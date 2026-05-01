@@ -150,10 +150,9 @@ export default function Editor() {
               {currentSop?.title || 'Untitled SOP'}
             </p>
             <p className="text-xs font-mono text-text-tertiary mt-0.5">
-              {id}
+              {currentSop?.sop_id || 'Loading...'}
             </p>
-          </div>
-
+            </div>
           <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-3">
             {SECTIONS.map((sec) => {
               const Icon = sec.icon;
