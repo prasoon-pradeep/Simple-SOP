@@ -25,6 +25,7 @@ interface SopState {
   setSearchTerm: (term: string) => void;
   setSelectedProject: (project: string | null) => void;
   
+  resetEditorState: () => void;
   setActiveSopId: (id: string | null) => void;
   setEditorOrigin: (origin: 'home' | 'viewer') => void;
   setCurrentSop: (sop: SOP | null) => void;
@@ -69,6 +70,18 @@ export const useSopStore = create<SopState>((set, get) => ({
   setSops: (sops) => set({ sops }),
   setSearchTerm: (searchTerm) => set({ searchTerm }),
   setSelectedProject: (selectedProject) => set({ selectedProject }),
+
+  resetEditorState: () => set({
+    currentSop: null,
+    revisions: [],
+    definitions: [],
+    tools: [],
+    items: [],
+    stepsFull: [],
+    isDirty: false,
+    isSaving: false,
+    lastSavedAt: null,
+  }),
 
   setActiveSopId: (id) => set({ activeSopId: id }),
   setEditorOrigin: (origin) => set({ editorOrigin: origin }),
