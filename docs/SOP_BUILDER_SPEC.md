@@ -792,13 +792,13 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] Clone-on-borrow logic with source UUID tracking
 
 ### PHASE 5 — Steps Editor
-- [ ] Step card component with all fields
-- [ ] Add/Delete step buttons
-- [ ] Drag-to-reorder with dnd-kit, step_number recalculation
-- [ ] Duplicate step (full copy, independent after duplication)
-- [ ] Per-step image upload (multiple, crop+annotate flow)
-- [ ] Per-step tools multi-select (library + free text fallback tags)
-- [ ] Per-step items multi-select (library + free text fallback, qty + unit)
+- [x] Step card component with all fields
+- [x] Add/Delete step buttons
+- [x] Drag-to-reorder with dnd-kit, step_number recalculation
+- [x] Duplicate step (full copy, independent after duplication)
+- [x] Per-step image upload (multiple, crop+annotate flow)
+- [x] Per-step tools multi-select (library + free text fallback tags)
+- [x] Per-step items multi-select (library + free text fallback, qty + unit)
 
 ### PHASE 6 — Definitions Section
 - [ ] Dynamic table: add/remove rows, term + meaning columns
