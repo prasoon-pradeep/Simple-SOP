@@ -873,6 +873,9 @@ pub async fn reorder_steps(sop_id: String, step_ids: Vec<String>, state: tauri::
             .bind(order).bind(order).bind(id).bind(&sop_id)
             .execute(&mut *tx).await.map_err(|e| e.to_string())?;
     }
+    
+    normalize_steps(&sop_id, &mut tx).await.map_err(|e| e.to_string())?;
+
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(())
 }
