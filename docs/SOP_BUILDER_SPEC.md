@@ -814,10 +814,10 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] Sidebar Mode A fully implemented (app nav, project items, footer)
 
 ### PHASE 8 — Viewer (Read-Only)
-- [ ] Route `/sop/:id/view` — loads SOP from SQLite
-- [ ] Renders HTML/CSS PDF template inline (same template used for PDF export)
-- [ ] Read-only — no editable fields
-- [ ] Sidebar Mode C: back link (← All SOPs) | SOP ID | title | status badge | Edit SOP button | Export PDF button | DB health
+- [x] Route `/sop/:id/view` — loads SOP from SQLite
+- [x] Renders HTML/CSS PDF template inline (same template used for PDF export)
+- [x] Read-only — no editable fields
+- [x] Sidebar Mode C: back link (← All SOPs) | SOP ID | title | status badge | Edit SOP button | Export PDF button | DB health
 - [ ] "Edit SOP" button → navigate to Editor, back link in editor reads "← View SOP"
 - [ ] Back link "← All SOPs" → navigate to Home (no dirty check needed — viewer is read-only)
 - [ ] "Export PDF" in sidebar → triggers print-to-PDF (same pipeline as Phase 9)
