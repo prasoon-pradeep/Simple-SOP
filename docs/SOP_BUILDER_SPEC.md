@@ -805,13 +805,13 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] Sort order preserved
 
 ### PHASE 7 — Home Screen
-- [ ] Flat list table: SOP ID, Project, Title, Date Released, Status, Version
-- [ ] Metadata search/filter bar (SOP ID, project, title, department, status)
-- [ ] Project filter via sidebar Mode A — click project → filter list, click All SOPs → clear
-- [ ] "Create SOP" button (page header + sidebar) → generates SOP ID → V1 auto-insert → navigate to Editor
-- [ ] "Import .sop" button (page header, alongside Create SOP) → file picker → import flow
-- [ ] Row click → navigates to **Viewer** (`/sop/:id/view`), not editor
-- [ ] Sidebar Mode A fully implemented (app nav, project items, footer)
+- [x] Flat list table: SOP ID, Project, Title, Date Released, Status, Version
+- [x] Metadata search/filter bar (SOP ID, project, title, department, status)
+- [x] Project filter via sidebar Mode A — click project → filter list, click All SOPs → clear
+- [x] "Create SOP" button (page header + sidebar) → generates SOP ID → V1 auto-insert → navigate to Editor
+- [x] "Import .sop" button (page header, alongside Create SOP) → file picker → import flow (placeholder UI)
+- [x] Row click → navigates to **Viewer** (`/sop/:id/view`), not editor
+- [x] Sidebar Mode A fully implemented (app nav, project items, footer)
 
 ### PHASE 8 — Viewer (Read-Only)
 - [ ] Route `/sop/:id/view` — loads SOP from SQLite
