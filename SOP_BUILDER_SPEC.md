@@ -699,11 +699,24 @@ When user clicks "Search other SOPs" in Tools or Items library:
 
 ## 15. PDF EXPORT
 
+### Template File
+`sop-pdf-template.html` — **complete and ready for integration** (as of 2026-05-01).
+
+Key characteristics of the template:
+- A4 portrait, 15mm margins all sides
+- Greyscale throughout; brand colour applied only to company name via `--brand` CSS variable
+- Data injected at runtime via `window.SOP_DATA` JSON object (Tauri sets this before webview renders)
+- Running header (company | SOP ID) and footer (page number | status | revision) via `@page` margin boxes, values injected dynamically by JS into a `<style>` block (CSS variables cannot be used in `@page content`)
+- Tables: Tools Library, Items/Parts Library (with image thumbnail column), Procedure/Steps (5 cols: Step | Action | Expected Output | Notes | Tools & Materials), Definitions, Revision History
+- Steps table: Tools & Materials column uses a split-cell layout — tools sub-section on top, materials (with inline qty) below, separated by a hairline rule
+- Zebra striping on Procedure, Definitions, and Revision History tables
+- Image thumbnails render as sub-rows below each step (one sub-row per image)
+
 ### Pipeline
 ```
 1. User clicks "Export PDF" in View mode
-2. Tauri renders SOP HTML template in a hidden webview
-3. Inject SOP data as JSON into webview at render time
+2. Tauri renders sop-pdf-template.html in a hidden webview
+3. Inject SOP data as JSON into webview at render time (window.SOP_DATA)
 4. Webview renders complete SOP (all sections, all steps, all images using annotated.png paths)
 5. Tauri calls print-to-PDF on the webview
 6. Save PDF to user-chosen location
@@ -1061,7 +1074,7 @@ Sidebar switches mode based on context. Transition is instant (no animation need
 
 ## 20. OPEN ITEMS (To be defined later)
 
-- PDF HTML template visual design (to be iterated with stakeholder before Phase 9)
+- ~~PDF HTML template visual design~~ — **DONE**: `sop-pdf-template.html` complete as of 2026-05-01
 - Excel export (explicitly deferred, do not build)
 - Formal approval routing workflow (deferred, manual status field only for now)
 - Mac platform support (deferred)
