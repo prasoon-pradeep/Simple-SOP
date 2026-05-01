@@ -801,8 +801,8 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] Per-step items multi-select (library + free text fallback, qty + unit)
 
 ### PHASE 6 — Definitions Section
-- [ ] Dynamic table: add/remove rows, term + meaning columns
-- [ ] Sort order preserved
+- [x] Dynamic table: add/remove rows, term + meaning columns
+- [x] Sort order preserved
 
 ### PHASE 7 — Home Screen
 - [ ] Flat list table: SOP ID, Project, Title, Date Released, Status, Version
