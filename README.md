@@ -169,4 +169,6 @@ See the spec for complete behavior rules and constraints.
 
 ## License
 
-No license file is currently defined in this repository.
+This project is licensed under **MIT License + Commons Clause**.
+
+See `LICENSE` for the full terms.
