@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text, Label as KonvaLabel, Tag } from 'react-konva';
 import useImage from 'use-image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -148,12 +148,17 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
                 {annotations.map((ann) => (
                   <React.Fragment key={ann.id}>
                     {ann.type === 'arrow' && <Arrow points={ann.points || []} stroke={ann.color} fill={ann.color} strokeWidth={4} pointerLength={10} pointerWidth={10} />}
-                    {ann.type === 'circle' && <Circle x={ann.x} y={ann.y} radius={ann.radius} stroke={ann.color} strokeWidth={4} />}
-                    {ann.type === 'text' && <Text x={ann.x} y={ann.y} text={ann.text} fontSize={20} fill={ann.color} fontStyle="bold" padding={4} />}
+                    {ann.type === 'circle' && <Circle x={ann.x} y={ann.y} radius={ann.radius} stroke={ann.color} strokeWidth={6} />}
+                    {ann.type === 'text' && (
+                      <KonvaLabel x={ann.x} y={ann.y}>
+                        <Tag fill="rgba(255, 255, 255, 0.85)" cornerRadius={4} />
+                        <Text text={ann.text} fontSize={20} fill={ann.color} fontStyle="bold" padding={6} />
+                      </KonvaLabel>
+                    )}
                   </React.Fragment>
                 ))}
                 {newAnnotation && newAnnotation.type === 'arrow' && <Arrow points={newAnnotation.points || []} stroke={newAnnotation.color} fill={newAnnotation.color} strokeWidth={4} pointerLength={10} pointerWidth={10} />}
-                {newAnnotation && newAnnotation.type === 'circle' && <Circle x={newAnnotation.x} y={newAnnotation.y} radius={newAnnotation.radius} stroke={newAnnotation.color} strokeWidth={4} />}
+                {newAnnotation && newAnnotation.type === 'circle' && <Circle x={newAnnotation.x} y={newAnnotation.y} radius={newAnnotation.radius} stroke={newAnnotation.color} strokeWidth={6} />}
               </Layer>
             </Stage>
           )}

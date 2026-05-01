@@ -64,7 +64,7 @@ export function CropWindow({ open, imgSrc, onConfirm, onCancel }: CropWindowProp
       canvas.height
     );
 
-    const base64Image = canvas.toDataURL('image/jpeg', 0.9);
+    const base64Image = canvas.toDataURL('image/png');
     onConfirm(base64Image);
   };
 

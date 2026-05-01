@@ -12,9 +12,7 @@ interface ImageUploadAreaProps {
 export function ImageUploadArea({ onImageSaved, className, children }: ImageUploadAreaProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [originalDataUrl, setOriginalDataUrl] = useState<string>('');
-  
   const [croppedDataUrl, setCroppedDataUrl] = useState<string>('');
   
   const [showCrop, setShowCrop] = useState(false);
@@ -26,7 +24,6 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
       return;
     }
     
-    setOriginalFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
@@ -64,7 +61,6 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
 
   const handleCropCancel = () => {
     setShowCrop(false);
-    setOriginalFile(null);
     setOriginalDataUrl('');
   };
 
@@ -81,21 +77,13 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
 
   const handleAnnotationCancel = () => {
     setShowAnnotation(false);
-    setOriginalFile(null);
     setOriginalDataUrl('');
     setCroppedDataUrl('');
   };
 
   const saveImages = async (originalBase64: string, annotatedBase64: string) => {
     try {
-      // Get extension from original file if possible, default to png
-      let ext = 'png';
-      if (originalFile) {
-         const parts = originalFile.name.split('.');
-         if (parts.length > 1) {
-           ext = parts.pop() || 'png';
-         }
-      }
+      const ext = 'png';
       
       const uuid = await invoke<string>('save_image', {
         payload: {
@@ -112,7 +100,6 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
       alert("Failed to save image: " + error);
     } finally {
       // Clean up
-      setOriginalFile(null);
       setOriginalDataUrl('');
       setCroppedDataUrl('');
     }
