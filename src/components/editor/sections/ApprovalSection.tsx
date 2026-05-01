@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSopStore } from '@/store';
 import { Button } from '@/components/ui/button';
 

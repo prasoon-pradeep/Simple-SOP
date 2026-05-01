@@ -52,7 +52,7 @@ export function SafetySection() {
         </div>
 
         {currentSop.training_required && (
-          <div className="space-y-2 pt-4 border-t border-border-subtle animate-in fade-in duration-200">
+          <div className="space-y-2 pt-4 border-t border-border-subtle">
             <Label htmlFor="training_details">Training Details & Modules</Label>
             <Textarea 
               id="training_details" 

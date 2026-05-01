@@ -24,14 +24,18 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
   const [notes, setNotes] = useState('');
   const [revisedBy, setRevisedBy] = useState('');
   const [status, setStatus] = useState('Draft');
+  const [approvedBy, setApprovedBy] = useState('');
+  const [approvalDate, setApprovalDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm({ notes, revisedBy, status });
+    onConfirm({ notes, revisedBy, status, approvedBy, approvalDate });
     // Reset
     setNotes('');
     setRevisedBy('');
     setStatus('Draft');
+    setApprovedBy('');
+    setApprovalDate('');
   };
 
   return (
@@ -41,7 +45,7 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
           <DialogHeader>
             <DialogTitle>Unsaved Changes Detected</DialogTitle>
             <DialogDescription>
-              You have unsaved changes. To preserve document control integrity, please log a new revision before saving.
+              You have unsaved changes. Would you like to log a revision for document control?
             </DialogDescription>
           </DialogHeader>
 
@@ -81,18 +85,40 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
                 </select>
               </div>
             </div>
+            {status === 'Approved' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="appr-by">Approved By</Label>
+                  <Input 
+                    id="appr-by" 
+                    value={approvedBy} 
+                    onChange={(e) => setApprovedBy(e.target.value)} 
+                    placeholder="Approver Name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="appr-date">Approval Date</Label>
+                  <Input 
+                    id="appr-date" 
+                    type="date"
+                    value={approvalDate} 
+                    onChange={(e) => setApprovalDate(e.target.value)} 
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="flex justify-between items-center sm:justify-between">
-            <Button type="button" variant="ghost" onClick={onDiscard} className="text-status-red hover:text-status-red hover:bg-status-red-bg">
-              Discard Changes
+            <Button type="button" variant="ghost" onClick={onDiscard} className="text-status-red hover:text-status-red hover:bg-status-red-bg px-2">
+              Exit Without Revision
             </Button>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={!notes.trim()}>
-                Save Revision
+                Log Revision &amp; Exit
               </Button>
             </div>
           </DialogFooter>
