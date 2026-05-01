@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-app: #f0ede8;
+    --bg-panel: #faf9f7;
+    --bg-surface: #ffffff;
+    --bg-secondary: #f0ede8;
+    --bg-hover: #ebe8e2;
+
+    --text-primary: #1a1917;
+    --text-secondary: #3d3b37;
+    --text-tertiary: #7a756c;
+    --text-quaternary: #a8a39a;
+
+    --brand: #c84b2f;
+    --brand-light: #fdf1ee;
+    --brand-hover: #b33f25;
+
+    --status-green: #1e7e4a;
+    --status-green-bg: #edf7f1;
+    --status-red: #c0392b;
+    --status-red-bg: #fdf0ef;
+    --status-amber: #b45309;
+    --status-amber-bg: #fef9ec;
+
+    --border-subtle: rgba(26,25,23,0.07);
+    --border-standard: rgba(26,25,23,0.12);
+    --border-strong: rgba(26,25,23,0.20);
+
+    --shadow-sm: 0 1px 3px rgba(26,25,23,0.06), 0 1px 2px rgba(26,25,23,0.04);
+  }
+
+  *, *::before, *::after {
+    @apply border-border-standard;
+  }
+  
+  html, body { 
+    @apply h-full overflow-hidden;
+  }
+  
+  body {
+    @apply font-primary bg-[var(--bg-app)] text-text-primary text-[13.5px] leading-normal flex flex-col antialiased;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    @apply w-[5px] h-[5px];
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-standard rounded-full;
+  }
+}
