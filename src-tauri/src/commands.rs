@@ -682,22 +682,52 @@ pub async fn save_definition(_payload: serde_json::Value, _state: tauri::State<'
 #[tauri::command]
 pub async fn get_steps_full(sop_id: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<StepFull>, String> {
     let pool = state.inner();
-    let steps = sqlx::query_as::<sqlx::Sqlite, Step>("SELECT * FROM steps WHERE sop_id = ? ORDER BY sort_order ASC")
-        .bind(&sop_id)
-        .fetch_all(pool)
-        .await
-        .map_err(|e| e.to_string())?;
     
+    let steps = sqlx::query_as::<sqlx::Sqlite, Step>(
+        "SELECT * FROM steps WHERE sop_id = ? ORDER BY sort_order ASC"
+    )
+    .bind(&sop_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    
+    if steps.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let images = sqlx::query_as::<sqlx::Sqlite, StepImage>(
+        "SELECT * FROM step_images WHERE step_id IN (SELECT id FROM steps WHERE sop_id = ?) ORDER BY sort_order ASC"
+    )
+    .bind(&sop_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let tools = sqlx::query_as::<sqlx::Sqlite, StepTool>(
+        "SELECT * FROM step_tools WHERE step_id IN (SELECT id FROM steps WHERE sop_id = ?)"
+    )
+    .bind(&sop_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let items = sqlx::query_as::<sqlx::Sqlite, StepItem>(
+        "SELECT * FROM step_items WHERE step_id IN (SELECT id FROM steps WHERE sop_id = ?)"
+    )
+    .bind(&sop_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
     let mut steps_full = Vec::new();
     for step in steps {
-        let step_id = step.id.clone();
-        let images = sqlx::query_as::<sqlx::Sqlite, StepImage>("SELECT * FROM step_images WHERE step_id = ? ORDER BY sort_order ASC")
-            .bind(&step_id).fetch_all(pool).await.map_err(|e| e.to_string())?;
-        let tools = sqlx::query_as::<sqlx::Sqlite, StepTool>("SELECT * FROM step_tools WHERE step_id = ?")
-            .bind(&step_id).fetch_all(pool).await.map_err(|e| e.to_string())?;
-        let items = sqlx::query_as::<sqlx::Sqlite, StepItem>("SELECT * FROM step_items WHERE step_id = ?")
-            .bind(&step_id).fetch_all(pool).await.map_err(|e| e.to_string())?;
-        steps_full.push(StepFull { step, images, tools, items });
+        let sid = &step.id;
+        steps_full.push(StepFull {
+            step: step.clone(),
+            images: images.iter().filter(|i| &i.step_id == sid).cloned().collect(),
+            tools: tools.iter().filter(|t| &t.step_id == sid).cloned().collect(),
+            items: items.iter().filter(|i| &i.step_id == sid).cloned().collect(),
+        });
     }
     Ok(steps_full)
 }
@@ -812,19 +842,59 @@ pub async fn delete_step_item(id: String, state: tauri::State<'_, SqlitePool>) -
 pub async fn duplicate_step(step_id: String, state: tauri::State<'_, SqlitePool>) -> Result<String, String> {
     let pool = state.inner();
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
-    let original = sqlx::query_as::<sqlx::Sqlite, Step>("SELECT * FROM steps WHERE id = ?").bind(&step_id).fetch_one(&mut *tx).await.map_err(|e| e.to_string())?;
+    
+    let original = sqlx::query_as::<sqlx::Sqlite, Step>("SELECT * FROM steps WHERE id = ?")
+        .bind(&step_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+        
     let new_id = Uuid::new_v4().to_string();
-    let row = sqlx::query("SELECT MAX(sort_order) as max_so FROM steps WHERE sop_id = ?").bind(&original.sop_id).fetch_one(&mut *tx).await.map_err(|e| e.to_string())?;
+    let row = sqlx::query("SELECT MAX(sort_order) as max_so FROM steps WHERE sop_id = ?")
+        .bind(&original.sop_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
     let max_so: i64 = row.try_get("max_so").unwrap_unwrap_or(0);
     let new_so = max_so + 1;
-    sqlx::query(r#"INSERT INTO steps (id, sop_id, step_number, action, notes, expected_output, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)"#)
-        .bind(&new_id).bind(&original.sop_id).bind(new_so).bind(&original.action).bind(&original.notes).bind(&original.expected_output).bind(new_so).execute(&mut *tx).await.map_err(|e| e.to_string())?;
-    sqlx::query(r#"INSERT INTO step_images (id, step_id, image_uuid, sort_order) SELECT ?, ?, image_uuid, sort_order FROM step_images WHERE step_id = ?"#)
-        .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(&step_id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
-    sqlx::query(r#"INSERT INTO step_tools (id, step_id, tool_id, free_text) SELECT ?, ?, tool_id, free_text FROM step_tools WHERE step_id = ?"#)
-        .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(&step_id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
-    sqlx::query(r#"INSERT INTO step_items (id, step_id, item_id, free_text, quantity, unit) SELECT ?, ?, item_id, free_text, quantity, unit FROM step_items WHERE step_id = ?"#)
-        .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(&step_id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO steps (id, sop_id, step_number, action, notes, expected_output, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        "#
+    )
+    .bind(&new_id).bind(&original.sop_id).bind(new_so)
+    .bind(&original.action).bind(&original.notes).bind(&original.expected_output).bind(new_so)
+    .execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    
+    // Images
+    let images = sqlx::query_as::<sqlx::Sqlite, StepImage>("SELECT * FROM step_images WHERE step_id = ?")
+        .bind(&step_id).fetch_all(&mut *tx).await.map_err(|e| e.to_string())?;
+    for img in images {
+        sqlx::query("INSERT INTO step_images (id, step_id, image_uuid, sort_order) VALUES (?, ?, ?, ?)")
+            .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(img.image_uuid).bind(img.sort_order)
+            .execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    }
+    
+    // Tools
+    let tools = sqlx::query_as::<sqlx::Sqlite, StepTool>("SELECT * FROM step_tools WHERE step_id = ?")
+        .bind(&step_id).fetch_all(&mut *tx).await.map_err(|e| e.to_string())?;
+    for tool in tools {
+        sqlx::query("INSERT INTO step_tools (id, step_id, tool_id, free_text) VALUES (?, ?, ?, ?)")
+            .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(tool.tool_id).bind(tool.free_text)
+            .execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    }
+    
+    // Items
+    let items = sqlx::query_as::<sqlx::Sqlite, StepItem>("SELECT * FROM step_items WHERE step_id = ?")
+        .bind(&step_id).fetch_all(&mut *tx).await.map_err(|e| e.to_string())?;
+    for item in items {
+        sqlx::query("INSERT INTO step_items (id, step_id, item_id, free_text, quantity, unit) VALUES (?, ?, ?, ?, ?, ?)")
+            .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(item.item_id).bind(item.free_text).bind(item.quantity).bind(item.unit)
+            .execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    }
+
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(new_id)
 }
