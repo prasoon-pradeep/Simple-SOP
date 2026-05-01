@@ -16,7 +16,7 @@ import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
 
 export function ToolsSection() {
-  const { currentSop, tools, setTools } = useSopStore();
+  const { currentSop, tools, setTools, setDirty } = useSopStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Partial<Tool> | null>(null);
@@ -79,6 +79,7 @@ export function ToolsSection() {
     if (window.confirm("Are you sure you want to delete this tool?")) {
       try {
         await invoke('delete_tool', { id });
+        setDirty(true);
         loadTools();
       } catch (error) {
         console.error("Failed to delete tool", error);
@@ -90,6 +91,7 @@ export function ToolsSection() {
     if (!editingTool || !editingTool.name) return;
     try {
       await invoke('save_tool', { payload: editingTool });
+      setDirty(true);
       setIsDialogOpen(false);
       loadTools();
     } catch (error) {
@@ -105,6 +107,7 @@ export function ToolsSection() {
     if (!currentSop) return;
     try {
       await invoke('clone_tool', { toolId, targetSopId: currentSop.id });
+      setDirty(true);
       loadTools();
       setIsSearchOpen(false);
     } catch (error) {

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
+import { invoke } from '@tauri-apps/api/core';
 import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Save } from 'lucide-react';
 import { HeaderSection } from '@/components/editor/sections/HeaderSection';
 import { ScopeSection } from '@/components/editor/sections/ScopeSection';
@@ -28,14 +29,53 @@ export default function Editor() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('header');
   const [showRevisionModal, setShowRevisionModal] = useState(false);
-  const { isDirty, currentSop, setDirty } = useSopStore();
+  const { isDirty, currentSop, setDirty, setCurrentSop, setRevisions, setTools, setItems, setStepsFull } = useSopStore();
 
-  const handleRevisionConfirm = (data: any) => {
-    // TODO: implement rust call to save revision and update SOP
-    console.log("Saving revision:", data);
-    setDirty(false);
-    setShowRevisionModal(false);
-    navigate('/');
+  useEffect(() => {
+    if (id) {
+      loadData();
+    }
+  }, [id]);
+
+  const loadData = async () => {
+    try {
+      const [sop, revs, tools, items, steps] = await Promise.all([
+        invoke<any>('get_sop', { id }),
+        invoke<any[]>('get_revisions', { sopId: id }),
+        invoke<any[]>('get_tools', { sopId: id }),
+        invoke<any[]>('get_items', { sopId: id }),
+        invoke<any[]>('get_steps_full', { sopId: id }),
+      ]);
+
+      setCurrentSop(sop);
+      setRevisions(revs);
+      setTools(tools);
+      setItems(items);
+      setStepsFull(steps);
+    } catch (error) {
+      console.error("Failed to load SOP data", error);
+    }
+  };
+
+  const handleRevisionConfirm = async (data: any) => {
+    try {
+      await invoke('save_revision', {
+        payload: {
+          sop_id: id,
+          revision_notes: data.notes,
+          revised_by: data.revisedBy,
+          approval_status: data.status,
+          approved_by: data.status === 'Approved' ? data.approvedBy : null,
+          approval_date: data.status === 'Approved' ? data.approvalDate : null,
+        }
+      });
+      setDirty(false);
+      setShowRevisionModal(false);
+      navigate('/');
+    } catch (error) {
+      console.error("Failed to save revision", error);
+      alert("Error saving revision: " + error);
+    }
   };
 
   const handleRevisionDiscard = () => {
@@ -57,7 +97,7 @@ export default function Editor() {
       case 'items': return <ItemsSection />;
       case 'procedure': return <ProcedureSection />;
       case 'definitions': return <div className="p-6">Definitions Placeholder</div>;
-      case 'approval': return <ApprovalSection />;
+      case 'approval': return <ApprovalSection onLogRevision={() => setShowRevisionModal(true)} />;
       default: return null;
     }
   };

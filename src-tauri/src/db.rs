@@ -1,6 +1,5 @@
 use anyhow::Result;
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
-use std::path::PathBuf;
 use std::str::FromStr;
 use tauri::{AppHandle, Manager};
 

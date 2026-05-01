@@ -1,7 +1,11 @@
 import { useSopStore } from '@/store';
 import { Button } from '@/components/ui/button';
 
-export function ApprovalSection() {
+interface ApprovalSectionProps {
+  onLogRevision: () => void;
+}
+
+export function ApprovalSection({ onLogRevision }: ApprovalSectionProps) {
   const { currentSop, revisions } = useSopStore();
 
   if (!currentSop) return <div className="p-6">No SOP loaded.</div>;
@@ -13,7 +17,7 @@ export function ApprovalSection() {
           <h3 className="text-lg font-bold text-text-primary">Revision History</h3>
           <p className="text-sm text-text-tertiary">All logged revisions and approval statuses for this document.</p>
         </div>
-        <Button>Log New Revision</Button>
+        <Button onClick={onLogRevision}>Log New Revision</Button>
       </div>
 
       <div className="bg-surface border border-border-standard rounded-lg overflow-hidden">

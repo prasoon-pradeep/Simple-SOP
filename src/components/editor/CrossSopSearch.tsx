@@ -24,7 +24,11 @@ export function CrossSopSearch({ open, onOpenChange, type, onClone }: CrossSopSe
 
   useEffect(() => {
     if (open) {
-      handleSearch();
+      if (query.trim()) {
+        handleSearch();
+      } else {
+        setResults([]);
+      }
     }
   }, [open, query]);
 

@@ -287,6 +287,8 @@ pub struct CreateRevisionPayload {
     pub revision_notes: String,
     pub revised_by: Option<String>,
     pub approval_status: Option<String>,
+    pub approved_by: Option<String>,
+    pub approval_date: Option<String>,
 }
 
 #[tauri::command]
@@ -309,8 +311,9 @@ pub async fn save_revision(payload: CreateRevisionPayload, state: tauri::State<'
     sqlx::query(
         r#"
         INSERT INTO revisions (
-            id, sop_id, version, revision_notes, revised_by, revision_date, approval_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            id, sop_id, version, revision_notes, revised_by, revision_date, 
+            approval_status, approved_by, approval_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#
     )
     .bind(&rev_id)
@@ -320,6 +323,8 @@ pub async fn save_revision(payload: CreateRevisionPayload, state: tauri::State<'
     .bind(&payload.revised_by)
     .bind(&now)
     .bind(&payload.approval_status)
+    .bind(&payload.approved_by)
+    .bind(&payload.approval_date)
     .execute(&mut *tx)
     .await
     .map_err(|e| e.to_string())?;

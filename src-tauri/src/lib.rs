@@ -15,9 +15,7 @@ pub fn run() {
                         handle.manage(pool);
                     }
                     Err(e) => {
-                        eprintln!("Database initialization or integrity check failed: {}", e);
-                        // In the future: show error dialog instead of panicking
-                        panic!("DB Init Error: {}", e);
+                        eprintln!("CRITICAL: Database initialization failed: {}", e);
                     }
                 }
             });

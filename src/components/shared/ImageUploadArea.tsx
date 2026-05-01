@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { CropWindow } from './CropWindow';
 import { AnnotationWindow } from './AnnotationWindow';
@@ -13,6 +13,7 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [originalDataUrl, setOriginalDataUrl] = useState<string>('');
+  const [originalExt, setOriginalExt] = useState<string>('png');
   const [croppedDataUrl, setCroppedDataUrl] = useState<string>('');
   
   const [showCrop, setShowCrop] = useState(false);
@@ -23,6 +24,9 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
       alert("Please select an image file.");
       return;
     }
+    
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+    setOriginalExt(ext);
     
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -83,13 +87,11 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
 
   const saveImages = async (originalBase64: string, annotatedBase64: string) => {
     try {
-      const ext = 'png';
-      
       const uuid = await invoke<string>('save_image', {
         payload: {
           original_base64: originalBase64,
           annotated_base64: annotatedBase64,
-          ext: ext
+          ext: originalExt
         }
       });
       
@@ -101,6 +103,7 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
     } finally {
       // Clean up
       setOriginalDataUrl('');
+      setOriginalExt('png');
       setCroppedDataUrl('');
     }
   };

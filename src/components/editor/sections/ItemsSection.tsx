@@ -14,7 +14,7 @@ import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
 
 export function ItemsSection() {
-  const { currentSop, items, setItems } = useSopStore();
+  const { currentSop, items, setItems, setDirty } = useSopStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<Item> | null>(null);
@@ -75,6 +75,7 @@ export function ItemsSection() {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
         await invoke('delete_item', { id });
+        setDirty(true);
         loadItems();
       } catch (error) {
         console.error("Failed to delete item", error);
@@ -86,6 +87,7 @@ export function ItemsSection() {
     if (!editingItem || !editingItem.name) return;
     try {
       await invoke('save_item', { payload: editingItem });
+      setDirty(true);
       setIsDialogOpen(false);
       loadItems();
     } catch (error) {
@@ -101,6 +103,7 @@ export function ItemsSection() {
     if (!currentSop) return;
     try {
       await invoke('clone_item', { itemId, targetSopId: currentSop.id });
+      setDirty(true);
       loadItems();
       setIsSearchOpen(false);
     } catch (error) {
