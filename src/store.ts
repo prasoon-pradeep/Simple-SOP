@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { SOP, Revision, Definition, Tool, Item, Step, StepFull } from './types';
 
 interface SopState {
+  sops: SOP[];
   activeSopId: string | null;
   editorOrigin: 'home' | 'viewer';
   currentSop: SOP | null;
@@ -16,7 +17,14 @@ interface SopState {
   isSaving: boolean;
   lastSavedAt: string | null;
 
+  searchTerm: string;
+  selectedProject: string | null;
+
   // Actions
+  setSops: (sops: SOP[]) => void;
+  setSearchTerm: (term: string) => void;
+  setSelectedProject: (project: string | null) => void;
+  
   setActiveSopId: (id: string | null) => void;
   setEditorOrigin: (origin: 'home' | 'viewer') => void;
   setCurrentSop: (sop: SOP | null) => void;
@@ -41,6 +49,7 @@ let stepSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 let defSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 export const useSopStore = create<SopState>((set, get) => ({
+  sops: [],
   activeSopId: null,
   editorOrigin: 'home',
   currentSop: null,
@@ -53,6 +62,13 @@ export const useSopStore = create<SopState>((set, get) => ({
   isDirty: false,
   isSaving: false,
   lastSavedAt: null,
+
+  searchTerm: '',
+  selectedProject: null,
+
+  setSops: (sops) => set({ sops }),
+  setSearchTerm: (searchTerm) => set({ searchTerm }),
+  setSelectedProject: (selectedProject) => set({ selectedProject }),
 
   setActiveSopId: (id) => set({ activeSopId: id }),
   setEditorOrigin: (origin) => set({ editorOrigin: origin }),
