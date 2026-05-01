@@ -14,7 +14,7 @@ import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
 
 export function ItemsSection() {
-  const { currentSop, items, setItems, setDirty } = useSopStore();
+  const { currentSop, items, setItems, setDirty, setSaving, setLastSavedAt } = useSopStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<Item> | null>(null);
@@ -73,25 +73,33 @@ export function ItemsSection() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
+      setSaving(true);
       try {
         await invoke('delete_item', { id });
-        setDirty(true);
+        setDirty(false);
+        setSaving(false);
+        setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         loadItems();
       } catch (error) {
         console.error("Failed to delete item", error);
+        setSaving(false);
       }
     }
   };
 
   const handleSave = async () => {
     if (!editingItem || !editingItem.name) return;
+    setSaving(true);
     try {
       await invoke('save_item', { payload: editingItem });
-      setDirty(true);
+      setDirty(false);
+      setSaving(false);
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setIsDialogOpen(false);
       loadItems();
     } catch (error) {
       console.error("Failed to save item", error);
+      setSaving(false);
     }
   };
 
@@ -101,13 +109,17 @@ export function ItemsSection() {
 
   const handleCloneItem = async (itemId: string) => {
     if (!currentSop) return;
+    setSaving(true);
     try {
       await invoke('clone_item', { itemId, targetSopId: currentSop.id });
-      setDirty(true);
+      setDirty(false);
+      setSaving(false);
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       loadItems();
       setIsSearchOpen(false);
     } catch (error) {
       console.error("Failed to clone item", error);
+      setSaving(false);
     }
   };
 

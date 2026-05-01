@@ -30,6 +30,8 @@ interface SopState {
   updateStepField: (stepId: string, field: keyof Step, value: any) => void;
 
   setDirty: (dirty: boolean) => void;
+  setSaving: (saving: boolean) => void;
+  setLastSavedAt: (time: string | null) => void;
 }
 
 let saveTimeout: ReturnType<typeof setTimeout>;
@@ -88,6 +90,9 @@ export const useSopStore = create<SopState>((set, get) => ({
   setTools: (tools) => set({ tools }),
   setItems: (items) => set({ items }),
   setStepsFull: (stepsFull) => set({ stepsFull }),
+
+  setSaving: (isSaving) => set({ isSaving }),
+  setLastSavedAt: (lastSavedAt) => set({ lastSavedAt }),
 
   updateStepField: (stepId, field, value) => {
     set((state) => ({

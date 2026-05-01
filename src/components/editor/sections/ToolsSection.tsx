@@ -16,7 +16,7 @@ import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
 
 export function ToolsSection() {
-  const { currentSop, tools, setTools, setDirty } = useSopStore();
+  const { currentSop, tools, setTools, setDirty, setSaving, setLastSavedAt } = useSopStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Partial<Tool> | null>(null);
@@ -77,25 +77,33 @@ export function ToolsSection() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this tool?")) {
+      setSaving(true);
       try {
         await invoke('delete_tool', { id });
-        setDirty(true);
+        setDirty(false);
+        setSaving(false);
+        setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         loadTools();
       } catch (error) {
         console.error("Failed to delete tool", error);
+        setSaving(false);
       }
     }
   };
 
   const handleSave = async () => {
     if (!editingTool || !editingTool.name) return;
+    setSaving(true);
     try {
       await invoke('save_tool', { payload: editingTool });
-      setDirty(true);
+      setDirty(false);
+      setSaving(false);
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setIsDialogOpen(false);
       loadTools();
     } catch (error) {
       console.error("Failed to save tool", error);
+      setSaving(false);
     }
   };
 
@@ -105,13 +113,17 @@ export function ToolsSection() {
 
   const handleCloneTool = async (toolId: string) => {
     if (!currentSop) return;
+    setSaving(true);
     try {
       await invoke('clone_tool', { toolId, targetSopId: currentSop.id });
-      setDirty(true);
+      setDirty(false);
+      setSaving(false);
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       loadTools();
       setIsSearchOpen(false);
     } catch (error) {
       console.error("Failed to clone tool", error);
+      setSaving(false);
     }
   };
 
