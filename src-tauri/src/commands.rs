@@ -723,18 +723,33 @@ pub async fn get_steps_full(sop_id: String, state: tauri::State<'_, SqlitePool>)
     .fetch_all(pool)
     .await
     .map_err(|e| e.to_string())?;
+// 3. Assemble full objects in memory
+let mut images_map: std::collections::HashMap<String, Vec<StepImage>> = std::collections::HashMap::new();
+for img in images {
+    images_map.entry(img.step_id.clone()).or_default().push(img);
+}
 
-    let mut steps_full = Vec::new();
-    for step in steps {
-        let sid = &step.id;
-        steps_full.push(StepFull {
-            step: step.clone(),
-            images: images.iter().filter(|i| &i.step_id == sid).cloned().collect(),
-            tools: tools.iter().filter(|t| &t.step_id == sid).cloned().collect(),
-            items: items.iter().filter(|i| &i.step_id == sid).cloned().collect(),
-        });
-    }
-    Ok(steps_full)
+let mut tools_map: std::collections::HashMap<String, Vec<StepTool>> = std::collections::HashMap::new();
+for tool in tools {
+    tools_map.entry(tool.step_id.clone()).or_default().push(tool);
+}
+
+let mut items_map: std::collections::HashMap<String, Vec<StepItem>> = std::collections::HashMap::new();
+for item in items {
+    items_map.entry(item.step_id.clone()).or_default().push(item);
+}
+
+let mut steps_full = Vec::new();
+for step in steps {
+    let sid = step.id.clone();
+    steps_full.push(StepFull {
+        step,
+        images: images_map.remove(&sid).unwrap_or_default(),
+        tools: tools_map.remove(&sid).unwrap_or_default(),
+        items: items_map.remove(&sid).unwrap_or_default(),
+    });
+}
+Ok(steps_full)
 }
 
 #[tauri::command]
