@@ -767,15 +767,15 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] Set up React Router: `/`, `/sop/:id/edit`, `/sop/:id/view`
 
 ### PHASE 2 — SOP Editor Core
-- [ ] Sidebar nav with 8 section tabs (jump freely)
-- [ ] Header section: all fields, date pickers, read-only fields (no approval fields here)
-- [ ] Scope & Purpose section
-- [ ] Safety section with conditional training fields
-- [ ] Dirty state tracking in Zustand
-- [ ] Revision prompt modal on exit/navigate away (with all revision + approval fields)
-- [ ] Approval & Revisions tab: revision history table (read-only) + Log New Revision inline form
-- [ ] V1 auto-insert on SOP creation ("Initial Draft")
-- [ ] sops.approval_status auto-mirror from latest revision on every revision write
+- [x] Sidebar nav with 8 section tabs (jump freely)
+- [x] Header section: all fields, date pickers, read-only fields (no approval fields here)
+- [x] Scope & Purpose section
+- [x] Safety section with conditional training fields
+- [x] Dirty state tracking in Zustand
+- [x] Revision prompt modal on exit/navigate away (with all revision + approval fields)
+- [x] Approval & Revisions tab: revision history table (read-only) + Log New Revision inline form
+- [x] V1 auto-insert on SOP creation ("Initial Draft")
+- [x] sops.approval_status auto-mirror from latest revision on every revision write
 
 ### PHASE 3 — Image Handling
 - [ ] Image upload component (file input + paste from clipboard)
