@@ -1,11 +1,8 @@
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import Editor from "./pages/Editor";
 
 function Home() {
   return <div className="p-4">Home Screen</div>;
-}
-
-function Editor() {
-  return <div className="p-4">Editor Screen</div>;
 }
 
 function Viewer() {
@@ -25,3 +22,4 @@ function App() {
 }
 
 export default App;
+

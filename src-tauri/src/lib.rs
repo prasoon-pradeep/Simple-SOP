@@ -25,6 +25,10 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::generate_sop_id,
+            commands::create_sop,
+            commands::get_sops,
+            commands::get_sop,
+            commands::get_revisions,
             commands::save_sop,
             commands::save_revision,
             commands::save_definition,
