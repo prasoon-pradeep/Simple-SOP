@@ -785,11 +785,11 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] UUID generation per image (Rust side)
 
 ### PHASE 4 — Tools & Items Libraries
-- [ ] Tools library table UI: add/edit/delete rows, all fields, image upload
-- [ ] Items library table UI: add/edit/delete rows, all fields
-- [ ] Cross-SOP search modal for tools (Section 13)
-- [ ] Cross-SOP search modal for items
-- [ ] Clone-on-borrow logic with source UUID tracking
+- [x] Tools library table UI: add/edit/delete rows, all fields, image upload
+- [x] Items library table UI: add/edit/delete rows, all fields
+- [x] Cross-SOP search modal for tools (Section 13)
+- [x] Cross-SOP search modal for items
+- [x] Clone-on-borrow logic with source UUID tracking
 
 ### PHASE 5 — Steps Editor
 - [ ] Step card component with all fields
