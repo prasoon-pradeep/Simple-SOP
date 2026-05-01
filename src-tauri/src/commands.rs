@@ -130,9 +130,65 @@ pub struct StepFull {
     pub items: Vec<StepItem>,
 }
 
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct Definition {
+    pub id: String,
+    pub sop_id: String,
+    pub term: String,
+    pub meaning: String,
+    pub sort_order: i64,
+}
+
 // --------------------------------------------------------
 // Commands
 // --------------------------------------------------------
+
+#[tauri::command]
+pub async fn get_definitions(sop_id: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<Definition>, String> {
+    let definitions = sqlx::query_as::<sqlx::Sqlite, Definition>(
+        "SELECT * FROM definitions WHERE sop_id = ? ORDER BY sort_order ASC"
+    )
+    .bind(sop_id)
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(definitions)
+}
+
+#[tauri::command]
+pub async fn save_definition(payload: Definition, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    sqlx::query(
+        r#"
+        INSERT INTO definitions (id, sop_id, term, meaning, sort_order)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            term = excluded.term,
+            meaning = excluded.meaning,
+            sort_order = excluded.sort_order
+        "#
+    )
+    .bind(&payload.id)
+    .bind(&payload.sop_id)
+    .bind(&payload.term)
+    .bind(&payload.meaning)
+    .bind(payload.sort_order)
+    .execute(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_definition(id: String, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    sqlx::query("DELETE FROM definitions WHERE id = ?")
+        .bind(id)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
 
 #[tauri::command]
 pub async fn create_sop(title: String, state: tauri::State<'_, SqlitePool>) -> Result<String, String> {
@@ -676,11 +732,6 @@ pub async fn clone_item(
     .await
     .map_err(|e| e.to_string())?;
 
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn save_definition(_payload: serde_json::Value, _state: tauri::State<'_, sqlx::SqlitePool>) -> Result<(), String> {
     Ok(())
 }
 
