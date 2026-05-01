@@ -757,14 +757,14 @@ All filters applied client-side from SQLite query. No full-text search on step c
 ## 17. BUILD PHASES & TODO LIST
 
 ### PHASE 1 — Scaffold + Core DB
-- [ ] Init Tauri v2 project with React + TypeScript template
-- [ ] Configure Tailwind CSS + shadcn/ui
-- [ ] Set up Zustand store
-- [ ] Implement app-managed directory creation on first launch (Linux + Windows paths)
-- [ ] Implement SQLite init: create all tables on first launch (schema from Section 4)
-- [ ] Implement SOP ID generation logic (Section 5) as Tauri command
-- [ ] Implement auto-save Tauri commands for every table
-- [ ] Set up React Router: `/`, `/sop/:id/edit`, `/sop/:id/view`
+- [x] Init Tauri v2 project with React + TypeScript template
+- [x] Configure Tailwind CSS + shadcn/ui
+- [x] Set up Zustand store
+- [x] Implement app-managed directory creation on first launch (Linux + Windows paths)
+- [x] Implement SQLite init: create all tables on first launch (schema from Section 4)
+- [x] Implement SOP ID generation logic (Section 5) as Tauri command
+- [x] Implement auto-save Tauri commands for every table
+- [x] Set up React Router: `/`, `/sop/:id/edit`, `/sop/:id/view`
 
 ### PHASE 2 — SOP Editor Core
 - [ ] Sidebar nav with 8 section tabs (jump freely)
