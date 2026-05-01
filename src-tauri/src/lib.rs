@@ -10,15 +10,10 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
             tauri::async_runtime::block_on(async move {
-                match db::init_db(&handle).await {
-                    Ok(pool) => {
-                        handle.manage(pool);
-                    }
-                    Err(e) => {
-                        eprintln!("CRITICAL: Database initialization failed: {}", e);
-                    }
-                }
-            });
+                let pool = db::init_db(&handle).await?;
+                handle.manage(pool);
+                Ok(())
+            })?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
