@@ -1,21 +1,12 @@
-import { useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 
-export function Header() {
-  const navigate = useNavigate();
-  const { currentSop, isDirty, isSaving, lastSavedAt, editorOrigin } = useSopStore();
+interface HeaderProps {
+  onBack: () => void;
+}
 
-  const handleBack = () => {
-    if (isDirty) {
-      const confirmLeave = window.confirm("You have unsaved changes. Leave without logging a revision?");
-      if (confirmLeave) {
-        navigate(editorOrigin === 'viewer' && currentSop ? `/sop/${currentSop.id}/view` : '/');
-      }
-    } else {
-      navigate(editorOrigin === 'viewer' && currentSop ? `/sop/${currentSop.id}/view` : '/');
-    }
-  };
+export function Header({ onBack }: HeaderProps) {
+  const { currentSop, isDirty, isSaving, lastSavedAt, editorOrigin } = useSopStore();
 
   return (
     <header className="h-12 bg-surface border-b border-border-standard flex items-center justify-between px-4 shrink-0">
@@ -23,7 +14,7 @@ export function Header() {
         {currentSop && (
           <>
             <button 
-              onClick={handleBack}
+              onClick={onBack}
               className="flex items-center text-text-secondary hover:text-text-primary transition-colors text-sm font-medium"
             >
               <ArrowLeft className="w-4 h-4 mr-1.5" />

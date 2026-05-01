@@ -87,6 +87,7 @@ export function ProcedureSection() {
       const stepIds = newStepsFull.map(s => s.step.id);
       try {
         await invoke('reorder_steps', { sopId: currentSop?.id, stepIds });
+        await loadSteps(); // Refresh to get normalized step numbers
       } catch (error) {
         console.error("Failed to persist reorder", error);
         loadSteps(); // revert on error

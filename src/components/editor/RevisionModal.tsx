@@ -18,9 +18,10 @@ interface RevisionModalProps {
   onConfirm: (data: any) => void;
   onDiscard: () => void;
   onCancel: () => void;
+  mode?: 'exit' | 'log';
 }
 
-export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCancel }: RevisionModalProps) {
+export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCancel, mode = 'exit' }: RevisionModalProps) {
   const [notes, setNotes] = useState('');
   const [revisedBy, setRevisedBy] = useState('');
   const [status, setStatus] = useState('Draft');
@@ -43,9 +44,13 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Unsaved Changes Detected</DialogTitle>
+            <DialogTitle>
+              {mode === 'exit' ? 'Unsaved Changes Detected' : 'Log New Revision'}
+            </DialogTitle>
             <DialogDescription>
-              You have unsaved changes. Would you like to log a revision for document control?
+              {mode === 'exit' 
+                ? 'You have unsaved changes. Would you like to log a revision for document control?'
+                : 'Log a new revision record to document major changes or approvals.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -110,15 +115,17 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
           </div>
 
           <DialogFooter className="flex justify-between items-center sm:justify-between">
-            <Button type="button" variant="ghost" onClick={onDiscard} className="text-status-red hover:text-status-red hover:bg-status-red-bg px-2">
-              Exit Without Revision
-            </Button>
+            {mode === 'exit' ? (
+              <Button type="button" variant="ghost" onClick={onDiscard} className="text-status-red hover:text-status-red hover:bg-status-red-bg px-2">
+                Exit Without Revision
+              </Button>
+            ) : <div />}
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={!notes.trim()}>
-                Log Revision &amp; Exit
+                {mode === 'exit' ? 'Log Revision & Exit' : 'Save Revision'}
               </Button>
             </div>
           </DialogFooter>

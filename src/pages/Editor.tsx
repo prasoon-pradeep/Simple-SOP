@@ -30,7 +30,8 @@ export default function Editor() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('header');
   const [showRevisionModal, setShowRevisionModal] = useState(false);
-  const { isDirty, currentSop, setDirty, setCurrentSop, setRevisions, setTools, setItems, setStepsFull } = useSopStore();
+  const [modalMode, setModalMode] = useState<'exit' | 'log'>('exit');
+  const { isDirty, currentSop, editorOrigin, setDirty, setCurrentSop, setRevisions, setTools, setItems, setStepsFull } = useSopStore();
 
   useEffect(() => {
     if (id) {
@@ -58,6 +59,23 @@ export default function Editor() {
     }
   };
 
+  const handleBack = () => {
+    if (isDirty) {
+      setModalMode('exit');
+      setShowRevisionModal(true);
+    } else {
+      exitCleanly();
+    }
+  };
+
+  const exitCleanly = () => {
+    if (editorOrigin === 'viewer' && currentSop) {
+      navigate(`/sop/${currentSop.id}/view`);
+    } else {
+      navigate('/');
+    }
+  };
+
   const handleRevisionConfirm = async (data: any) => {
     try {
       await invoke('save_revision', {
@@ -70,9 +88,17 @@ export default function Editor() {
           approval_date: data.status === 'Approved' ? data.approvalDate : null,
         }
       });
+      
       setDirty(false);
       setShowRevisionModal(false);
-      navigate('/');
+      
+      if (modalMode === 'exit') {
+        exitCleanly();
+      } else {
+        // Just reload history if we are logging from the tab
+        const revs = await invoke<any[]>('get_revisions', { sopId: id });
+        setRevisions(revs);
+      }
     } catch (error) {
       console.error("Failed to save revision", error);
       alert("Error saving revision: " + error);
@@ -82,7 +108,7 @@ export default function Editor() {
   const handleRevisionDiscard = () => {
     setDirty(false);
     setShowRevisionModal(false);
-    navigate('/');
+    exitCleanly();
   };
 
   const handleRevisionCancel = () => {
@@ -98,14 +124,21 @@ export default function Editor() {
       case 'items': return <ItemsSection />;
       case 'procedure': return <ProcedureSection />;
       case 'definitions': return <DefinitionsSection />;
-      case 'approval': return <ApprovalSection onLogRevision={() => setShowRevisionModal(true)} />;
+      case 'approval': return (
+        <ApprovalSection 
+          onLogRevision={() => {
+            setModalMode('log');
+            setShowRevisionModal(true);
+          }} 
+        />
+      );
       default: return null;
     }
   };
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
-      <Header />
+      <Header onBack={handleBack} />
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-56 bg-surface border-r border-border-standard flex flex-col h-full shrink-0">
@@ -152,7 +185,10 @@ export default function Editor() {
             <div className="flex items-center space-x-3">
               {isDirty && (
                  <button 
-                   onClick={() => setShowRevisionModal(true)}
+                   onClick={() => {
+                     setModalMode('log');
+                     setShowRevisionModal(true);
+                   }}
                    className="flex items-center px-3 py-1.5 bg-brand text-white rounded text-sm font-medium hover:bg-brand-hover transition-colors"
                  >
                     <Save className="w-4 h-4 mr-2" />
@@ -173,6 +209,7 @@ export default function Editor() {
         onConfirm={handleRevisionConfirm}
         onDiscard={handleRevisionDiscard}
         onCancel={handleRevisionCancel}
+        mode={modalMode}
       />
     </div>
   );
