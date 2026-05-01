@@ -42,10 +42,17 @@ pub fn run() {
             commands::search_items,
             commands::clone_tool,
             commands::clone_item,
+            commands::get_steps_full,
             commands::save_step,
+            commands::delete_step,
+            commands::reorder_steps,
             commands::save_step_image,
+            commands::delete_step_image,
             commands::save_step_tool,
+            commands::delete_step_tool,
             commands::save_step_item,
+            commands::delete_step_item,
+            commands::duplicate_step,
             commands::save_image,
         ])
         .run(tauri::generate_context!())
