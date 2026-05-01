@@ -123,9 +123,9 @@ export default function Home() {
             )}
           </div>
           <div className="flex items-center space-x-3">
-             <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-border-strong">
+             <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-border-strong opacity-50 cursor-not-allowed" disabled>
                 <Upload className="w-3.5 h-3.5 mr-2" />
-                Import .sop
+                Import .sop (Soon)
              </Button>
              <Button onClick={handleCreateSop} size="sm" className="h-8 text-xs font-bold bg-brand hover:bg-brand-hover text-white">
                 <Plus className="w-3.5 h-3.5 mr-2" />

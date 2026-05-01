@@ -21,7 +21,8 @@ export function Sidebar() {
   const { 
     sops, 
     selectedProject, 
-    setSelectedProject
+    setSelectedProject,
+    setEditorOrigin
   } = useSopStore();
 
   // Extract unique projects from sops list
@@ -30,6 +31,7 @@ export function Sidebar() {
   const handleCreateSop = async () => {
     try {
       const id = await invoke<string>('create_sop', { title: 'Untitled SOP' });
+      setEditorOrigin('home');
       navigate(`/sop/${id}/edit`);
     } catch (error) {
       console.error("Failed to create SOP", error);
