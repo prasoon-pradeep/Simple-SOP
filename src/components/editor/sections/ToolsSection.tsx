@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Pencil, Trash2, Image as ImageIcon, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
@@ -204,13 +206,20 @@ export function ToolsSection() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="type" className="text-right">Type</Label>
-              <Input 
-                id="type" 
-                value={editingTool?.type || ''} 
-                onChange={e => setEditingTool(prev => prev ? { ...prev, type: e.target.value } : null)}
-                className="col-span-3" 
-                placeholder="e.g. Hand Tool"
-              />
+              <div className="col-span-3">
+                <Select 
+                  value={editingTool?.type || ''} 
+                  onValueChange={val => setEditingTool(prev => prev ? { ...prev, type: val } : null)}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Physical">Physical</SelectItem>
+                    <SelectItem value="Digital">Digital</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="model" className="text-right">Model #</Label>
@@ -231,6 +240,32 @@ export function ToolsSection() {
                 placeholder="e.g. 10-50 Nm"
               />
             </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="cal-req" className="text-right">Calibration</Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <Switch 
+                  id="cal-req" 
+                  checked={!!editingTool?.calibration_required} 
+                  onCheckedChange={checked => setEditingTool(prev => prev ? { ...prev, calibration_required: checked } : null)}
+                />
+                <span className="text-xs text-text-tertiary">Requires Calibration</span>
+              </div>
+            </div>
+
+            {editingTool?.calibration_required && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cal-date" className="text-right">Due Date</Label>
+                <Input 
+                  id="cal-date" 
+                  type="date"
+                  value={editingTool?.calibration_due_date || ''} 
+                  onChange={e => setEditingTool(prev => prev ? { ...prev, calibration_due_date: e.target.value } : null)}
+                  className="col-span-3" 
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Image</Label>
               <div className="col-span-3 flex flex-col space-y-2">

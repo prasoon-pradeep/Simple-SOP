@@ -479,11 +479,13 @@ pub async fn search_tools(query: String, state: tauri::State<'_, SqlitePool>) ->
 pub async fn search_items(query: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<Item>, String> {
     let items = sqlx::query_as::<sqlx::Sqlite, Item>(
         r#"
-        SELECT * FROM (
-            SELECT *, COALESCE(source_item_uuid, id) as dedup_id
+        SELECT * FROM items
+        WHERE id IN (
+            SELECT MIN(id)
             FROM items
             WHERE name LIKE ?
-        ) GROUP BY dedup_id
+            GROUP BY COALESCE(source_item_uuid, id)
+        )
         "#
     )
     .bind(format!("%{}%", query))
