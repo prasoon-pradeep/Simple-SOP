@@ -1,0 +1,266 @@
+import { useState, useEffect } from 'react';
+import { useSopStore } from '@/store';
+import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import { appDataDir, join } from '@tauri-apps/api/path';
+import { Tool } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus, Pencil, Trash2, Image as ImageIcon, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
+import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
+
+export function ToolsSection() {
+  const { currentSop, tools, setTools } = useSopStore();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [editingTool, setEditingTool] = useState<Partial<Tool> | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (currentSop) {
+      loadTools();
+    }
+  }, [currentSop]);
+
+  useEffect(() => {
+    loadImages();
+  }, [tools]);
+
+  const loadTools = async () => {
+    if (!currentSop) return;
+    try {
+      const data = await invoke<Tool[]>('get_tools', { sopId: currentSop.id });
+      setTools(data);
+    } catch (error) {
+      console.error("Failed to load tools", error);
+    }
+  };
+
+  const loadImages = async () => {
+    const urls: Record<string, string> = {};
+    const baseDir = await appDataDir();
+    
+    for (const tool of tools) {
+      if (tool.image_uuid) {
+        const filePath = await join(baseDir, 'images', tool.image_uuid, 'annotated.png');
+        urls[tool.image_uuid] = convertFileSrc(filePath);
+      }
+    }
+    setImageUrls(urls);
+  };
+
+  const handleAdd = () => {
+    setEditingTool({
+      id: crypto.randomUUID(),
+      sop_id: currentSop?.id,
+      name: '',
+      type: '',
+      model_part_no: '',
+      specification: '',
+      calibration_required: false,
+      calibration_due_date: null,
+      image_uuid: null
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (tool: Tool) => {
+    setEditingTool({ ...tool });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this tool?")) {
+      try {
+        await invoke('delete_tool', { id });
+        loadTools();
+      } catch (error) {
+        console.error("Failed to delete tool", error);
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editingTool || !editingTool.name) return;
+    try {
+      await invoke('save_tool', { payload: editingTool });
+      setIsDialogOpen(false);
+      loadTools();
+    } catch (error) {
+      console.error("Failed to save tool", error);
+    }
+  };
+
+  const handleImageSaved = (uuid: string) => {
+    setEditingTool(prev => prev ? { ...prev, image_uuid: uuid } : null);
+  };
+
+  const handleCloneTool = async (toolId: string) => {
+    if (!currentSop) return;
+    try {
+      await invoke('clone_tool', { toolId, targetSopId: currentSop.id });
+      loadTools();
+      setIsSearchOpen(false);
+    } catch (error) {
+      console.error("Failed to clone tool", error);
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-text-primary">Tools & Equipment</h3>
+          <p className="text-sm text-text-tertiary">Manage all tools required for this procedure.</p>
+        </div>
+        <div className="flex space-x-3">
+          <Button variant="outline" size="sm" className="flex items-center" onClick={() => setIsSearchOpen(true)}>
+             <Search className="w-4 h-4 mr-2" />
+             Search other SOPs
+          </Button>
+          <Button onClick={handleAdd} size="sm" className="flex items-center">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Tool
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-surface border border-border-standard rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader className="bg-secondary">
+            <TableRow>
+              <TableHead className="w-[80px]">Image</TableHead>
+              <TableHead>Tool Name</TableHead>
+              <TableHead>Type / Model</TableHead>
+              <TableHead>Specification</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tools.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-text-tertiary italic">
+                  No tools added yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              tools.map((tool) => (
+                <TableRow key={tool.id}>
+                  <TableCell>
+                    {tool.image_uuid && imageUrls[tool.image_uuid] ? (
+                      <img 
+                        src={imageUrls[tool.image_uuid]} 
+                        alt={tool.name} 
+                        className="w-[108px] h-[60.75px] object-cover rounded border border-border-subtle"
+                      />
+                    ) : (
+                      <div className="w-[108px] h-[60.75px] bg-background border border-dashed border-border-standard rounded flex items-center justify-center text-text-quaternary">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium text-text-primary">{tool.name}</TableCell>
+                  <TableCell className="text-text-secondary">
+                    {tool.type} {tool.model_part_no ? `/ ${tool.model_part_no}` : ''}
+                  </TableCell>
+                  <TableCell className="text-text-secondary italic">{tool.specification || '—'}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(tool)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(tool.id)} className="text-status-red hover:text-status-red hover:bg-status-red-bg">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingTool?.name ? 'Edit Tool' : 'Add New Tool'}</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">Name</Label>
+              <Input 
+                id="name" 
+                value={editingTool?.name || ''} 
+                onChange={e => setEditingTool(prev => prev ? { ...prev, name: e.target.value } : null)}
+                className="col-span-3" 
+                placeholder="e.g. Torque Wrench"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">Type</Label>
+              <Input 
+                id="type" 
+                value={editingTool?.type || ''} 
+                onChange={e => setEditingTool(prev => prev ? { ...prev, type: e.target.value } : null)}
+                className="col-span-3" 
+                placeholder="e.g. Hand Tool"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="model" className="text-right">Model #</Label>
+              <Input 
+                id="model" 
+                value={editingTool?.model_part_no || ''} 
+                onChange={e => setEditingTool(prev => prev ? { ...prev, model_part_no: e.target.value } : null)}
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="spec" className="text-right">Spec</Label>
+              <Input 
+                id="spec" 
+                value={editingTool?.specification || ''} 
+                onChange={e => setEditingTool(prev => prev ? { ...prev, specification: e.target.value } : null)}
+                className="col-span-3" 
+                placeholder="e.g. 10-50 Nm"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label className="text-right pt-2">Image</Label>
+              <div className="col-span-3 flex flex-col space-y-2">
+                 <ImageUploadArea onImageSaved={handleImageSaved}>
+                   {editingTool?.image_uuid && imageUrls[editingTool.image_uuid] ? (
+                     <img 
+                       src={imageUrls[editingTool.image_uuid]} 
+                       alt="Preview" 
+                       className="w-full h-full object-cover rounded"
+                     />
+                   ) : null}
+                 </ImageUploadArea>
+                 <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-tight">Click or Paste to change image</p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={!editingTool?.name}>Save Tool</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <CrossSopSearch 
+        open={isSearchOpen} 
+        onOpenChange={setIsSearchOpen} 
+        type="tool" 
+        onClone={handleCloneTool}
+      />
+    </div>
+  );
+}

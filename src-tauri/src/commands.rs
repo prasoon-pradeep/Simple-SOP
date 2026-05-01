@@ -303,19 +303,330 @@ pub async fn save_revision(payload: CreateRevisionPayload, state: tauri::State<'
     Ok(())
 }
 
-// Stubs for remaining tables
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct Tool {
+    pub id: String,
+    pub sop_id: String,
+    pub name: String,
+    pub r#type: Option<String>,
+    pub model_part_no: Option<String>,
+    pub specification: Option<String>,
+    pub image_uuid: Option<String>,
+    pub calibration_required: bool,
+    pub calibration_due_date: Option<String>,
+    pub source_tool_uuid: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct Item {
+    pub id: String,
+    pub sop_id: String,
+    pub name: String,
+    pub part_no: Option<String>,
+    pub description: Option<String>,
+    pub image_uuid: Option<String>,
+    pub unit: Option<String>,
+    pub source_item_uuid: Option<String>,
+}
+
+// --------------------------------------------------------
+// Commands
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn get_tools(sop_id: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<Tool>, String> {
+    let tools = sqlx::query_as::<sqlx::Sqlite, Tool>(
+        r#"
+        SELECT id, sop_id, name, type, model_part_no, specification, image_uuid,
+               CASE WHEN calibration_required = 1 THEN 1 ELSE 0 END as calibration_required,
+               calibration_due_date, source_tool_uuid
+        FROM tools
+        WHERE sop_id = ?
+        "#
+    )
+    .bind(sop_id)
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(tools)
+}
+
+#[tauri::command]
+pub async fn save_tool(payload: Tool, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    let cal_req = if payload.calibration_required { 1 } else { 0 };
+
+    sqlx::query(
+        r#"
+        INSERT INTO tools (
+            id, sop_id, name, type, model_part_no, specification, image_uuid,
+            calibration_required, calibration_due_date, source_tool_uuid
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name,
+            type = excluded.type,
+            model_part_no = excluded.model_part_no,
+            specification = excluded.specification,
+            image_uuid = excluded.image_uuid,
+            calibration_required = excluded.calibration_required,
+            calibration_due_date = excluded.calibration_due_date
+        "#
+    )
+    .bind(&payload.id)
+    .bind(&payload.sop_id)
+    .bind(&payload.name)
+    .bind(&payload.r#type)
+    .bind(&payload.model_part_no)
+    .bind(&payload.specification)
+    .bind(&payload.image_uuid)
+    .bind(cal_req)
+    .bind(&payload.calibration_due_date)
+    .bind(&payload.source_tool_uuid)
+    .execute(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_tool(id: String, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    sqlx::query("DELETE FROM tools WHERE id = ?")
+        .bind(id)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_items(sop_id: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<Item>, String> {
+    let items = sqlx::query_as::<sqlx::Sqlite, Item>(
+        r#"
+        SELECT id, sop_id, name, part_no, description, image_uuid, unit, source_item_uuid
+        FROM items
+        WHERE sop_id = ?
+        "#
+    )
+    .bind(sop_id)
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub async fn save_item(payload: Item, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    sqlx::query(
+        r#"
+        INSERT INTO items (
+            id, sop_id, name, part_no, description, image_uuid, unit, source_item_uuid
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name,
+            part_no = excluded.part_no,
+            description = excluded.description,
+            image_uuid = excluded.image_uuid,
+            unit = excluded.unit
+        "#
+    )
+    .bind(&payload.id)
+    .bind(&payload.sop_id)
+    .bind(&payload.name)
+    .bind(&payload.part_no)
+    .bind(&payload.description)
+    .bind(&payload.image_uuid)
+    .bind(&payload.unit)
+    .bind(&payload.source_item_uuid)
+    .execute(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_item(id: String, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    sqlx::query("DELETE FROM items WHERE id = ?")
+        .bind(id)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn search_tools(query: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<Tool>, String> {
+    let tools = sqlx::query_as::<sqlx::Sqlite, Tool>(
+        r#"
+        SELECT * FROM (
+            SELECT *, COALESCE(source_tool_uuid, id) as dedup_id
+            FROM tools
+            WHERE name LIKE ?
+        ) GROUP BY dedup_id
+        "#
+    )
+    .bind(format!("%{}%", query))
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(tools)
+}
+
+#[tauri::command]
+pub async fn search_items(query: String, state: tauri::State<'_, SqlitePool>) -> Result<Vec<Item>, String> {
+    let items = sqlx::query_as::<sqlx::Sqlite, Item>(
+        r#"
+        SELECT * FROM (
+            SELECT *, COALESCE(source_item_uuid, id) as dedup_id
+            FROM items
+            WHERE name LIKE ?
+        ) GROUP BY dedup_id
+        "#
+    )
+    .bind(format!("%{}%", query))
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub async fn clone_tool(
+    tool_id: String, 
+    target_sop_id: String, 
+    state: tauri::State<'_, SqlitePool>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let pool = state.inner();
+    
+    // 1. Get original tool
+    let original = sqlx::query_as::<sqlx::Sqlite, Tool>("SELECT * FROM tools WHERE id = ?")
+        .bind(&tool_id)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+    let new_id = Uuid::new_v4().to_string();
+    let source_uuid = original.source_tool_uuid.unwrap_or(original.id);
+    
+    // 2. Clone images if present
+    let mut new_image_uuid = None;
+    if let Some(img_uuid) = original.image_uuid {
+        let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+        let src_dir = app_dir.join("images").join(&img_uuid);
+        let dst_uuid = Uuid::new_v4().to_string();
+        let dst_dir = app_dir.join("images").join(&dst_uuid);
+        
+        if src_dir.exists() {
+            std::fs::create_dir_all(&dst_dir).map_err(|e| e.to_string())?;
+            for entry in std::fs::read_dir(src_dir).map_err(|e| e.to_string())? {
+                let entry = entry.map_err(|e| e.to_string())?;
+                let path = entry.path();
+                if path.is_file() {
+                    let file_name = path.file_name().unwrap();
+                    std::fs::copy(&path, dst_dir.join(file_name)).map_err(|e| e.to_string())?;
+                }
+            }
+            new_image_uuid = Some(dst_uuid);
+        }
+    }
+    
+    // 3. Insert new tool
+    sqlx::query(
+        r#"
+        INSERT INTO tools (
+            id, sop_id, name, type, model_part_no, specification, image_uuid,
+            calibration_required, calibration_due_date, source_tool_uuid
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        "#
+    )
+    .bind(new_id)
+    .bind(target_sop_id)
+    .bind(original.name)
+    .bind(original.r#type)
+    .bind(original.model_part_no)
+    .bind(original.specification)
+    .bind(new_image_uuid)
+    .bind(if original.calibration_required { 1 } else { 0 })
+    .bind(original.calibration_due_date)
+    .bind(source_uuid)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn clone_item(
+    item_id: String, 
+    target_sop_id: String, 
+    state: tauri::State<'_, SqlitePool>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let pool = state.inner();
+    
+    // 1. Get original item
+    let original = sqlx::query_as::<sqlx::Sqlite, Item>("SELECT * FROM items WHERE id = ?")
+        .bind(&item_id)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+    let new_id = Uuid::new_v4().to_string();
+    let source_uuid = original.source_item_uuid.unwrap_or(original.id);
+    
+    // 2. Clone images if present
+    let mut new_image_uuid = None;
+    if let Some(img_uuid) = original.image_uuid {
+        let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+        let src_dir = app_dir.join("images").join(&img_uuid);
+        let dst_uuid = Uuid::new_v4().to_string();
+        let dst_dir = app_dir.join("images").join(&dst_uuid);
+        
+        if src_dir.exists() {
+            std::fs::create_dir_all(&dst_dir).map_err(|e| e.to_string())?;
+            for entry in std::fs::read_dir(src_dir).map_err(|e| e.to_string())? {
+                let entry = entry.map_err(|e| e.to_string())?;
+                let path = entry.path();
+                if path.is_file() {
+                    let file_name = path.file_name().unwrap();
+                    std::fs::copy(&path, dst_dir.join(file_name)).map_err(|e| e.to_string())?;
+                }
+            }
+            new_image_uuid = Some(dst_uuid);
+        }
+    }
+    
+    // 3. Insert new item
+    sqlx::query(
+        r#"
+        INSERT INTO items (
+            id, sop_id, name, part_no, description, image_uuid, unit, source_item_uuid
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        "#
+    )
+    .bind(new_id)
+    .bind(target_sop_id)
+    .bind(original.name)
+    .bind(original.part_no)
+    .bind(original.description)
+    .bind(new_image_uuid)
+    .bind(original.unit)
+    .bind(source_uuid)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn save_definition(_payload: serde_json::Value, _state: tauri::State<'_, sqlx::SqlitePool>) -> Result<(), String> {
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn save_tool(_payload: serde_json::Value, _state: tauri::State<'_, sqlx::SqlitePool>) -> Result<(), String> {
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn save_item(_payload: serde_json::Value, _state: tauri::State<'_, sqlx::SqlitePool>) -> Result<(), String> {
     Ok(())
 }
 

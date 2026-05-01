@@ -5,6 +5,8 @@ import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, 
 import { HeaderSection } from '@/components/editor/sections/HeaderSection';
 import { ScopeSection } from '@/components/editor/sections/ScopeSection';
 import { SafetySection } from '@/components/editor/sections/SafetySection';
+import { ToolsSection } from '@/components/editor/sections/ToolsSection';
+import { ItemsSection } from '@/components/editor/sections/ItemsSection';
 import { ApprovalSection } from '@/components/editor/sections/ApprovalSection';
 import { RevisionModal } from '@/components/editor/RevisionModal';
 import { Header } from '@/components/layout/Header';
@@ -50,8 +52,8 @@ export default function Editor() {
       case 'header': return <HeaderSection />;
       case 'scope': return <ScopeSection />;
       case 'safety': return <SafetySection />;
-      case 'tools': return <div className="p-6">Tools Placeholder</div>;
-      case 'items': return <div className="p-6">Items Placeholder</div>;
+      case 'tools': return <ToolsSection />;
+      case 'items': return <ItemsSection />;
       case 'procedure': return <div className="p-6">Procedure Placeholder</div>;
       case 'definitions': return <div className="p-6">Definitions Placeholder</div>;
       case 'approval': return <ApprovalSection />;
