@@ -24,6 +24,8 @@ interface SopState {
   
   setRevisions: (revisions: Revision[]) => void;
   setDefinitions: (definitions: Definition[]) => void;
+  updateDefinitionField: (id: string, field: keyof Definition, value: any) => void;
+  
   setTools: (tools: Tool[]) => void;
   setItems: (items: Item[]) => void;
   setStepsFull: (stepsFull: StepFull[]) => void;
@@ -36,6 +38,7 @@ interface SopState {
 
 let saveTimeout: ReturnType<typeof setTimeout>;
 let stepSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
+let defSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 export const useSopStore = create<SopState>((set, get) => ({
   activeSopId: null,
@@ -87,6 +90,35 @@ export const useSopStore = create<SopState>((set, get) => ({
 
   setRevisions: (revisions) => set({ revisions }),
   setDefinitions: (definitions) => set({ definitions }),
+  
+  updateDefinitionField: (id, field, value) => {
+    set((state) => ({
+      definitions: state.definitions.map(d => 
+        d.id === id ? { ...d, [field]: value } : d
+      ),
+      isDirty: true,
+      isSaving: true,
+    }));
+
+    clearTimeout(defSaveTimeouts[id]);
+    defSaveTimeouts[id] = setTimeout(async () => {
+      const def = get().definitions.find(d => d.id === id);
+      if (def) {
+        try {
+          await invoke('save_definition', { payload: def });
+          set({ 
+            isDirty: false, 
+            isSaving: false, 
+            lastSavedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+          });
+        } catch (error) {
+          console.error("Failed to auto-save Definition:", error);
+          set({ isSaving: false });
+        }
+      }
+    }, 500);
+  },
+
   setTools: (tools) => set({ tools }),
   setItems: (items) => set({ items }),
   setStepsFull: (stepsFull) => set({ stepsFull }),

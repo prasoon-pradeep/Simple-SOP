@@ -9,6 +9,7 @@ import { SafetySection } from '@/components/editor/sections/SafetySection';
 import { ToolsSection } from '@/components/editor/sections/ToolsSection';
 import { ItemsSection } from '@/components/editor/sections/ItemsSection';
 import { ProcedureSection } from '@/components/editor/sections/ProcedureSection';
+import { DefinitionsSection } from '@/components/editor/sections/DefinitionsSection';
 import { ApprovalSection } from '@/components/editor/sections/ApprovalSection';
 import { RevisionModal } from '@/components/editor/RevisionModal';
 import { Header } from '@/components/layout/Header';
@@ -96,7 +97,7 @@ export default function Editor() {
       case 'tools': return <ToolsSection />;
       case 'items': return <ItemsSection />;
       case 'procedure': return <ProcedureSection />;
-      case 'definitions': return <div className="p-6">Definitions Placeholder</div>;
+      case 'definitions': return <DefinitionsSection />;
       case 'approval': return <ApprovalSection onLogRevision={() => setShowRevisionModal(true)} />;
       default: return null;
     }
