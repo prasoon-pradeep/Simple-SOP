@@ -99,3 +99,10 @@ export interface StepItem {
   quantity: number | null;
   unit: string | null;
 }
+
+export interface StepFull {
+  step: Step;
+  images: StepImage[];
+  tools: StepTool[];
+  items: StepItem[];
+}

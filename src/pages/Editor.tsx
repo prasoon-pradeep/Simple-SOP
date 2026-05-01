@@ -7,6 +7,7 @@ import { ScopeSection } from '@/components/editor/sections/ScopeSection';
 import { SafetySection } from '@/components/editor/sections/SafetySection';
 import { ToolsSection } from '@/components/editor/sections/ToolsSection';
 import { ItemsSection } from '@/components/editor/sections/ItemsSection';
+import { ProcedureSection } from '@/components/editor/sections/ProcedureSection';
 import { ApprovalSection } from '@/components/editor/sections/ApprovalSection';
 import { RevisionModal } from '@/components/editor/RevisionModal';
 import { Header } from '@/components/layout/Header';
@@ -54,7 +55,7 @@ export default function Editor() {
       case 'safety': return <SafetySection />;
       case 'tools': return <ToolsSection />;
       case 'items': return <ItemsSection />;
-      case 'procedure': return <div className="p-6">Procedure Placeholder</div>;
+      case 'procedure': return <ProcedureSection />;
       case 'definitions': return <div className="p-6">Definitions Placeholder</div>;
       case 'approval': return <ApprovalSection />;
       default: return null;

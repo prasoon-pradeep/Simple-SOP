@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { SOP, Revision, Definition, Tool, Item, Step, StepImage, StepTool, StepItem } from './types';
+import { SOP, Revision, Definition, Tool, Item, Step, StepFull } from './types';
 
 interface SopState {
   activeSopId: string | null;
@@ -10,10 +10,7 @@ interface SopState {
   definitions: Definition[];
   tools: Tool[];
   items: Item[];
-  steps: Step[];
-  stepImages: StepImage[];
-  stepTools: StepTool[];
-  stepItems: StepItem[];
+  stepsFull: StepFull[];
 
   isDirty: boolean;
   isSaving: boolean;
@@ -29,15 +26,14 @@ interface SopState {
   setDefinitions: (definitions: Definition[]) => void;
   setTools: (tools: Tool[]) => void;
   setItems: (items: Item[]) => void;
-  setSteps: (steps: Step[]) => void;
-  setStepImages: (stepImages: StepImage[]) => void;
-  setStepTools: (stepTools: StepTool[]) => void;
-  setStepItems: (stepItems: StepItem[]) => void;
+  setStepsFull: (stepsFull: StepFull[]) => void;
+  updateStepField: (stepId: string, field: keyof Step, value: any) => void;
 
   setDirty: (dirty: boolean) => void;
 }
 
 let saveTimeout: ReturnType<typeof setTimeout>;
+let stepSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 export const useSopStore = create<SopState>((set, get) => ({
   activeSopId: null,
@@ -47,10 +43,7 @@ export const useSopStore = create<SopState>((set, get) => ({
   definitions: [],
   tools: [],
   items: [],
-  steps: [],
-  stepImages: [],
-  stepTools: [],
-  stepItems: [],
+  stepsFull: [],
 
   isDirty: false,
   isSaving: false,
@@ -94,10 +87,35 @@ export const useSopStore = create<SopState>((set, get) => ({
   setDefinitions: (definitions) => set({ definitions }),
   setTools: (tools) => set({ tools }),
   setItems: (items) => set({ items }),
-  setSteps: (steps) => set({ steps }),
-  setStepImages: (stepImages) => set({ stepImages }),
-  setStepTools: (stepTools) => set({ stepTools }),
-  setStepItems: (stepItems) => set({ stepItems }),
+  setStepsFull: (stepsFull) => set({ stepsFull }),
+
+  updateStepField: (stepId, field, value) => {
+    set((state) => ({
+      stepsFull: state.stepsFull.map(s => 
+        s.step.id === stepId ? { ...s, step: { ...s.step, [field]: value } } : s
+      ),
+      isDirty: true,
+      isSaving: true,
+    }));
+
+    clearTimeout(stepSaveTimeouts[stepId]);
+    stepSaveTimeouts[stepId] = setTimeout(async () => {
+      const stepFull = get().stepsFull.find(s => s.step.id === stepId);
+      if (stepFull) {
+        try {
+          await invoke('save_step', { payload: stepFull.step });
+          set({ 
+            isDirty: false, 
+            isSaving: false, 
+            lastSavedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+          });
+        } catch (error) {
+          console.error("Failed to auto-save Step:", error);
+          set({ isSaving: false });
+        }
+      }
+    }, 500);
+  },
 
   setDirty: (dirty) => set({ isDirty: dirty })
 }));
