@@ -778,11 +778,11 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] sops.approval_status auto-mirror from latest revision on every revision write
 
 ### PHASE 3 — Image Handling
-- [ ] Image upload component (file input + paste from clipboard)
-- [ ] Crop window component: ratio selector (16:9 / 4:3), crop overlay, confirm
-- [ ] Annotation window component (Konva.js): arrow, circle, text label, undo, skip
-- [ ] Save both original + annotated to app images directory via Tauri command
-- [ ] UUID generation per image (Rust side)
+- [x] Image upload component (file input + paste from clipboard)
+- [x] Crop window component: ratio selector (16:9 / 4:3), crop overlay, confirm
+- [x] Annotation window component (Konva.js): arrow, circle, text label, undo, skip
+- [x] Save both original + annotated to app images directory via Tauri command
+- [x] UUID generation per image (Rust side)
 
 ### PHASE 4 — Tools & Items Libraries
 - [ ] Tools library table UI: add/edit/delete rows, all fields, image upload

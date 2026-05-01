@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use sqlx::{SqlitePool, Row};
 use uuid::Uuid;
+use tauri::Manager;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 
 #[tauri::command]
 pub fn generate_sop_id() -> String {
@@ -348,4 +351,46 @@ impl UnwrapOr for Result<i64, sqlx::Error> {
             Err(_) => default,
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SaveImagePayload {
+    pub original_base64: String,
+    pub annotated_base64: String,
+    pub ext: String,
+}
+
+#[tauri::command]
+pub async fn save_image(
+    payload: SaveImagePayload,
+    app_handle: tauri::AppHandle,
+) -> Result<String, String> {
+    let uuid = Uuid::new_v4().to_string();
+    let app_dir = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let image_dir = app_dir.join("images").join(&uuid);
+    
+    std::fs::create_dir_all(&image_dir).map_err(|e: std::io::Error| e.to_string())?;
+    
+    let original_path = image_dir.join(format!("original.{}", payload.ext));
+    let annotated_path = image_dir.join("annotated.png");
+    
+    let original_b64 = if let Some(idx) = payload.original_base64.find(',') {
+        &payload.original_base64[idx + 1..]
+    } else {
+        &payload.original_base64
+    };
+    
+    let annotated_b64 = if let Some(idx) = payload.annotated_base64.find(',') {
+        &payload.annotated_base64[idx + 1..]
+    } else {
+        &payload.annotated_base64
+    };
+    
+    let original_bytes = BASE64_STANDARD.decode(original_b64).map_err(|e: base64::DecodeError| e.to_string())?;
+    let annotated_bytes = BASE64_STANDARD.decode(annotated_b64).map_err(|e: base64::DecodeError| e.to_string())?;
+    
+    std::fs::write(&original_path, original_bytes).map_err(|e: std::io::Error| e.to_string())?;
+    std::fs::write(&annotated_path, annotated_bytes).map_err(|e: std::io::Error| e.to_string())?;
+    
+    Ok(uuid)
 }

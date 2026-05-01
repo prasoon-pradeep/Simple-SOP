@@ -38,6 +38,7 @@ pub fn run() {
             commands::save_step_image,
             commands::save_step_tool,
             commands::save_step_item,
+            commands::save_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
