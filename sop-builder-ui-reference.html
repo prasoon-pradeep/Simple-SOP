@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  SOP BUILDER — UI REFERENCE FILE
+  ============================================================
+  PURPOSE:
+    This file is the canonical visual and structural reference
+    for building the SOP Builder application UI. It is NOT the
+    app itself — it is a static mockup showing every screen,
+    state, and component the agent must implement in React +
+    Tailwind inside Tauri.
+
+  HOW TO USE:
+    - Open in a browser to see the live mockup
+    - Read the HTML comments to understand what each block maps to
+    - All CSS variables, class names, and layout rules here are
+      the source of truth for the design system
+    - The JS at the bottom shows interaction behaviour only —
+      the real app uses React state + Zustand, not DOM manipulation
+
+  SPEC REFERENCE: SOP_BUILDER_SPEC.md — Section 18 (UI Guide)
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOP Builder — UI Reference</title>
+
+  <!--
+    FONTS
+    Primary: DM Sans — all UI text
+    Mono: DM Mono — SOP IDs, part numbers, version labels
+    Never use Inter, Roboto, or system-ui as primary font.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+       All colours, spacing, and typography use these CSS variables.
+       In Tailwind, extend the theme config to expose these as
+       custom utilities (e.g. bg-panel, text-tertiary, etc.)
+       ============================================================ */
+    :root {
+      /* Backgrounds — from outermost to innermost surface */
+      --bg-app:          #f0ede8;   /* outer shell, window chrome */
+      --bg-panel:        #faf9f7;   /* header, sidebar, page sub-headers */
+      --bg-surface:      #ffffff;   /* cards, inputs, table rows */
+      --bg-secondary:    #f0ede8;   /* step card headers, read-only inputs, tags bg */
+      --bg-hover:        #ebe8e2;   /* hover state on nav items, buttons */
+
+      /* Text — 4 levels of emphasis */
+      --text-primary:    #1a1917;   /* headings, strong labels */
+      --text-secondary:  #3d3b37;   /* body text, table cells */
+      --text-tertiary:   #7a756c;   /* form labels, nav items */
+      --text-quaternary: #a8a39a;   /* muted: section labels, dates, placeholders */
+
+      /* Brand — primary action colour */
+      --brand:           #c84b2f;   /* buttons, active nav, step bubbles, focus rings */
+      --brand-light:     #fdf1ee;   /* active nav background, library tag background */
+      --brand-hover:     #b33f25;   /* primary button hover */
+
+      /* Status colours */
+      --status-green:    #1e7e4a;
+      --status-green-bg: #edf7f1;
+      --status-red:      #c0392b;
+      --status-red-bg:   #fdf0ef;
+      --status-amber:    #b45309;
+      --status-amber-bg: #fef9ec;
+
+      /* Borders — 3 levels */
+      --border-subtle:   rgba(26,25,23,0.07);   /* dividers, card edges */
+      --border-standard: rgba(26,25,23,0.12);   /* input borders, sidebar border */
+      --border-strong:   rgba(26,25,23,0.20);   /* toggle track, emphasis borders */
+
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(26,25,23,0.06), 0 1px 2px rgba(26,25,23,0.04);
+
+      /* Fonts */
+      --font-primary: 'DM Sans', system-ui, sans-serif;
+      --font-mono:    'DM Mono', ui-monospace, monospace;
+
+      /* Layout */
+      --nav-width:     224px;   /* sidebar fixed width — never changes */
+      --header-height:  48px;   /* top header fixed height */
+      --radius:          6px;   /* standard border-radius for inputs, buttons, nav items */
+    }
+
+    /* ============================================================
+       RESET + BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }   /* full-height, no page scroll — only internal scroll */
+    body {
+      font-family: var(--font-primary);
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-size: 13.5px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============================================================
+       HEADER
+       Fixed 48px bar. Three zones: brand (left) | breadcrumb (center) | autosave (right)
+       NO action buttons in header. All actions are in sidebar or page content.
+       ============================================================ */
+    .app-header {
+      height: var(--header-height);
+      flex-shrink: 0;                          /* never shrinks */
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-standard);
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+    }
+
+    /* Brand zone — exactly matches sidebar width */
+    .header-brand {
+      width: var(--nav-width);
+      flex-shrink: 0;
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 9px;
+      border-right: 1px solid var(--border-subtle);
+    }
+    .app-logo {
+      width: 26px; height: 26px;
+      background: var(--brand);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .app-logo svg { color: #fff; }
+
+    /* App name: "SOP" bold + "Builder" light */
+    .app-name { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.2px; }
+    .app-name span { font-weight: 400; color: var(--text-quaternary); }
+
+    /* Breadcrumb zone — fills remaining width */
+    .header-center { flex: 1; display: flex; align-items: center; padding: 0 20px; }
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-quaternary); }
+    .breadcrumb-link { cursor: pointer; transition: color 0.1s; }
+    .breadcrumb-link:hover { color: var(--text-secondary); }
+    .breadcrumb-sep { opacity: 0.4; font-size: 11px; }
+    .breadcrumb-current { color: var(--text-secondary); font-weight: 500; }
+
+    /* Autosave zone — right side, only visible in editor */
+    .header-right { display: flex; align-items: center; padding: 0 16px; gap: 8px; flex-shrink: 0; }
+
+    /*
+      AUTOSAVE PILL
+      Show: when user is in editor (any section)
+      Hide: when user is on home screen
+      Text: "All changes saved" — always. No "saving..." state needed in mockup.
+    */
+    .autosave-pill {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11.5px; color: var(--status-green);
+      background: var(--status-green-bg);
+      padding: 3px 9px; border-radius: 99px;
+    }
+    .autosave-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--status-green); }
+
+    /* ============================================================
+       APP LAYOUT — below header
+       Sidebar (fixed) + Main content (flex)
+       ============================================================ */
+    .app-layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ============================================================
+       SIDEBAR
+       Two modes: Mode A (app nav) and Mode B (editor nav).
+       Only one mode visible at a time. Toggle via .hidden class.
+       Width is always 224px — never collapses.
+       ============================================================ */
+    .app-nav {
+      width: var(--nav-width);
+      flex-shrink: 0;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-standard);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* Nav mode wrapper — controls which mode is shown */
+    .nav-mode { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .nav-mode.hidden { display: none; }   /* toggle this to switch modes */
+
+    /* Scrollable area inside sidebar */
+    .nav-scroll { flex: 1; overflow-y: auto; padding: 10px 0 8px; }
+    .nav-scroll::-webkit-scrollbar { width: 3px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: var(--border-standard); border-radius: 2px; }
+
+    /*
+      SECTION LABELS — uppercase muted headers above groups of nav items
+      e.g. "WORKSPACE", "PROJECTS"
+    */
+    .nav-section-label {
+      font-size: 10.5px; font-weight: 600;
+      color: var(--text-quaternary);
+      letter-spacing: 0.6px; text-transform: uppercase;
+      padding: 0 14px; margin: 12px 0 3px;
+    }
+    .nav-section-label:first-child { margin-top: 2px; }
+
+    /*
+      NAV ITEM — clickable row in app nav (Mode A)
+      States:
+        default  → muted text, no bg
+        :hover   → --bg-hover bg, slightly darker text
+        .active  → --brand-light bg, --brand text, font-weight 500
+    */
+    .nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px; margin: 1px 6px;
+      border-radius: var(--radius);
+      cursor: pointer; font-size: 13px; color: var(--text-tertiary);
+      transition: background 0.1s, color 0.1s; user-select: none;
+    }
+    .nav-item svg { flex-shrink: 0; color: var(--text-quaternary); transition: color 0.1s; }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text-secondary); }
+    .nav-item:hover svg { color: var(--text-tertiary); }
+    .nav-item.active { background: var(--brand-light); color: var(--brand); font-weight: 500; }
+    .nav-item.active svg { color: var(--brand); }
+
+    /* Count badge on nav items (e.g. "12" next to All SOPs) */
+    .nav-badge {
+      margin-left: auto;
+      background: var(--bg-secondary); border: 1px solid var(--border-standard);
+      color: var(--text-tertiary); font-size: 10.5px; font-weight: 600;
+      padding: 1px 6px; border-radius: 99px;
+    }
+
+    .nav-divider { height: 1px; background: var(--border-subtle); margin: 8px 12px; }
+
+    /*
+      NAV FOOTER — pinned to bottom of sidebar (both modes)
+      Contains: Settings link | DB status | version string
+    */
+    .nav-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 8px 8px 6px;
+      display: flex; flex-direction: column; gap: 1px; flex-shrink: 0;
+    }
+    .nav-footer-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 8px; border-radius: var(--radius);
+      font-size: 12px; color: var(--text-quaternary);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .nav-footer-item:hover { background: var(--bg-hover); color: var(--text-tertiary); }
+    .nav-footer-item.active { background: var(--brand-light); color: var(--brand); font-weight: 500; }
+    .nav-footer-item.active svg { color: var(--brand); }
+
+    /* DB health indicator — green dot */
+    .db-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--status-green);
+      box-shadow: 0 0 0 2px rgba(30,126,74,0.15);
+      flex-shrink: 0;
+    }
+    /* db-dot.error → background: var(--status-red) — for failed integrity check */
+
+    .nav-version { padding: 3px 8px; font-size: 10.5px; font-family: var(--font-mono); color: var(--text-quaternary); opacity: 0.6; }
+
+    /* ============================================================
+       SIDEBAR MODE B — EDITOR NAV
+       Shown when a SOP is open in the editor.
+       ============================================================ */
+
+    /* Header strip inside editor nav — shows back link + SOP identity */
+    .editor-nav-header {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+    }
+
+    /*
+      BACK LINK — "← All SOPs"
+      Clicking triggers exit warning modal if dirty flag is true.
+      If clean, navigates directly to home and switches sidebar to Mode A.
+    */
+    .editor-nav-back {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-quaternary);
+      cursor: pointer; padding: 4px 6px; margin: 0 -6px 8px;
+      border-radius: var(--radius); transition: background 0.1s, color 0.1s;
+    }
+    .editor-nav-back:hover { background: var(--bg-hover); color: var(--text-secondary); }
+
+    /* SOP ID in monospace — always rendered in DM Mono */
+    .editor-nav-sopid { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-primary); font-weight: 500; }
+
+    /* SOP title — truncated with ellipsis if too long */
+    .editor-nav-title { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /*
+      SECTION NAV ITEM — the 8 section tabs in editor Mode B
+      States:
+        default  → muted text, grey number bubble
+        :hover   → --bg-hover
+        .active  → --brand-light bg, --brand text, red number bubble
+        .done    → green checkmark bubble (section has content)
+    */
+    .section-nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px; margin: 1px 6px;
+      border-radius: var(--radius);
+      cursor: pointer; font-size: 13px; color: var(--text-tertiary);
+      transition: background 0.1s, color 0.1s; user-select: none;
+    }
+    .section-nav-item:hover { background: var(--bg-hover); color: var(--text-secondary); }
+    .section-nav-item.active { background: var(--brand-light); color: var(--brand); font-weight: 500; }
+
+    /* Section number bubble — 18×18px circle */
+    .section-nav-num {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--border-subtle);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600; color: var(--text-quaternary); flex-shrink: 0;
+    }
+    .section-nav-item.active .section-nav-num { background: var(--brand); color: #fff; }
+    .section-nav-item.done .section-nav-num { background: var(--status-green); color: #fff; }
+    /* .done shows a checkmark SVG inside the bubble instead of a number */
+
+    /*
+      EDITOR NAV FOOTER — Export buttons + DB status
+      Always visible at bottom of editor sidebar.
+      Export .sop = ghost button (full width)
+      Export PDF  = primary button (full width)
+    */
+    .editor-nav-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 10px 10px 8px;
+      display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    }
+
+    /* ============================================================
+       BUTTONS
+       Variants: primary | ghost | ghost-danger
+       Sizes: default | sm | xs
+       ============================================================ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: var(--radius);
+      font-family: var(--font-primary); font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+
+    /* Primary — brand red fill */
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-hover); }
+
+    /* Ghost — transparent with border */
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-standard); }
+    .btn-ghost:hover { background: var(--bg-hover); }
+
+    /* Ghost Danger — used for "Exit Without Revision" */
+    .btn-ghost-danger { background: transparent; color: var(--status-red); border: 1px solid rgba(192,57,43,0.22); }
+    .btn-ghost-danger:hover { background: var(--status-red-bg); }
+
+    /* Sizes */
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-xs { padding: 3px 8px; font-size: 11.5px; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ============================================================
+       MAIN CONTENT AREA
+       ============================================================ */
+    .app-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+    /*
+      PAGES — only one page active at a time
+      .active = display:flex, others = display:none
+    */
+    .page { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .page.active { display: flex; }
+
+    /* ============================================================
+       HOME PAGE
+       ============================================================ */
+    .page-header {
+      padding: 18px 28px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-panel);
+      display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0;
+    }
+    .page-title { font-size: 16px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.25px; }
+    .page-sub { font-size: 12px; color: var(--text-quaternary); margin-top: 2px; }
+
+    /* Toolbar — search + filter chips */
+    .page-toolbar {
+      padding: 10px 28px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-panel); flex-shrink: 0;
+    }
+    .search-box {
+      flex: 1; max-width: 300px;
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-surface); border: 1px solid var(--border-standard);
+      border-radius: var(--radius); padding: 6px 10px;
+      font-size: 12.5px; color: var(--text-quaternary);
+    }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 10px;
+      background: var(--bg-surface); border: 1px solid var(--border-standard);
+      border-radius: var(--radius); font-size: 12px; color: var(--text-tertiary);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .filter-chip:hover { background: var(--bg-hover); }
+
+    .page-content { flex: 1; overflow-y: auto; }
+
+    /* ============================================================
+       DATA TABLE — used in home screen and tools/items/definitions sections
+       ============================================================ */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      text-align: left; font-size: 11px; font-weight: 600;
+      color: var(--text-quaternary); letter-spacing: 0.4px; text-transform: uppercase;
+      padding: 10px 14px; border-bottom: 1px solid var(--border-standard);
+      background: var(--bg-panel); white-space: nowrap; position: sticky; top: 0;
+    }
+    .data-table td {
+      padding: 16px 14px; border-bottom: 1px solid var(--border-subtle);
+      font-size: 13px; color: var(--text-secondary); vertical-align: middle;
+    }
+    .data-table tr { background: var(--bg-surface); cursor: pointer; transition: background 0.1s; }
+    .data-table tr:hover td { background: #fdf8f5; }   /* slight warm tint on hover */
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /*
+      SOP ID — always DM Mono, never plain font
+      Used in: home table, breadcrumb, editor nav header, read-only field
+    */
+    .sop-id { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); font-weight: 500; }
+
+    /* Project tag — small pill label */
+    .project-tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 99px;
+      background: var(--bg-secondary); border: 1px solid var(--border-subtle);
+      font-size: 11.5px; color: var(--text-tertiary); font-weight: 500;
+    }
+
+    /*
+      STATUS BADGE — coloured dot + label
+      Variants: badge-approved | badge-review | badge-draft | badge-rejected
+    */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 500;
+    }
+    .status-badge .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .badge-approved { background: var(--status-green-bg); color: var(--status-green); }
+    .badge-approved .dot { background: var(--status-green); }
+    .badge-draft { background: var(--bg-secondary); color: var(--text-tertiary); }
+    .badge-draft .dot { background: var(--text-quaternary); }
+    .badge-review { background: var(--status-amber-bg); color: var(--status-amber); }
+    .badge-review .dot { background: var(--status-amber); }
+    .badge-rejected { background: var(--status-red-bg); color: var(--status-red); }
+    .badge-rejected .dot { background: var(--status-red); }
+
+    /* ============================================================
+       EDITOR CONTENT AREA
+       Single scrollable column. Section content swaps on tab click.
+       ============================================================ */
+    .editor-body { flex: 1; overflow-y: auto; padding: 26px 30px; }
+    .editor-body::-webkit-scrollbar { width: 5px; }
+    .editor-body::-webkit-scrollbar-thumb { background: var(--border-standard); border-radius: 2px; }
+
+    /* Section heading block at top of each section */
+    .section-title { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.2px; margin-bottom: 3px; }
+    .section-desc { font-size: 12px; color: var(--text-quaternary); margin-bottom: 18px; }
+
+    /* ============================================================
+       FORM CARD — white card wrapping a group of fields
+       Flush variant (form-card-flush) used for embedded tables.
+       ============================================================ */
+    .form-card {
+      background: var(--bg-surface); border: 1px solid var(--border-standard);
+      border-radius: 8px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-sm);
+    }
+    .form-card-flush { padding: 0; overflow: hidden; }   /* table goes edge-to-edge inside */
+
+    /* Two-column form grid — most fields use this */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-full { grid-column: 1 / -1; }   /* spans both columns */
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-size: 11.5px; font-weight: 500; color: var(--text-tertiary); }
+    .req { color: var(--brand); }   /* required field asterisk */
+
+    /*
+      FORM INPUTS
+      States:
+        default    → standard border
+        :focus     → brand border + 3px brand glow
+        .readonly  → grey bg, muted text, no focus
+        .mono      → DM Mono font (SOP ID, part numbers)
+    */
+    .form-input, .form-select, .form-textarea {
+      font-family: var(--font-primary); font-size: 13px;
+      color: var(--text-primary); background: var(--bg-surface);
+      border: 1px solid var(--border-standard); border-radius: var(--radius);
+      padding: 6px 9px; outline: none; width: 100%;
+      transition: border-color 0.12s, box-shadow 0.12s;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--brand); box-shadow: 0 0 0 3px rgba(200,75,47,0.08);
+    }
+    .form-input.readonly { background: var(--bg-secondary); color: var(--text-tertiary); cursor: default; }
+    .form-input.mono { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.3px; }
+    .form-textarea { resize: vertical; min-height: 76px; line-height: 1.6; }
+
+    /* Table toolbar — action buttons above flush tables */
+    .table-toolbar {
+      display: flex; justify-content: flex-end; align-items: center;
+      padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); gap: 8px;
+    }
+
+    /* ============================================================
+       STEP CARD — one per step in the Steps section
+       ============================================================ */
+    .step-card {
+      background: var(--bg-surface); border: 1px solid var(--border-standard);
+      border-radius: 8px; margin-bottom: 10px; box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+
+    /* Step card header — drag handle + number + title + action buttons */
+    .step-card-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);   /* warm grey to visually separate from body */
+    }
+
+    /* Drag handle — 6-dot grip icon. cursor:grab. In real app: dnd-kit drag source */
+    .step-drag { cursor: grab; color: var(--text-quaternary); }
+
+    /* Step number bubble — brand red circle with white number */
+    .step-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; flex-shrink: 0;
+    }
+
+    .step-name { font-size: 13px; font-weight: 500; color: var(--text-secondary); flex: 1; }
+
+    /*
+      Step action buttons — 26×26px icon buttons
+      Duplicate: grey → grey darker on hover
+      Delete:    grey → red bg on hover (.danger)
+    */
+    .step-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: var(--radius);
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-quaternary); transition: background 0.1s, color 0.1s;
+    }
+    .step-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
+    .step-btn.danger:hover { background: var(--status-red-bg); color: var(--status-red); }
+
+    .step-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+    /*
+      STEP IMAGES
+      Each image: 108×60.75px (exactly 16:9)
+      Placeholder: shows image icon, dashed border
+      Add button: dashed border → brand on hover
+      In real app: clicking opens crop → annotation flow
+    */
+    .step-images { display: flex; gap: 8px; flex-wrap: wrap; }
+    .img-thumb {
+      width: 108px; height: 60.75px;   /* 16:9 */
+      border-radius: var(--radius); border: 1px solid var(--border-standard);
+      background: var(--bg-secondary);
+      display: flex; align-items: center; justify-content: center; color: var(--text-quaternary);
+      overflow: hidden;
+    }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* Small thumbnail for data tables */
+    .table-img {
+      width: 48px; height: 32px;
+      border-radius: 4px; border: 1px solid var(--border-standard);
+      background: var(--bg-secondary);
+      display: flex; align-items: center; justify-content: center; color: var(--text-quaternary);
+      overflow: hidden; flex-shrink: 0;
+    }
+    .table-img svg { width: 14px; height: 14px; }
+
+    .img-add {
+      width: 108px; height: 60.75px;
+      border-radius: var(--radius); border: 1px dashed var(--border-standard);
+      background: var(--bg-secondary);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; color: var(--text-quaternary); font-size: 11px;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+    .img-add:hover { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
+
+    /*
+      TAG INPUT — used for tools and items in steps
+      Two tag types:
+        tag-lib  = selected from library (brand red tint)
+        tag-free = free text fallback (grey tint)
+      × button removes the tag
+    */
+    .tag-input {
+      display: flex; flex-wrap: wrap; gap: 5px; padding: 5px 8px; min-height: 34px;
+      background: var(--bg-surface); border: 1px solid var(--border-standard);
+      border-radius: var(--radius); align-items: center;
+    }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 500; }
+    .tag-lib { background: var(--brand-light); color: var(--brand); border: 1px solid rgba(200,75,47,0.18); }
+    .tag-free { background: var(--bg-secondary); color: var(--text-tertiary); border: 1px solid var(--border-standard); }
+    .tag-x { cursor: pointer; opacity: 0.55; font-size: 13px; line-height: 1; }
+    .tag-x:hover { opacity: 1; }
+
+    /* ============================================================
+       TOGGLE — used for "Training Required" in Safety section
+       States: off (grey track) | on (brand track, thumb shifted right)
+       ============================================================ */
+    .toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .toggle-track {
+      width: 32px; height: 18px; border-radius: 99px;
+      background: var(--border-strong); position: relative; transition: background 0.15s; flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--brand); }
+    .toggle-thumb {
+      width: 12px; height: 12px; border-radius: 50%; background: #fff;
+      position: absolute; top: 3px; left: 3px;
+      transition: transform 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(14px); }
+    .toggle-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+
+    /* ============================================================
+       REVISION TABLE — used in Approval & Revisions section
+       Columns: Ver. | Notes | Revised By | Date | Status | Approved By | Approval Date
+       V1 always shows "Initial Draft" in italics in the notes column
+       Newest revision at top, V1 at bottom
+       ============================================================ */
+    .rev-table { width: 100%; border-collapse: collapse; }
+    .rev-table th {
+      text-align: left; font-size: 10.5px; font-weight: 600;
+      color: var(--text-quaternary); text-transform: uppercase; letter-spacing: 0.4px;
+      padding: 7px 12px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-standard);
+    }
+    .rev-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 12.5px; color: var(--text-secondary); vertical-align: top; }
+    .rev-table tr:last-child td { border-bottom: none; }
+    .rev-v { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text-primary); }
+
+    /* ============================================================
+       MODALS
+       Two modals: Log Revision | Exit Warning
+       Overlay: semi-transparent + blur backdrop
+       .open class shows the modal
+       ============================================================ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(26,25,23,0.3); z-index: 1000;
+      align-items: center; justify-content: center; backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg-surface); border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(26,25,23,0.16), 0 4px 16px rgba(26,25,23,0.08);
+      width: 480px; max-width: 95vw; overflow: hidden;
+    }
+    .modal-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border-subtle); }
+    .modal-title { font-size: 14.5px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.2px; }
+    .modal-sub { font-size: 12px; color: var(--text-quaternary); margin-top: 2px; }
+    .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border-subtle); display: flex; gap: 8px; justify-content: flex-end; }
+
+    /*
+      EXIT MODAL FOOTER layout:
+      [Cancel]  ............  [Exit Without Revision] [Log Revision & Exit]
+      .spread = space-between
+    */
+    .modal-footer.spread { justify-content: space-between; }
+
+    /* ============================================================
+       SCROLLBARS — applied globally
+       ============================================================ */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-standard); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     Three zones: brand | breadcrumb | autosave
+     No action buttons live here.
+     ============================================================ -->
+<header class="app-header">
+
+  <!-- Brand zone: aligns exactly with sidebar width -->
+  <div class="header-brand">
+    <div class="app-logo">
+      <!-- Document icon — white on brand red -->
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+    </div>
+    <!-- "SOP" bold + "Builder" light weight -->
+    <div class="app-name">SOP <span>Builder</span></div>
+  </div>
+
+  <!-- Breadcrumb zone: updates dynamically based on current page -->
+  <div class="header-center">
+    <div class="breadcrumb" id="breadcrumb">
+      <!-- HOME STATE: plain text -->
+      <span>All SOPs</span>
+      <!-- EDITOR STATE (set via JS):
+           <span class="breadcrumb-link" onclick="tryGoHome()">All SOPs</span>
+           <span class="breadcrumb-sep">›</span>
+           <span class="breadcrumb-current">SOP-2025-8F3AB2</span>
+      -->
+    </div>
+  </div>
+
+  <!-- Autosave zone: hidden on home, visible in editor -->
+  <div class="header-right">
+    <!--
+      AUTOSAVE PILL
+      show/hide based on current page (editor = show, home = hide)
+      In real app: also shows "Saving..." momentarily during write
+    -->
+    <div class="autosave-pill" id="autosave-pill" style="display:none;">
+      <div class="autosave-dot"></div>
+      All changes saved
+    </div>
+  </div>
+</header>
+
+<div class="app-layout">
+
+  <!-- ============================================================
+       SIDEBAR
+       Contains Mode A (app nav) and Mode B (editor nav).
+       Only one mode is visible at a time.
+       ============================================================ -->
+  <nav class="app-nav">
+
+    <!-- ==================
+         MODE A: APP NAV
+         Visible: when on home screen
+         ================== -->
+    <div class="nav-mode" id="nav-app">
+      <div class="nav-scroll">
+
+        <div class="nav-section-label">Workspace</div>
+
+        <!-- All SOPs — active by default on home screen -->
+        <div class="nav-item active" onclick="filterByProject('all', this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All SOPs
+          <span class="nav-badge">12</span>   <!-- total SOP count from DB -->
+        </div>
+
+        <!-- Create SOP — generates new SOP ID, switches to editor mode -->
+        <div class="nav-item" onclick="goEditor(); setNavActive(this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create SOP
+        </div>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section-label">Projects</div>
+
+        <!-- Project filter items — clicking filters home list by project tag -->
+        <div class="nav-item" onclick="filterByProject('Gen Alpha', this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12h3m14 0h3M12 2v3m0 14v3"/></svg>
+          Gen Alpha
+          <span class="nav-badge">7</span>
+        </div>
+        <div class="nav-item" onclick="filterByProject('Commissioning', this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Commissioning
+          <span class="nav-badge">3</span>
+        </div>
+        <div class="nav-item" onclick="filterByProject('Safety', this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Safety
+          <span class="nav-badge">2</span>
+        </div>
+      </div>
+
+      <!-- Footer — pinned to bottom of Mode A sidebar -->
+      <div class="nav-footer">
+        <div class="nav-footer-item" onclick="goSettings(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          Settings
+        </div>
+        <!-- DB health — green dot = healthy. Red dot + "DB error" = failed integrity check -->
+        <div class="nav-footer-item">
+          <div class="db-dot"></div>
+          DB healthy
+        </div>
+        <div class="nav-version">v0.1.0-alpha</div>
+      </div>
+    </div>
+    <!-- END MODE A -->
+
+    <!-- ==================
+         MODE B: EDITOR NAV
+         Visible: when a SOP is open
+         ================== -->
+    <div class="nav-mode hidden" id="nav-editor">
+
+      <!-- Editor nav header: back link + SOP identity -->
+      <div class="editor-nav-header">
+        <!--
+          Back link: triggers exit warning modal if dirty flag = true.
+          If clean, navigates directly to home.
+        -->
+        <div class="editor-nav-back" onclick="tryGoHome()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          All SOPs
+        </div>
+        <!-- SOP ID: always DM Mono -->
+        <div class="editor-nav-sopid">SOP-2025-8F3AB2</div>
+        <!-- Title: truncated, 12px, muted -->
+        <div class="editor-nav-title">Air Fryer 5L — Heating Element…</div>
+      </div>
+
+      <!-- 8 section tabs — user can click any in any order -->
+      <div class="nav-scroll">
+        <div style="padding: 8px 0 4px;">
+
+          <!-- Tab 1: Header — active by default when SOP opens -->
+          <div class="section-nav-item active" onclick="showSection('header',this)">
+            <div class="section-nav-num">1</div>
+            Header
+          </div>
+
+          <!-- Tab 2: done = green checkmark (has content) -->
+          <div class="section-nav-item done" onclick="showSection('scope',this)">
+            <div class="section-nav-num done">
+              <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l3.5 3.5L13 4"/></svg>
+            </div>
+            Scope & Purpose
+          </div>
+
+          <!-- Tab 3: done -->
+          <div class="section-nav-item done" onclick="showSection('safety',this)">
+            <div class="section-nav-num done">
+              <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l3.5 3.5L13 4"/></svg>
+            </div>
+            Safety
+          </div>
+
+          <!-- Tabs 4–8: not yet started (grey bubble with number) -->
+          <div class="section-nav-item" onclick="showSection('tools',this)">
+            <div class="section-nav-num">4</div> Tools Library
+          </div>
+          <div class="section-nav-item" onclick="showSection('items',this)">
+            <div class="section-nav-num">5</div> Items & Parts
+          </div>
+          <div class="section-nav-item" onclick="showSection('steps',this)">
+            <div class="section-nav-num">6</div> Steps
+          </div>
+          <div class="section-nav-item" onclick="showSection('definitions',this)">
+            <div class="section-nav-num">7</div> Definitions
+          </div>
+          <div class="section-nav-item" onclick="showSection('approval',this)">
+            <div class="section-nav-num">8</div> Approval & Revisions
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor footer: export buttons + DB status -->
+      <div class="editor-nav-footer">
+        <!-- Export .sop — ghost full-width button -->
+        <button class="btn btn-ghost btn-sm btn-full">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export .sop
+        </button>
+        <!-- Export PDF — primary full-width button -->
+        <button class="btn btn-primary btn-sm btn-full">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Export PDF
+        </button>
+        <div class="nav-footer-item" style="margin-top:2px;">
+          <div class="db-dot"></div>DB healthy
+        </div>
+      </div>
+    </div>
+    <!-- END MODE B -->
+
+  </nav>
+  <!-- END SIDEBAR -->
+
+  <!-- ============================================================
+       MAIN CONTENT
+       Only one .page is .active at a time.
+       ============================================================ -->
+  <main class="app-main">
+
+    <!-- ==================
+         PAGE: HOME
+         ================== -->
+    <div class="page active" id="page-home">
+
+      <!-- Page header: title + Create SOP button -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">All SOPs</div>
+          <div class="page-sub">12 documents · last updated today</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="goEditor()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create SOP
+        </button>
+      </div>
+
+      <!-- Toolbar: search + filter chips -->
+      <div class="page-toolbar">
+        <div class="search-box">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search by ID, title, project…
+        </div>
+        <!-- Filter chips — clicking would filter the table (not implemented in mockup) -->
+        <div class="filter-chip">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Status
+        </div>
+        <div class="filter-chip">Department</div>
+        <div class="filter-chip">Project</div>
+      </div>
+
+      <!-- SOP list table — full width, scrollable -->
+      <div class="page-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SOP ID</th>       <!-- DM Mono, always -->
+              <th>Project</th>      <!-- pill tag -->
+              <th>Title</th>        <!-- plain text -->
+              <th>Date Released</th><!-- muted, 12.5px -->
+              <th>Status</th>       <!-- coloured badge -->
+              <th>Version</th>      <!-- DM Mono -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row click → opens SOP in editor (goEditor()) -->
+
+            <!-- APPROVED example -->
+            <tr onclick="goEditor()">
+              <td><span class="sop-id">SOP-2025-8F3AB2</span></td>
+              <td><span class="project-tag">Gen Alpha</span></td>
+              <td>Air Fryer 5L — Heating Element Assembly</td>
+              <td style="font-size:12.5px;color:var(--text-quaternary);">12 Jan 2025</td>
+              <td><span class="status-badge badge-approved"><span class="dot"></span>Approved</span></td>
+              <td><span class="sop-id">V3</span></td>
+            </tr>
+
+            <!-- UNDER REVIEW example -->
+            <tr onclick="goEditor()">
+              <td><span class="sop-id">SOP-2025-C72EF4</span></td>
+              <td><span class="project-tag">Gen Alpha</span></td>
+              <td>Air Fryer 6L — Fan Motor Replacement</td>
+              <td style="font-size:12.5px;color:var(--text-quaternary);">28 Jan 2025</td>
+              <td><span class="status-badge badge-review"><span class="dot"></span>Under Review</span></td>
+              <td><span class="sop-id">V2</span></td>
+            </tr>
+
+            <!-- APPROVED, different project -->
+            <tr onclick="goEditor()">
+              <td><span class="sop-id">SOP-2025-A94DB6</span></td>
+              <td><span class="project-tag">Commissioning</span></td>
+              <td>Production Line Startup Sequence</td>
+              <td style="font-size:12.5px;color:var(--text-quaternary);">05 Feb 2025</td>
+              <td><span class="status-badge badge-approved"><span class="dot"></span>Approved</span></td>
+              <td><span class="sop-id">V1</span></td>
+            </tr>
+
+            <!-- DRAFT — no release date yet (shown as em dash) -->
+            <tr onclick="goEditor()">
+              <td><span class="sop-id">SOP-2025-E2C83F</span></td>
+              <td><span class="project-tag">Safety</span></td>
+              <td>Electrical Isolation & LOTO Procedure</td>
+              <td style="font-size:12.5px;color:var(--text-quaternary);">—</td>
+              <td><span class="status-badge badge-draft"><span class="dot"></span>Draft</span></td>
+              <td><span class="sop-id">V1</span></td>
+            </tr>
+
+            <!-- Another approved -->
+            <tr onclick="goEditor()">
+              <td><span class="sop-id">SOP-2025-B37C29</span></td>
+              <td><span class="project-tag">Gen Alpha</span></td>
+              <td>Air Fryer 12L — Final QC Inspection</td>
+              <td style="font-size:12.5px;color:var(--text-quaternary);">14 Mar 2025</td>
+              <td><span class="status-badge badge-approved"><span class="dot"></span>Approved</span></td>
+              <td><span class="sop-id">V2</span></td>
+            </tr>
+
+            <!-- Another draft -->
+            <tr onclick="goEditor()">
+              <td><span class="sop-id">SOP-2025-F49A37</span></td>
+              <td><span class="project-tag">Safety</span></td>
+              <td>Chemical Handling & Spill Response</td>
+              <td style="font-size:12.5px;color:var(--text-quaternary);">—</td>
+              <td><span class="status-badge badge-draft"><span class="dot"></span>Draft</span></td>
+              <td><span class="sop-id">V1</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- END PAGE HOME -->
+
+    <!-- ==================
+         PAGE: EDITOR
+         Section content swaps based on sidebar tab click.
+         No sub-header — sidebar IS the navigation.
+         ================== -->
+    <div class="page" id="page-editor">
+      <div class="editor-body" id="editor-body">
+
+        <!-- ══════════════════════════
+             SECTION 1: HEADER
+             ══════════════════════════ -->
+        <div id="section-header">
+          <div class="section-title">Header</div>
+          <div class="section-desc">Document identification, ownership, and distribution</div>
+          <div class="form-card">
+            <div class="form-grid">
+
+              <!-- SOP ID: auto-generated, read-only, DM Mono -->
+              <div class="form-group">
+                <label class="form-label">SOP ID</label>
+                <input class="form-input readonly mono" value="SOP-2025-8F3AB2" readonly>
+              </div>
+
+              <!-- Version: auto-incremented on revision, read-only -->
+              <div class="form-group">
+                <label class="form-label">Version</label>
+                <input class="form-input readonly mono" value="V2" readonly>
+              </div>
+
+              <!-- Title: required field -->
+              <div class="form-group form-full">
+                <label class="form-label">Title <span class="req">*</span></label>
+                <input class="form-input" value="Air Fryer 5L — Heating Element Assembly">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Project Tag</label>
+                <input class="form-input" value="Gen Alpha">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <input class="form-input" value="Hardware Engineering">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Document Owner</label>
+                <input class="form-input" value="John Smith">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Created By</label>
+                <input class="form-input" value="Sarah Johnson">
+              </div>
+
+              <!-- Date fields: native date picker -->
+              <div class="form-group">
+                <label class="form-label">Created Date</label>
+                <input class="form-input" type="date" value="2025-01-12">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Active / Release Date</label>
+                <input class="form-input" type="date" value="2025-01-28">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Next Review Date</label>
+                <input class="form-input" type="date" value="2026-01-28">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Regulatory Reference</label>
+                <input class="form-input" value="ISO 9001:2015">
+              </div>
+
+              <!-- Distribution list: free text, multi-line -->
+              <div class="form-group form-full">
+                <label class="form-label">Distribution List</label>
+                <textarea class="form-textarea" style="min-height:52px;">John Smith, Michael Brown, Emily Davis, David Wilson</textarea>
+              </div>
+
+              <!-- Related docs: other SOP IDs, free text, comma-separated -->
+              <div class="form-group form-full">
+                <label class="form-label">Related Documents</label>
+                <input class="form-input" value="SOP-2025-C72EF4, SOP-2025-A94DB6" placeholder="Other SOP IDs, comma separated">
+              </div>
+            </div>
+          </div>
+
+          <!--
+            NOTE: Approval Status is NOT in the header section.
+            It lives in Section 8 (Approval & Revisions) only.
+            The sops.approval_status field is derived automatically
+            from the latest revision record.
+          -->
+        </div>
+        <!-- END SECTION HEADER -->
+
+        <!-- ══════════════════════════
+             SECTION 2: SCOPE & PURPOSE
+             ══════════════════════════ -->
+        <div id="section-scope" style="display:none;">
+          <div class="section-title">Scope & Purpose</div>
+          <div class="section-desc">Objective and boundaries of this procedure</div>
+          <div class="form-card">
+            <div class="form-grid">
+              <div class="form-group form-full">
+                <label class="form-label">Purpose</label>
+                <textarea class="form-textarea" style="min-height:96px;">This SOP defines the assembly procedure for the heating element in the Air Fryer 5L (Gen Alpha) product line. Ensures consistent, safe, and repeatable assembly by trained operations engineers.</textarea>
+              </div>
+              <div class="form-group form-full">
+                <label class="form-label">Scope</label>
+                <textarea class="form-textarea" style="min-height:96px;">Applies to all heating element assembly on the AF-5L production line. Covers component identification, torque specification, electrical connection, and post-assembly verification.</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════
+             SECTION 3: SAFETY
+             ══════════════════════════ -->
+        <div id="section-safety" style="display:none;">
+          <div class="section-title">Safety</div>
+          <div class="section-desc">Compliance and hazard information for this procedure</div>
+          <div class="form-card">
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label">Safety Notes</label>
+              <textarea class="form-textarea" style="min-height:110px;">⚠ Disconnect all power before handling heating element. Use insulated gloves rated for 300°C. Do not touch element after energising — surface reaches 280°C within 8 seconds. Clear work area of flammable material.</textarea>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <!--
+                TOGGLE — Training Required
+                .on class = active state (brand red track, thumb shifted right)
+                Toggling shows/hides Training Details field below
+              -->
+              <label class="toggle-row">
+                <div class="toggle-track on"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label">Training Required</span>
+              </label>
+              <!-- Training details: shown only when toggle is ON -->
+              <div class="form-group">
+                <label class="form-label">Training Details</label>
+                <textarea class="form-textarea" style="min-height:56px;">Engineer must hold EHS Electrical Safety Certification (Level 2) before performing unsupervised.</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════
+             SECTION 4: TOOLS LIBRARY
+             ══════════════════════════ -->
+        <div id="section-tools" style="display:none;">
+          <div class="section-title">Tools Library</div>
+          <div class="section-desc">Tools local to this SOP. Referenced by steps via tag selection.</div>
+          <!--
+            FLUSH CARD with table inside.
+            Table toolbar at top (right-aligned buttons).
+            Table rows: full-width, no internal padding.
+          -->
+          <div class="form-card form-card-flush">
+            <div class="table-toolbar">
+              <!-- Search from other SOPs: opens cross-SOP search modal -->
+              <button class="btn btn-ghost btn-sm" style="flex: 1; max-width: 300px; justify-content: flex-start;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Search from other SOPs...
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-tool').classList.add('open')">+ Add Tool</button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 25%;">Name</th>
+                  <th style="width: 80px;">Image</th>
+                  <th style="width: 15%;">Type</th>
+                  <th style="width: 25%;">Model / Part No.</th>
+                  <th style="width: 20%;">Calibration</th>
+                  <th style="width: 80px;"></th>   <!-- Edit button column -->
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Calibration due soon → badge-review (amber) -->
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">Torque Wrench</td>
+                  <td><div class="table-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="9 11 12 14 22 4"/><path d="M21 12V9"/></svg></div></td>
+                  <td style="font-size:12px;color:var(--text-quaternary);">Physical</td>
+                  <td><span class="sop-id">TW-SNAP-3/8</span></td>
+                  <td><span class="status-badge badge-review" style="font-size:11px;"><span class="dot"></span>Due 30 Jun</span></td>
+                  <td style="text-align:right;"><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <!-- Calibration valid → badge-approved (green) -->
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">Digital Multimeter</td>
+                  <td><div class="table-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="9 11 12 14 22 4"/><path d="M21 12V9"/></svg></div></td>
+                  <td style="font-size:12px;color:var(--text-quaternary);">Physical</td>
+                  <td><span class="sop-id">FLUKE-117</span></td>
+                  <td><span class="status-badge badge-approved" style="font-size:11px;"><span class="dot"></span>Valid</span></td>
+                  <td style="text-align:right;"><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <!-- No calibration needed → badge-draft (grey N/A) -->
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">Insulated Gloves</td>
+                  <td><div class="table-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="9 11 12 14 22 4"/><path d="M21 12V9"/></svg></div></td>
+                  <td style="font-size:12px;color:var(--text-quaternary);">Physical</td>
+                  <td><span class="sop-id">—</span></td>
+                  <td><span class="status-badge badge-draft" style="font-size:11px;"><span class="dot"></span>N/A</span></td>
+                  <td style="text-align:right;"><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════
+             SECTION 5: ITEMS & PARTS
+             ══════════════════════════ -->
+        <div id="section-items" style="display:none;">
+          <div class="section-title">Items & Parts</div>
+          <div class="section-desc">Components and consumables used in this SOP. Referenced by steps.</div>
+          <div class="form-card form-card-flush">
+            <div class="table-toolbar">
+              <button class="btn btn-ghost btn-sm" style="flex: 1; max-width: 300px; justify-content: flex-start;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Search from other SOPs...
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-item').classList.add('open')">+ Add Item</button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 40%;">Name</th>
+                  <th style="width: 80px;">Image</th>
+                  <th style="width: 30%;">Part No.</th>
+                  <th style="width: 15%;">Unit</th>
+                  <th style="width: 80px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">Heating Element AF-5L</td>
+                  <td><div class="table-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="9 11 12 14 22 4"/><path d="M21 12V9"/></svg></div></td>
+                  <td><span class="sop-id">HE-AF5L-001</span></td>
+                  <td style="color:var(--text-quaternary);">pcs</td>
+                  <td style="text-align:right;"><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">M4 Hex Bolt (SS)</td>
+                  <td><div class="table-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="9 11 12 14 22 4"/><path d="M21 12V9"/></svg></div></td>
+                  <td><span class="sop-id">BLT-M4-SS-12</span></td>
+                  <td style="color:var(--text-quaternary);">pcs</td>
+                  <td style="text-align:right;"><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">Thermal Paste</td>
+                  <td><div class="table-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="9 11 12 14 22 4"/><path d="M21 12V9"/></svg></div></td>
+                  <td><span class="sop-id">TP-MX4-4G</span></td>
+                  <td style="color:var(--text-quaternary);">g</td>
+                  <td style="text-align:right;"><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════
+             SECTION 6: STEPS
+             ══════════════════════════ -->
+        <div id="section-steps" style="display:none;">
+          <div class="section-title">Steps</div>
+          <div class="section-desc">Sequential procedure steps. Drag handle to reorder. Step numbers auto-update.</div>
+
+          <!--
+            STEP CARD
+            Each step is one .step-card.
+            Structure: header (drag+number+name+actions) | body (all fields)
+            In real app: rendered via dnd-kit sortable list
+          -->
+          <div class="step-card">
+            <div class="step-card-header">
+              <!-- Drag handle: dnd-kit drag source in real app -->
+              <div class="step-drag">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+              </div>
+              <!-- Step number: auto from sort_order, brand red bubble -->
+              <div class="step-num">1</div>
+              <!-- Step name: first line of action field, shown as preview in header -->
+              <div class="step-name">Power isolation & PPE check</div>
+              <!-- Duplicate button: grey, copies step with new UUID -->
+              <button class="step-btn" title="Duplicate">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <!-- Delete button: red on hover, requires confirm dialog -->
+              <button class="step-btn danger" title="Delete">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </button>
+            </div>
+
+            <div class="step-body">
+              <div class="form-grid">
+
+                <!-- Action: main instruction text -->
+                <div class="form-group form-full">
+                  <label class="form-label">Action / Instruction</label>
+                  <textarea class="form-textarea" style="min-height:60px;">Disconnect from mains. Verify isolation using multimeter — confirm 0V across terminals L and N. Don insulated gloves before proceeding.</textarea>
+                </div>
+
+                <!-- Expected output: what should result from this step -->
+                <div class="form-group form-full">
+                  <label class="form-label">Expected Output</label>
+                  <input class="form-input" value="Multimeter reads 0V. PPE worn.">
+                </div>
+
+                <!--
+                  TOOLS TAG INPUT
+                  tag-lib = from library (brand red tint)
+                  tag-free = free text (grey tint)
+                  Both can coexist in same field
+                -->
+                <div class="form-group">
+                  <label class="form-label">Tools</label>
+                  <div class="tag-input">
+                    <span class="tag tag-lib">Digital Multimeter <span class="tag-x">×</span></span>
+                    <span class="tag tag-lib">Insulated Gloves <span class="tag-x">×</span></span>
+                    <!-- Example free text tag: -->
+                    <!-- <span class="tag tag-free">Custom wrench <span class="tag-x">×</span></span> -->
+                  </div>
+                </div>
+
+                <!-- Items: same tag pattern, but with qty+unit appended to label -->
+                <div class="form-group">
+                  <label class="form-label">Items / Parts</label>
+                  <!-- Empty state: muted italic placeholder -->
+                  <div class="tag-input" style="color:var(--text-quaternary);font-size:12px;font-style:italic;">None</div>
+                </div>
+
+                <div class="form-group form-full">
+                  <label class="form-label">Notes / Cautions</label>
+                  <textarea class="form-textarea" style="min-height:44px;">⚠ Capacitors may hold charge even if appliance appears off. Always verify with multimeter.</textarea>
+                </div>
+
+                <!--
+                  IMAGES
+                  img-thumb: filled image slot (108×60.75px = 16:9)
+                  img-add: dashed add button, same dimensions
+                  Multiple images allowed per step
+                -->
+                <div class="form-group form-full">
+                  <label class="form-label">Images</label>
+                  <div class="step-images">
+                    <!-- Filled slot: shows placeholder icon (real app: annotated.png) -->
+                    <div class="img-thumb">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <!-- Add button: triggers crop → annotation flow -->
+                    <div class="img-add">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Add image
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- END STEP 1 -->
+
+          <!-- STEP 2 — items example -->
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-drag"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div>
+              <div class="step-num">2</div>
+              <div class="step-name">Remove existing heating element</div>
+              <button class="step-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="step-btn danger"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+            </div>
+            <div class="step-body">
+              <div class="form-grid">
+                <div class="form-group form-full"><label class="form-label">Action / Instruction</label><textarea class="form-textarea" style="min-height:60px;">Using torque wrench, loosen all 4× M4 hex bolts counter-clockwise. Remove and set aside. Carefully lift element from mounting channel.</textarea></div>
+                <div class="form-group form-full"><label class="form-label">Expected Output</label><input class="form-input" value="Element removed cleanly. No deformation to mounting channel."></div>
+                <div class="form-group"><label class="form-label">Tools</label><div class="tag-input"><span class="tag tag-lib">Torque Wrench <span class="tag-x">×</span></span></div></div>
+                <!-- Items with quantity appended to tag label -->
+                <div class="form-group"><label class="form-label">Items / Parts</label><div class="tag-input"><span class="tag tag-lib">M4 Hex Bolt (SS) × 4 <span class="tag-x">×</span></span></div></div>
+                <div class="form-group form-full"><label class="form-label">Notes / Cautions</label><textarea class="form-textarea" style="min-height:44px;">Keep removed bolts together. Element may be warm — wait 10 min after power isolation.</textarea></div>
+                <!-- Empty image slot -->
+                <div class="form-group form-full"><label class="form-label">Images</label><div class="step-images"><div class="img-add"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add image</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Step button — appends new empty step at bottom -->
+          <button class="btn btn-ghost btn-full" style="margin-top:4px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Step
+          </button>
+        </div>
+        <!-- END SECTION STEPS -->
+
+        <!-- ══════════════════════════
+             SECTION 7: DEFINITIONS
+             Rendered at end of PDF (after all steps)
+             ══════════════════════════ -->
+        <div id="section-definitions" style="display:none;">
+          <div class="section-title">Definitions</div>
+          <div class="section-desc">Terms and abbreviations — appears at the end of the exported PDF</div>
+          <div class="form-card form-card-flush">
+            <div class="table-toolbar">
+              <button class="btn btn-primary btn-sm">+ Add Term</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th style="width:180px;">Term</th><th>Meaning</th><th style="width:50px;"></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">LOTO</td>
+                  <td>Lockout / Tagout — energy isolation safety procedure</td>
+                  <!-- × button removes the row -->
+                  <td><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">PPE</td>
+                  <td>Personal Protective Equipment</td>
+                  <td><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500;color:var(--text-primary);">AF-5L</td>
+                  <td>Air Fryer 5 Litre — Gen Alpha product variant</td>
+                  <td><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════
+             SECTION 8: APPROVAL & REVISIONS
+             ══════════════════════════ -->
+        <div id="section-approval" style="display:none;">
+          <div class="section-title">Approval & Revisions</div>
+          <div class="section-desc">Full revision history and approval records. Newest version at top.</div>
+          <div class="form-card form-card-flush">
+            <div class="table-toolbar">
+              <!-- Opens Log Revision modal -->
+              <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-revision').classList.add('open')">+ Log Revision</button>
+            </div>
+            <!--
+              REVISION TABLE
+              Columns: Ver. | Notes | Revised By | Date | Status | Approved By | Approval Date
+              V1 always has "Initial Draft" in notes column (italic, muted)
+              Latest version at top. V1 always at bottom.
+              sops.approval_status always mirrors latest row's approval_status.
+            -->
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Ver.</th>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Revision Notes</th>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Revised By</th>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Date</th>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Status</th>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Approved By</th>
+                  <th style="text-align:left;font-size:10.5px;font-weight:600;color:var(--text-quaternary);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-standard);">Approval Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- V2 — latest, no approval yet -->
+                <tr>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);vertical-align:top;"><span class="sop-id">V2</span></td>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-secondary);vertical-align:top;">Torque spec updated 4 Nm → 4.5 Nm per Careline OEM update</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-secondary);vertical-align:top;">John Smith</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);font-size:12px;color:var(--text-quaternary);white-space:nowrap;vertical-align:top;">28 Jan 2025</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);vertical-align:top;"><span class="status-badge badge-review" style="font-size:11px;"><span class="dot"></span>Under Review</span></td>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-quaternary);vertical-align:top;">—</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-quaternary);vertical-align:top;">—</td>
+                </tr>
+                <!-- V1 — always shows "Initial Draft", italic muted -->
+                <tr>
+                  <td style="padding:9px 12px;vertical-align:top;"><span class="sop-id">V1</span></td>
+                  <td style="padding:9px 12px;font-size:12.5px;color:var(--text-quaternary);font-style:italic;vertical-align:top;">Initial Draft</td>
+                  <td style="padding:9px 12px;font-size:12.5px;color:var(--text-secondary);vertical-align:top;">Sarah Johnson</td>
+                  <td style="padding:9px 12px;font-size:12px;color:var(--text-quaternary);white-space:nowrap;vertical-align:top;">12 Jan 2025</td>
+                  <td style="padding:9px 12px;vertical-align:top;"><span class="status-badge badge-approved" style="font-size:11px;"><span class="dot"></span>Approved</span></td>
+                  <td style="padding:9px 12px;font-size:12.5px;color:var(--text-secondary);vertical-align:top;">Michael Brown</td>
+                  <td style="padding:9px 12px;font-size:12px;color:var(--text-quaternary);white-space:nowrap;vertical-align:top;">15 Jan 2025</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- END SECTION APPROVAL -->
+
+      </div>
+    </div>
+    <!-- END PAGE EDITOR -->
+
+    <!-- ==================
+         PAGE: SETTINGS
+         ================== -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Settings</div>
+          <div class="page-sub">Configure your profile and organization defaults</div>
+        </div>
+        <button class="btn btn-primary btn-sm">Save Changes</button>
+      </div>
+
+      <div class="page-content" style="padding: 26px 30px;">
+        
+        <!-- User Profile Section -->
+        <div class="section-title">User Profiles</div>
+        <div class="section-desc">Manage users and their primary/secondary status for document ownership</div>
+        
+        <div class="form-card form-card-flush">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 220px;">Full Name</th>
+                <th>Full Title</th>
+                <th style="width: 80px; text-align: center;">Primary</th>
+                <th style="width: 50px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Primary User -->
+              <tr>
+                <td><input class="form-input" value="John Smith" style="border:none; padding: 2px 0;"></td>
+                <td><input class="form-input" value="Senior Operations Engineer" style="border:none; padding: 2px 0;"></td>
+                <td style="text-align: center;">
+                  <input type="radio" name="primary-user" checked>
+                </td>
+                <td style="text-align: right;"><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+              </tr>
+              <!-- Secondary Users -->
+              <tr>
+                <td><input class="form-input" value="Sarah Johnson" style="border:none; padding: 2px 0;"></td>
+                <td><input class="form-input" value="Product Manager" style="border:none; padding: 2px 0;"></td>
+                <td style="text-align: center;">
+                  <input type="radio" name="primary-user">
+                </td>
+                <td style="text-align: right;"><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+              </tr>
+              <tr>
+                <td><input class="form-input" value="Michael Brown" style="border:none; padding: 2px 0;"></td>
+                <td><input class="form-input" value="Quality Lead" style="border:none; padding: 2px 0;"></td>
+                <td style="text-align: center;">
+                  <input type="radio" name="primary-user">
+                </td>
+                <td style="text-align: right;"><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+              </tr>
+              <tr>
+                <td><input class="form-input" value="Emily Davis" style="border:none; padding: 2px 0;"></td>
+                <td><input class="form-input" value="EHS Specialist" style="border:none; padding: 2px 0;"></td>
+                <td style="text-align: center;">
+                  <input type="radio" name="primary-user">
+                </td>
+                <td style="text-align: right;"><button class="btn btn-ghost btn-xs" style="color:var(--status-red);">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding: 10px 14px; border-top: 1px solid var(--border-subtle);">
+            <button class="btn btn-ghost btn-sm">+ Add User</button>
+          </div>
+        </div>
+
+        <!-- Organization Section -->
+        <div class="section-title" style="margin-top: 32px;">Organization</div>
+        <div class="section-desc">Global branding and identification for all SOPs</div>
+        
+        <div class="form-card">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Organization Name</label>
+              <input class="form-input" value="Acme Corp">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Org Primary Colour</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="color" class="form-input" value="#c84b2f" style="width: 48px; height: 32px; padding: 2px;">
+                <input class="form-input mono" value="#c84b2f" style="width: 100px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- END PAGE SETTINGS -->
+
+  </main>
+</div>
+
+<!-- ============================================================
+     MODAL: ADD TOOL
+     ============================================================ -->
+<div class="modal-overlay" id="modal-tool">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Tool</div>
+      <div class="modal-sub">Add a physical or digital tool to this SOP's library</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label class="form-label">Tool Name <span class="req">*</span></label>
+          <input class="form-input" placeholder="e.g. Torque Wrench">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select">
+            <option>Physical</option>
+            <option>Digital / Software</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model / Part No.</label>
+          <input class="form-input mono" placeholder="e.g. TW-SNAP-3/8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Calibration Status</label>
+          <select class="form-select">
+            <option>N/A</option>
+            <option>Valid</option>
+            <option>Due Soon</option>
+            <option>Expired</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Calibration Due Date</label>
+          <input class="form-input" type="date">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Tool Image</label>
+          <div class="img-add" style="width: 100%; height: 80px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Click to upload
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-tool').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal-tool').classList.remove('open')">Add to Library</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: ADD ITEM
+     ============================================================ -->
+<div class="modal-overlay" id="modal-item">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Item / Part</div>
+      <div class="modal-sub">Add components or consumables used in this procedure</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label class="form-label">Item Name <span class="req">*</span></label>
+          <input class="form-input" placeholder="e.g. M4 Hex Bolt">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Part Number</label>
+          <input class="form-input mono" placeholder="e.g. BLT-M4-SS-12">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit of Measure</label>
+          <select class="form-select">
+            <option>pcs</option>
+            <option>g</option>
+            <option>ml</option>
+            <option>mm</option>
+            <option>sets</option>
+          </select>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Item Image</label>
+          <div class="img-add" style="width: 100%; height: 80px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Click to upload
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-item').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal-item').classList.remove('open')">Add to Library</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: LOG REVISION
+     Triggered by: "+ Log Revision" button in Approval & Revisions section
+     Also available from: exit warning modal (same fields, different context)
+     On confirm: insert revision row, increment version, mirror approval_status to sops table
+     ============================================================ -->
+<div class="modal-overlay" id="modal-revision">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Log Revision</div>
+      <!-- Sub shows what version this will create -->
+      <div class="modal-sub">Creates V3 — updates approval status across the document</div>
+    </div>
+    <div class="modal-body">
+      <!-- Revision Notes: REQUIRED. Cannot confirm with empty field. -->
+      <div class="form-group">
+        <label class="form-label">Revision Notes <span class="req">*</span></label>
+        <textarea class="form-textarea" placeholder="What changed in this revision?" style="min-height:68px;"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Revised By</label>
+          <input class="form-input" placeholder="Name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Approval Status</label>
+          <input class="form-input" placeholder="Draft, Approved, Under Review…">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Approved By</label>
+          <input class="form-input" placeholder="Name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Approval Date</label>
+          <input class="form-input" type="date">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-revision').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal-revision').classList.remove('open')">Save Revision</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: EXIT WARNING
+     Triggered by: back link in editor nav | home screen row click while in editor
+     Three actions:
+       Cancel               → stay in editor, nothing happens
+       Exit Without Revision → navigate away, no revision logged, data already safe in SQLite
+       Log Revision & Exit  → save revision then navigate away
+     ============================================================ -->
+<div class="modal-overlay" id="modal-exit">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">You have unsaved changes</div>
+      <div class="modal-sub">Log a revision before leaving, or exit without recording one</div>
+    </div>
+    <div class="modal-body">
+      <!-- Same fields as Log Revision modal -->
+      <div class="form-group">
+        <label class="form-label">Revision Notes <span class="req">*</span></label>
+        <textarea class="form-textarea" placeholder="What changed?" style="min-height:60px;"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Revised By</label><input class="form-input" placeholder="Name"></div>
+        <div class="form-group"><label class="form-label">Approval Status</label><input class="form-input" placeholder="Draft, Approved…"></div>
+        <div class="form-group"><label class="form-label">Approved By</label><input class="form-input" placeholder="Name"></div>
+        <div class="form-group"><label class="form-label">Approval Date</label><input class="form-input" type="date"></div>
+      </div>
+    </div>
+    <!--
+      FOOTER LAYOUT (spread):
+      [Cancel]  .....  [Exit Without Revision] [Log Revision & Exit]
+    -->
+    <div class="modal-footer spread">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-exit').classList.remove('open')">Cancel</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost-danger" onclick="exitConfirmed()">Exit Without Revision</button>
+        <button class="btn btn-primary" onclick="exitConfirmed()">Log Revision & Exit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     INTERACTION LOGIC
+     This JS is mockup-only — shows navigation behaviour.
+     In real app: use React Router + Zustand state.
+
+     Key behaviours modelled here:
+     1. goEditor()    — switch to editor page + editor sidebar mode
+     2. goHome()      — switch to home page + app sidebar mode
+     3. tryGoHome()   — check dirty flag (always true in mockup) → show exit modal
+     4. exitConfirmed()— confirm exit → go home
+     5. showSection() — swap visible section in editor
+     6. setNavActive()— update active state in app nav
+     ============================================================ -->
+<script>
+  // Switch to editor: update page, sidebar mode, breadcrumb, autosave pill
+  function goEditor() {
+    document.getElementById('page-home').classList.remove('active');
+    document.getElementById('page-editor').classList.add('active');
+    document.getElementById('nav-app').classList.add('hidden');
+    document.getElementById('nav-editor').classList.remove('hidden');
+    document.getElementById('autosave-pill').style.display = 'flex';
+    document.getElementById('breadcrumb').innerHTML =
+      '<span class="breadcrumb-link" onclick="tryGoHome()">All SOPs</span>' +
+      '<span class="breadcrumb-sep">›</span>' +
+      '<span class="breadcrumb-current">SOP-2025-8F3AB2</span>';
+    // Always open to Header section (Tab 1)
+    showSection('header', document.querySelector('#nav-editor .section-nav-item'));
+  }
+
+  // Switch to home: reset all editor state
+  function goHome() {
+    document.getElementById('page-editor').classList.remove('active');
+    document.getElementById('page-home').classList.add('active');
+    document.getElementById('nav-editor').classList.add('hidden');
+    document.getElementById('nav-app').classList.remove('hidden');
+    document.getElementById('autosave-pill').style.display = 'none';
+    document.getElementById('breadcrumb').innerHTML = '<span>All SOPs</span>';
+    // Reset active nav item to "All SOPs"
+    document.querySelectorAll('#nav-app .nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelector('#nav-app .nav-item').classList.add('active');
+    // Reset any filters
+    const rows = document.querySelectorAll('#page-home .data-table tbody tr');
+    rows.forEach(row => row.style.display = '');
+    document.querySelector('#page-home .page-title').textContent = 'All SOPs';
+    document.querySelector('#page-home .page-sub').textContent = '12 documents · last updated today';
+  }
+
+  // Filter home table by project name
+  function filterByProject(projectName, el) {
+    if (projectName === 'all') {
+      goHome();
+      return;
+    }
+    // Ensure we are on home page
+    document.getElementById('page-editor').classList.remove('active');
+    document.getElementById('page-home').classList.add('active');
+    document.getElementById('nav-editor').classList.add('hidden');
+    document.getElementById('nav-app').classList.remove('hidden');
+    document.getElementById('autosave-pill').style.display = 'none';
+
+    setNavActive(el);
+
+    const rows = document.querySelectorAll('#page-home .data-table tbody tr');
+    let visibleCount = 0;
+    rows.forEach(row => {
+      const projectTag = row.querySelector('.project-tag').textContent.trim();
+      if (projectTag === projectName) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    document.getElementById('breadcrumb').innerHTML = '<span>All SOPs</span> <span class="breadcrumb-sep">›</span> <span class="breadcrumb-current">' + projectName + '</span>';
+    document.querySelector('#page-home .page-title').textContent = projectName + ' SOPs';
+    document.querySelector('#page-home .page-sub').textContent = visibleCount + ' documents';
+  }
+
+  // In real app: check Zustand dirty flag. In mockup: always show warning.
+  function tryGoHome() {
+    document.getElementById('modal-exit').classList.add('open');
+  }
+
+  // User confirmed exit (either path) → navigate home
+  function exitConfirmed() {
+    document.getElementById('modal-exit').classList.remove('open');
+    goHome();
+  }
+
+  // Update active state in app nav (Mode A)
+  function setNavActive(el) {
+    document.querySelectorAll('#nav-app .nav-item, #nav-app .nav-footer-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Switch to settings page
+  function goSettings(el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-settings').classList.add('active');
+    document.getElementById('nav-editor').classList.add('hidden');
+    document.getElementById('nav-app').classList.remove('hidden');
+    document.getElementById('autosave-pill').style.display = 'none';
+    document.getElementById('breadcrumb').innerHTML = '<span>Settings</span>';
+    if (el) setNavActive(el);
+  }
+
+  // Swap visible section in editor + update section nav active state
+  function showSection(name, el) {
+    // Hide all sections
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+    // Show target section
+    document.getElementById('section-' + name).style.display = 'block';
+    // Update section nav active state
+    document.querySelectorAll('#nav-editor .section-nav-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+    // Scroll editor body to top on section switch
+    document.getElementById('editor-body').scrollTop = 0;
+  }
+</script>
+
+</body>
+</html>
