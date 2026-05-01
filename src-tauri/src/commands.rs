@@ -823,14 +823,42 @@ pub async fn save_step(payload: Step, state: tauri::State<'_, SqlitePool>) -> Re
     Ok(())
 }
 
+async fn normalize_steps(sop_id: &str, tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>) -> Result<(), sqlx::Error> {
+    let steps = sqlx::query_as::<sqlx::Sqlite, Step>("SELECT * FROM steps WHERE sop_id = ? ORDER BY sort_order ASC, step_number ASC")
+        .bind(sop_id)
+        .fetch_all(&mut **tx)
+        .await?;
+    
+    for (idx, step) in steps.iter().enumerate() {
+        let order = (idx + 1) as i64;
+        if step.sort_order != order || step.step_number != order {
+            sqlx::query("UPDATE steps SET sort_order = ?, step_number = ? WHERE id = ?")
+                .bind(order)
+                .bind(order)
+                .bind(&step.id)
+                .execute(&mut **tx)
+                .await?;
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn delete_step(id: String, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
     let pool = state.inner();
+    
+    // Get sop_id first
+    let row = sqlx::query("SELECT sop_id FROM steps WHERE id = ?").bind(&id).fetch_one(pool).await.map_err(|e| e.to_string())?;
+    let sop_id: String = row.try_get("sop_id").map_err(|e| e.to_string())?;
+
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
     sqlx::query("DELETE FROM step_images WHERE step_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
     sqlx::query("DELETE FROM step_tools WHERE step_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
     sqlx::query("DELETE FROM step_items WHERE step_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
     sqlx::query("DELETE FROM steps WHERE id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    
+    normalize_steps(&sop_id, &mut tx).await.map_err(|e| e.to_string())?;
+
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -965,6 +993,8 @@ pub async fn duplicate_step(step_id: String, state: tauri::State<'_, SqlitePool>
             .bind(Uuid::new_v4().to_string()).bind(&new_id).bind(item.item_id).bind(item.free_text).bind(item.quantity).bind(item.unit)
             .execute(&mut *tx).await.map_err(|e| e.to_string())?;
     }
+
+    normalize_steps(&original.sop_id, &mut tx).await.map_err(|e| e.to_string())?;
 
     tx.commit().await.map_err(|e| e.to_string())?;
     Ok(new_id)
