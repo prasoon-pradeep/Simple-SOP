@@ -141,9 +141,12 @@ export function Sidebar() {
           />
         </div>
         {appVersion && (
-          <p className="pb-1 text-center text-[10px] text-text-quaternary font-mono uppercase tracking-tighter">
-            v{appVersion}{!appVersion.includes('alpha') && '-alpha'}
-          </p>
+          <div className="flex flex-col items-center pb-1 gap-1">
+            <p className="text-[10px] text-text-quaternary font-mono uppercase tracking-tighter">v{appVersion}</p>
+            <span className="px-1 py-0.5 rounded-[2px] bg-brand/5 text-brand/60 text-[8px] font-black uppercase tracking-widest border border-brand/20 leading-none">
+              Alpha
+            </span>
+          </div>
         )}
       </div>
     </aside>
