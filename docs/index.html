@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOP Builder — Local-First SOP Management</title>
+  <meta name="description" content="A professional-grade, offline-first desktop app for creating, editing, and exporting Standard Operating Procedures." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #c0392b;
+      --brand-dark: #96281b;
+      --text: #1a1a1a;
+      --text-secondary: #555;
+      --border: #e2e2e2;
+      --bg: #ffffff;
+      --surface: #f7f7f5;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-logo span.sop { color: var(--brand); }
+
+    nav a.nav-link {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      transition: color 0.15s;
+    }
+    nav a.nav-link:hover { color: var(--text); }
+
+    nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 760px;
+      margin: 5rem auto 3rem;
+      padding: 0 2rem;
+      text-align: center;
+    }
+
+    .alpha-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc10733;
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    h1 em { font-style: normal; color: var(--brand); }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+    }
+
+    .btn-group { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: #fff;
+      border: 1px solid var(--brand-dark);
+    }
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    /* ── Screenshot ── */
+    .screenshot-wrap {
+      max-width: 960px;
+      margin: 0 auto 5rem;
+      padding: 0 2rem;
+    }
+
+    .screenshot-wrap img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+    }
+
+    /* ── Features ── */
+    .section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--brand);
+      margin-bottom: 0.5rem;
+    }
+
+    .section h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.5rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .feature-icon {
+      font-size: 1.25rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .feature h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .feature p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ── Gallery ── */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .gallery-item p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    /* ── Download ── */
+    .download-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .download-section h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .download-section p {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .download-cards {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .download-card {
+      flex: 1;
+      min-width: 220px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: left;
+    }
+
+    .download-card .os {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+
+    .download-card .formats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .download-card .formats a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--brand);
+      transition: opacity 0.15s;
+    }
+    .download-card .formats a:hover { opacity: 0.75; }
+
+    .download-card .formats span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    footer a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">
+      <span class="sop">SOP</span> BUILDER
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="#features">Features</a>
+      <a class="nav-link" href="#screenshots">Screenshots</a>
+      <a class="nav-link" href="#download">Download</a>
+      <a class="nav-link" href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="alpha-badge">Alpha — v0.1.5</div>
+    <h1>SOP documentation that stays<br><em>on your machine</em></h1>
+    <p>A professional-grade, offline-first desktop app for creating, editing, and exporting Standard Operating Procedures. No cloud. No login. No subscriptions.</p>
+    <div class="btn-group">
+      <a class="btn btn-primary" href="#download">↓ Download for free</a>
+      <a class="btn btn-secondary" href="https://github.com/prasoon-pradeep/Simple-SOP">View on GitHub</a>
+    </div>
+  </section>
+
+  <!-- Hero screenshot -->
+  <div class="screenshot-wrap">
+    <img src="screenshots/01-home-sop-library.png" alt="SOP Builder — SOP Library" />
+  </div>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="section-label">Why SOP Builder</div>
+    <h2>Everything you need. Nothing you don't.</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <h3>Data Sovereignty</h3>
+        <p>All SOPs live in a local SQLite database on your machine. No account required, no data leaves your network.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📋</div>
+        <h3>Structured Editor</h3>
+        <p>Purpose, scope, safety notes, tools, items, and sequential steps — each field has a home. Auto-saves as you type.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🖼️</div>
+        <h3>Visual Steps</h3>
+        <p>Attach annotated photos to each step. Draw arrows, circles, and labels directly in the app.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📄</div>
+        <h3>PDF Export</h3>
+        <p>Generate a printable, text-selectable PDF from any SOP in one click. No formatting work required.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📦</div>
+        <h3>Portable Bundles</h3>
+        <p>Export any SOP as a self-contained <code>.sop</code> file. Share it offline, import it anywhere SOP Builder is installed.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔁</div>
+        <h3>Revision History</h3>
+        <p>Log every revision with notes, approver, and date. Full audit trail built in, no plugins needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="section" id="screenshots">
+    <div class="section-label">Screenshots</div>
+    <h2>See it in action</h2>
+    <div class="gallery">
+      <div class="gallery-item">
+        <img src="screenshots/02-viewer-document.png" alt="Document Viewer" />
+        <p>Formatted document viewer</p>
+      </div>
+      <div class="gallery-item">
+        <img src="screenshots/03-editor-procedure-steps.png" alt="Step Editor" />
+        <p>Step editor with visual aids</p>
+      </div>
+      <div class="gallery-item">
+        <img src="screenshots/05-editor-header.png" alt="Document Header" />
+        <p>Structured document header</p>
+      </div>
+      <div class="gallery-item">
+        <img src="screenshots/04-editor-revisions.png" alt="Revision History" />
+        <p>Full revision audit trail</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download -->
+  <section class="download-section" id="download">
+    <div class="section-label" style="color: var(--brand); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem;">Free Download</div>
+    <h2>Get SOP Builder</h2>
+    <p>Available for Windows and Linux. Free to use, forever.</p>
+    <div class="download-cards">
+      <div class="download-card">
+        <div class="os">Windows</div>
+        <div class="formats">
+          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_x64-setup.exe">
+            ↓ Installer (.exe) <span>recommended</span>
+          </a>
+          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_x64_en-US.msi">
+            ↓ MSI package
+          </a>
+        </div>
+      </div>
+      <div class="download-card">
+        <div class="os">Linux</div>
+        <div class="formats">
+          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_amd64.AppImage">
+            ↓ AppImage <span>portable</span>
+          </a>
+          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_amd64.deb">
+            ↓ .deb package <span>Debian/Ubuntu</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      SOP Builder is open source, licensed under the MIT License + Commons Clause. &nbsp;·&nbsp;
+      <a href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a> &nbsp;·&nbsp;
+      <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases">Release notes</a>
+    </p>
+  </footer>
+
+</body>
+</html>
