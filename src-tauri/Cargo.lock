@@ -4019,7 +4019,7 @@ dependencies = [
 
 [[package]]
 name = "sop-builder"
-version = "0.1.3"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

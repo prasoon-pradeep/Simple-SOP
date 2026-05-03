@@ -291,7 +291,7 @@ export default function Home() {
                           {sop.active_date || '—'}
                         </TableCell>
                         <TableCell>
-                          <Badge className={cn("text-[10px] py-0 px-2 h-5 flex items-center font-bold", getStatusColor(sop.approval_status))}>
+                          <Badge className={cn("text-[10px] py-0 px-2 h-5 flex items-center font-bold whitespace-nowrap", getStatusColor(sop.approval_status))}>
                             {sop.approval_status || 'Draft'}
                           </Badge>
                         </TableCell>
