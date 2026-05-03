@@ -912,6 +912,12 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] **Feature:** Added inline qty/unit entry + confirmation modal in StepResourcePicker
 - [x] **Phase 9 complete:** .sop export/import fully wired including Viewer sidebar button
 - [x] **Phase 10 complete:** PDF export via system print dialog — Export PDF button in Viewer sidebar opens PDF template in a new window with real SOP data injected, triggers print dialog
+- [x] **PDF images:** Embedded as base64 data URIs in Rust — bypasses asset:// protocol issues in the dynamically created pdf-export webview
+- [x] **PDF export UX:** Export PDF button disables for 10 s after click with "Generating PDF…" label to prevent duplicate triggers
+
+### KNOWN ISSUES
+- **PDF filename (Linux):** GTK print dialog hardcodes `output.pdf` — `document.title` is ignored by WebKitGTK. On Windows, WebView2 respects `document.title` so the correct `{SOP-ID}-V{N}.pdf` filename appears. No fix available without a different PDF engine.
+- **PDF bottom margin (Linux):** WebKitGTK does not apply `@page` bottom margin at intermediate page breaks — the last row of content on a non-final page butts against the cut line with no trailing whitespace. Top, left, and right margins are correct. On Windows this renders correctly. Proper fix requires headless Chromium (heavy dependency) or a pure-Rust PDF library (`printpdf`). Deferred to a future release.
 
 ---
 
