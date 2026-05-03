@@ -126,11 +126,19 @@ jobs:
           VERSION=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Debug Artifacts
+        run: |
+          echo "--- LINUX ARTIFACTS ---"
+          find artifacts/linux -maxdepth 3 -ls
+          echo "--- WINDOWS ARTIFACTS ---"
+          find artifacts/windows -maxdepth 3 -ls
+
       - name: Build latest.json
         run: |
           TAG="${{ github.event.inputs.tag }}"
           VERSION="${{ steps.version.outputs.version }}"
 
+          # Discover files with flexible patterns
           LINUX_APPIMAGE=$(find artifacts/linux -name "*.AppImage.tar.gz" | head -1)
           LINUX_SIG=$(find artifacts/linux -name "*.AppImage.tar.gz.sig" | head -1)
           WINDOWS_NSIS=$(find artifacts/windows -name "*.exe" | head -1)
@@ -138,9 +146,14 @@ jobs:
           WINDOWS_MSI=$(find artifacts/windows -name "*.msi" | head -1)
           WINDOWS_MSI_SIG=$(find artifacts/windows -name "*.msi.sig" | head -1)
 
-          LINUX_SIG_CONTENT=$(cat "$LINUX_SIG")
-          WINDOWS_NSIS_SIG_CONTENT=$(cat "$WINDOWS_NSIS_SIG")
-          WINDOWS_MSI_SIG_CONTENT=$(cat "$WINDOWS_MSI_SIG")
+          # Validation and fallback
+          if [ -z "$LINUX_SIG" ]; then echo "WARNING: Linux signature not found"; fi
+          if [ -z "$WINDOWS_NSIS_SIG" ]; then echo "WARNING: Windows NSIS signature not found"; fi
+
+          # Read signature contents if they exist
+          LINUX_SIG_CONTENT=$([ -f "$LINUX_SIG" ] && cat "$LINUX_SIG" || echo "")
+          WINDOWS_NSIS_SIG_CONTENT=$([ -f "$WINDOWS_NSIS_SIG" ] && cat "$WINDOWS_NSIS_SIG" || echo "")
+          WINDOWS_MSI_SIG_CONTENT=$([ -f "$WINDOWS_MSI_SIG" ] && cat "$WINDOWS_MSI_SIG" || echo "")
 
           REPO_URL="https://github.com/prasoon-pradeep/Simple-SOP/releases/download/${TAG}"
 
@@ -152,16 +165,17 @@ jobs:
             "platforms": {
               "linux-x86_64": {
                 "signature": "${LINUX_SIG_CONTENT}",
-                "url": "${REPO_URL}/$(basename $LINUX_APPIMAGE)"
+                "url": "${REPO_URL}/$(basename "$LINUX_APPIMAGE")"
               },
               "windows-x86_64": {
                 "signature": "${WINDOWS_NSIS_SIG_CONTENT}",
-                "url": "${REPO_URL}/$(basename $WINDOWS_NSIS)"
+                "url": "${REPO_URL}/$(basename "$WINDOWS_NSIS")"
               }
             }
           }
           EOF
 
+          echo "Generated latest.json:"
           cat latest.json
 
       - name: Create GitHub Release

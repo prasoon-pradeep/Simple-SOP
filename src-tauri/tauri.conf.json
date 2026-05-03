@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SOP Builder (Alpha)",
+  "productName": "sop-builder",
   "identifier": "com.pp.sop-builder",
   "build": {
     "beforeDevCommand": "npm run dev",
