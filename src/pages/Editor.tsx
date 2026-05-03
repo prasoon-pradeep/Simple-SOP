@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke } from '@tauri-apps/api/core';
-import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, CheckSquare } from 'lucide-react';
+import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Download, FileDown } from 'lucide-react';
 import { HeaderSection } from '@/components/editor/sections/HeaderSection';
 import { ScopeSection } from '@/components/editor/sections/ScopeSection';
 import { SafetySection } from '@/components/editor/sections/SafetySection';
@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { RevisionModal } from '@/components/editor/RevisionModal';
 import { Header } from '@/components/layout/Header';
+import { save } from '@tauri-apps/plugin-dialog';
 
 const SECTIONS = [
   { id: 'header', label: 'Header', icon: FileText },
@@ -134,6 +135,27 @@ export default function Editor() {
     setShowRevisionModal(false);
   };
 
+  const handleExportSop = async () => {
+    if (!currentSop) return;
+    try {
+      const suggestedName = `${currentSop.sop_id}-V${currentSop.version}.sop`;
+      const selected = await save({
+        filters: [{ name: 'SOP File', extensions: ['sop'] }],
+        defaultPath: suggestedName,
+      });
+
+      if (selected) {
+        await invoke('export_sop', { 
+          sopIdUuid: currentSop.id, 
+          savePath: selected 
+        });
+      }
+    } catch (error) {
+      console.error("Failed to export SOP", error);
+      alert("Error exporting SOP: " + error);
+    }
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case 'header': return <HeaderSection />;
@@ -192,6 +214,28 @@ export default function Editor() {
               );
             })}
           </nav>
+
+          {/* Sidebar Footer Actions */}
+          <div className="p-3 border-t border-border-subtle bg-panel/30 space-y-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full justify-start text-xs font-bold text-text-tertiary h-9 px-3 hover:text-brand"
+              onClick={handleExportSop}
+            >
+              <Download className="w-3.5 h-3.5 mr-2" />
+              Export .sop
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="w-full justify-start text-xs font-bold h-9 px-3 bg-brand hover:bg-brand-hover shadow-sm"
+              onClick={() => navigate(`/sop/${id}/view`)}
+            >
+              <FileDown className="w-3.5 h-3.5 mr-2" />
+              Export PDF
+            </Button>
+          </div>
         </aside>
 
         {/* Main Content Area */}

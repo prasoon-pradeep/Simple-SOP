@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { appDataDir, join } from '@tauri-apps/api/path';
-import { ArrowLeft, Pencil, Download, Database, CheckCircle2, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Pencil, Download, Database, CheckCircle2, Clock, XCircle, AlertCircle, FileArchive } from 'lucide-react';
+import { save } from '@tauri-apps/plugin-dialog';
 import { Button } from '@/components/ui/button';
 import { Definition, SOP, Revision, Tool, Item, StepFull } from '@/types';
 import { cn } from '@/lib/utils';
@@ -114,6 +115,23 @@ export default function Viewer() {
     );
   }
 
+  const handleExportSop = async () => {
+    if (!currentSop) return;
+    try {
+      const suggestedName = `${currentSop.sop_id}-V${currentSop.version}.sop`;
+      const selected = await save({
+        filters: [{ name: 'SOP File', extensions: ['sop'] }],
+        defaultPath: suggestedName,
+      });
+      if (selected) {
+        await invoke('export_sop', { sopIdUuid: currentSop.id, savePath: selected });
+      }
+    } catch (error) {
+      console.error("Failed to export SOP", error);
+      alert("Error exporting SOP: " + error);
+    }
+  };
+
   const getStatusIcon = (status: string | null) => {
     switch (status) {
       case 'Approved': return <CheckCircle2 className="w-4 h-4 mr-2 text-status-green" />;
@@ -164,6 +182,10 @@ export default function Viewer() {
               <Button onClick={handleEdit} className="w-full bg-white hover:bg-hover text-text-primary border border-border-strong shadow-sm font-bold flex items-center justify-center">
                  <Pencil className="w-4 h-4 mr-2" />
                  Edit SOP
+              </Button>
+              <Button onClick={handleExportSop} variant="outline" className="w-full font-bold flex items-center justify-center">
+                 <FileArchive className="w-4 h-4 mr-2" />
+                 Export .sop
               </Button>
               <Button className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center opacity-50 cursor-not-allowed" disabled>
                  <Download className="w-4 h-4 mr-2" />

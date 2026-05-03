@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke } from '@tauri-apps/api/core';
+import { open, save } from '@tauri-apps/plugin-dialog';
 import { SOP } from '@/types';
 import { 
   Table, 
@@ -22,11 +23,21 @@ import {
   FilterX, 
   Pencil,
   Eye,
-  Trash2
+  Trash2,
+  ShieldAlert
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { cn } from '@/lib/utils';
 import { DeleteSopModal } from '@/components/shared/DeleteSopModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+
+interface ImportPreview {
+  temp_dir: string;
+  sop_id: string;
+  sop_uuid: string;
+  title: string;
+  exists: boolean;
+}
 
 export default function Home() {
   const navigate = useNavigate();
@@ -44,6 +55,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [sopToDelete, setSopToDelete] = useState<SOP | null>(null);
+
+  // Import states
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     loadSops();
@@ -70,6 +85,46 @@ export default function Home() {
       navigate(`/sop/${id}/edit`);
     } catch (error) {
       console.error("Failed to create SOP", error);
+    }
+  };
+
+  const handleImportSop = async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: 'SOP File', extensions: ['sop'] }]
+      });
+
+      if (selected && typeof selected === 'string') {
+        setIsImporting(true);
+        const preview = await invoke<ImportPreview>('import_sop_preview', { filePath: selected });
+        setImportPreview(preview);
+        setIsImporting(false);
+      }
+    } catch (error) {
+      console.error("Failed to import SOP", error);
+      setIsImporting(false);
+      alert("Error opening SOP file: " + error);
+    }
+  };
+
+  const finalizeImport = async (mode: 'replace' | 'new') => {
+    if (!importPreview) return;
+    try {
+      setIsImporting(true);
+      const finalSopUuid = await invoke<string>('finalize_import', { 
+        tempDir: importPreview.temp_dir, 
+        mode 
+      });
+      setImportPreview(null);
+      setIsImporting(false);
+      
+      // Navigate to the viewer of the newly imported SOP
+      navigate(`/sop/${finalSopUuid}/view`);
+    } catch (error) {
+      console.error("Failed to finalize import", error);
+      setIsImporting(false);
+      alert("Error importing SOP: " + error);
     }
   };
 
@@ -143,9 +198,15 @@ export default function Home() {
             )}
           </div>
           <div className="flex items-center space-x-3">
-             <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-border-strong opacity-50 cursor-not-allowed" disabled>
+             <Button 
+               variant="outline" 
+               size="sm" 
+               className="h-8 text-xs font-bold border-border-strong"
+               onClick={handleImportSop}
+               disabled={isImporting}
+             >
                 <Upload className="w-3.5 h-3.5 mr-2" />
-                Import .sop (Soon)
+                {isImporting ? 'Importing...' : 'Import .sop'}
              </Button>
              <Button onClick={handleCreateSop} size="sm" className="h-8 text-xs font-bold bg-brand hover:bg-brand-hover text-white">
                 <Plus className="w-3.5 h-3.5 mr-2" />
@@ -273,6 +334,57 @@ export default function Home() {
         sopIdDisplay={sopToDelete?.sop_id || ''}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Import Conflict Dialog */}
+      <Dialog open={!!importPreview} onOpenChange={(open) => !open && setImportPreview(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Importing SOP</DialogTitle>
+            <DialogDescription className="pt-2 text-text-secondary">
+              The SOP <span className="font-bold text-text-primary">"{importPreview?.title}"</span> ({importPreview?.sop_id}) is ready for import.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {importPreview?.exists ? (
+            <div className="py-4 space-y-3">
+              <div className="p-3 bg-status-amber-bg border border-status-amber/20 rounded-md text-sm text-status-amber flex items-start">
+                <ShieldAlert className="w-4 h-4 mr-2 mt-0.5 shrink-0" />
+                <p>An SOP with this unique ID already exists in your library. How would you like to proceed?</p>
+              </div>
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4 border-border-strong" onClick={() => finalizeImport('replace')}>
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-text-primary">Replace Existing</span>
+                    <span className="text-[11px] text-text-tertiary">Overwrites the current document with this version.</span>
+                  </div>
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-left h-auto py-3 px-4 border-border-strong" onClick={() => finalizeImport('new')}>
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-text-primary">Import as New Copy</span>
+                    <span className="text-[11px] text-text-tertiary">Assigns a new ID and UUID. Original remains untouched.</span>
+                  </div>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="py-6 flex flex-col items-center justify-center space-y-4">
+              <div className="w-12 h-12 bg-brand-light rounded-full flex items-center justify-center text-brand">
+                <FileText className="w-6 h-6" />
+              </div>
+              <p className="text-center text-sm text-text-secondary px-4">This document is new to your library and will be added as a fresh entry.</p>
+              <Button onClick={() => finalizeImport('new')} className="w-full bg-brand hover:bg-brand-hover">
+                Confirm Import
+              </Button>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-start">
+            <Button variant="ghost" className="text-text-tertiary" onClick={() => setImportPreview(null)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

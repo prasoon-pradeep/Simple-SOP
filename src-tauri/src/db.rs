@@ -20,8 +20,7 @@ pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool> {
     let db_url = format!("sqlite:{}", db_path.to_string_lossy());
 
     // Connect and create file if it doesn't exist
-    let options = SqliteConnectOptions::from_str(&db_url)?
-        .create_if_missing(true);
+    let options = SqliteConnectOptions::from_str(&db_url)?.create_if_missing(true);
 
     let pool = SqlitePool::connect_with(options).await?;
 
@@ -47,7 +46,10 @@ pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool> {
         .fetch_one(&pool)
         .await?;
     if row.0 != "ok" {
-        return Err(anyhow::anyhow!("Database integrity check failed: {}", row.0));
+        return Err(anyhow::anyhow!(
+            "Database integrity check failed: {}",
+            row.0
+        ));
     }
 
     Ok(pool)
@@ -169,9 +171,10 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
 
 async fn migrate_db(pool: &SqlitePool) -> Result<()> {
     // Check if is_deleted column exists
-    let row: (i64,) = sqlx::query_as("SELECT count(*) FROM pragma_table_info('sops') WHERE name='is_deleted'")
-        .fetch_one(pool)
-        .await?;
+    let row: (i64,) =
+        sqlx::query_as("SELECT count(*) FROM pragma_table_info('sops') WHERE name='is_deleted'")
+            .fetch_one(pool)
+            .await?;
 
     if row.0 == 0 {
         sqlx::query("ALTER TABLE sops ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0")
@@ -183,12 +186,16 @@ async fn migrate_db(pool: &SqlitePool) -> Result<()> {
     }
 
     // Migration: Standardize 'Review' -> 'Under Review'
-    sqlx::query("UPDATE sops SET approval_status = 'Under Review' WHERE approval_status = 'Review'")
-        .execute(pool)
-        .await?;
-    sqlx::query("UPDATE revisions SET approval_status = 'Under Review' WHERE approval_status = 'Review'")
-        .execute(pool)
-        .await?;
+    sqlx::query(
+        "UPDATE sops SET approval_status = 'Under Review' WHERE approval_status = 'Review'",
+    )
+    .execute(pool)
+    .await?;
+    sqlx::query(
+        "UPDATE revisions SET approval_status = 'Under Review' WHERE approval_status = 'Review'",
+    )
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
