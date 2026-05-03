@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSopStore } from '@/store';
-import { 
-  Home as HomeIcon, 
-  Plus, 
-  Folder, 
-  Settings, 
+import {
+  Home as HomeIcon,
+  Plus,
+  Folder,
+  Settings,
   Database,
   ChevronRight
 } from 'lucide-react';
@@ -18,12 +19,20 @@ export function Sidebar() {
   const isEditor = location.pathname.includes('/edit');
   const isViewer = location.pathname.includes('/view');
   
-  const { 
-    sops, 
-    selectedProject, 
+  const {
+    sops,
+    selectedProject,
     setSelectedProject,
     setEditorOrigin
   } = useSopStore();
+
+  const [dbHealthy, setDbHealthy] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    invoke<boolean>('check_db_health')
+      .then(ok => setDbHealthy(ok))
+      .catch(() => setDbHealthy(false));
+  }, []);
 
   // Extract unique projects from sops list
   const projects = Array.from(new Set(sops.map(s => s.project_tag).filter(Boolean))) as string[];
@@ -114,11 +123,19 @@ export function Sidebar() {
           Settings
         </button>
         <div className="flex items-center px-3 py-2 justify-between">
-           <div className="flex items-center text-[10px] text-text-quaternary font-bold uppercase tracking-tight">
-              <Database className="w-3 h-3 mr-1.5" />
-              SQLite Local
-           </div>
-           <div className="w-1.5 h-1.5 rounded-full bg-status-green shadow-[0_0_4px_rgba(30,126,74,0.5)]"></div>
+          <div className="flex items-center text-[10px] text-text-quaternary font-bold uppercase tracking-tight">
+            <Database className="w-3 h-3 mr-1.5" />
+            SQLite Local
+          </div>
+          <div
+            title={dbHealthy === null ? 'Checking…' : dbHealthy ? 'DB healthy' : 'DB error'}
+            className={cn(
+              "w-1.5 h-1.5 rounded-full transition-colors",
+              dbHealthy === null && "bg-text-quaternary",
+              dbHealthy === true  && "bg-status-green shadow-[0_0_4px_rgba(30,126,74,0.5)]",
+              dbHealthy === false && "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]"
+            )}
+          />
         </div>
       </div>
     </aside>

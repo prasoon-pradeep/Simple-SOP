@@ -57,6 +57,7 @@ pub fn run() {
             commands::export_sop,
             commands::import_sop_preview,
             commands::finalize_import,
+            commands::check_db_health,
             commands::get_config_value,
             commands::set_config_value,
             commands::export_pdf,

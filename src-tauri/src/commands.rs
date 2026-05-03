@@ -1679,6 +1679,21 @@ pub async fn finalize_import(
 }
 
 // --------------------------------------------------------
+// DB Health
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn check_db_health(
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<bool, String> {
+    let row: (String,) = sqlx::query_as("PRAGMA integrity_check;")
+        .fetch_one(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(row.0 == "ok")
+}
+
+// --------------------------------------------------------
 // App Config
 // --------------------------------------------------------
 
