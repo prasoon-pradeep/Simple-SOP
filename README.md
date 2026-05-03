@@ -1,70 +1,83 @@
-# Simple SOP (Alpha)
+# SOP Builder (Alpha)
 
-> **⚠️ ALPHA STATUS:** This software is currently in an early development phase. While functional, it may contain bugs or breaking changes. Use with caution in production environments and **always maintain independent backups of your SOP data.**
+> **⚠️ ALPHA STATUS:** This software is in an early release phase. While functional end-to-end, it may contain bugs or breaking changes. Always maintain independent backups of your SOP data.
 
-Simple SOP is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
-
----
-
-## About SOP Builder
-
-SOP Builder was created to bridge the gap between "paper and pencil" and "complex enterprise SaaS." Technical and industrial teams often struggle with documentation that is either too messy to follow or locked behind expensive, cloud-only subscriptions.
-
-**Our Mission:** Provide a professional-grade, local-first tool that gives teams full ownership of their knowledge.
-
-### Why use SOP Builder?
-- **Data Sovereignty:** Your SOPs are stored in a local SQLite vault. No cloud, no login, no data tracking.
-- **Industrial Rigor:** Built-in support for revision history, approval workflows, and unique SOP ID tracking.
-- **Visual First:** Integrated image annotation tools designed specifically for step-by-step mechanical and technical instructions.
-- **Portable Intelligence:** Export your library to self-contained `.sop` bundles for offline sharing across high-security facilities.
+SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
 ---
 
-It is built with:
-- Tauri v2 for the desktop shell
-- React + TypeScript for the UI
-- Rust + SQLite for persistence and app-side commands
+## About
 
-The product is intended for Linux and Windows in the initial release, with no cloud dependency and no user-auth requirement.
+SOP Builder bridges the gap between "paper and pencil" and complex enterprise SaaS. Technical and industrial teams often struggle with documentation that is either too messy to follow or locked behind expensive, cloud-only subscriptions.
 
-## Product goals
+**Mission:** A professional-grade, local-first tool that gives teams full ownership of their knowledge.
 
-- Enable teams to author SOPs in a structured editor with immediate auto-save
-- Keep all data local and portable
-- Support revision history and approval metadata
+### Why SOP Builder?
+- **Data Sovereignty:** SOPs are stored in a local SQLite vault. No cloud, no login, no data tracking.
+- **Industrial Rigor:** Built-in revision history, approval workflows, and unique SOP ID tracking.
+- **Visual First:** Integrated image annotation tools designed for step-by-step mechanical and technical instructions.
+- **Portable:** Export your library to self-contained `.sop` bundles for offline sharing across high-security facilities.
+
+---
+
+## Tech stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- **State:** Zustand
+- **Drag and drop:** dnd-kit (Steps reordering)
+- **Image handling:** react-image-crop, react-konva, konva
+- **Desktop runtime:** Tauri v2
+- **Backend:** Rust, Tokio
+- **Database:** SQLite via `sqlx`
+
+---
+
+## Features
+
+- Author SOPs in a structured editor with auto-save
+- Revision history and approval metadata
+- Full Tools and Items library with search and clone
+- Step editor with image annotation, tool/item attachments, and drag-to-reorder
 - Export SOPs to printable, text-selectable PDF
-- Support portable `.sop` import/export bundles
+- Portable `.sop` import/export bundles
+- In-app auto-update (checks GitHub releases on launch)
 
-Detailed product requirements are documented in `docs/SOP_BUILDER_SPEC.md`.
+---
 
-## Current implementation status
+## Local development
 
-The repository is under active phased development.
+### Prerequisites
 
-Implemented today:
-- Tauri + React project scaffold
-- SQLite initialization, schema creation, and DB integrity checks
-- SOP ID generation command
-- Core SOP create/read/update commands
-- Basic revision save command and revision table loading
-- Editor shell with:
-  - Header section
-  - Scope and Purpose section
-  - Safety and Training section
-  - Approval and Revisions table section
-- Zustand store for in-memory app/editor state and dirty/saving flags
-- Shared image flow components:
-  - Upload/paste image
-  - Crop modal (16:9, 4:3)
-  - Annotation modal (arrow, circle, text, undo, skip)
-  - Rust command to persist original + annotated image files by UUID
+- Node.js 20+ and npm
+- Rust stable toolchain via `rustup`
+- Tauri v2 system dependencies: [tauri.app/start/prerequisites](https://tauri.app/start/prerequisites/)
 
-Still in progress:
-- Full Home screen experience
-- Full Viewer route
-- Tools/Items/Steps/Definitions full CRUD workflows
-- End-to-end `.sop` import/export
-- End-to-end PDF generation pipeline wiring
+**Linux extra packages:**
+```bash
+sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+```
+
+### Setup
+
+```bash
+npm install
+```
+
+### Run
+
+```bash
+npm run tauri dev        # Full desktop app (Tauri + frontend)
+npm run dev              # Frontend only (Vite)
+```
+
+### Build
+
+```bash
+npm run tauri build      # Distributable installer/package
+npm run build            # Frontend bundle only
+```
+
+---
 
 ## Repository structure
 
@@ -77,122 +90,52 @@ Simple-SOP/
 ├── src/                             # React frontend (TypeScript)
 │   ├── components/
 │   ├── pages/
-│   ├── store.ts                     # Zustand state store
+│   │   ├── Home.tsx
+│   │   ├── Editor.tsx
+│   │   ├── Viewer.tsx
+│   │   └── Settings.tsx
+│   ├── store.ts
 │   └── types.ts
 ├── src-tauri/                       # Rust backend and Tauri app
 │   ├── src/
 │   │   ├── commands.rs              # Tauri command handlers
-│   │   ├── db.rs                    # DB init and schema setup
-│   │   └── lib.rs                   # Tauri app bootstrap and command registration
+│   │   ├── db.rs                    # DB init and schema
+│   │   └── lib.rs                   # App bootstrap
 │   └── tauri.conf.json
 └── package.json
 ```
 
-## Tech stack
+---
 
-- Frontend: React, TypeScript, Vite, Tailwind CSS, shadcn/ui
-- State management: Zustand
-- Drag and drop: dnd-kit (planned usage in Steps flow)
-- Image handling UI: react-image-crop, react-konva, konva
-- Desktop runtime: Tauri v2
-- Backend runtime: Rust, Tokio
-- Database: SQLite via `sqlx`
+## Architecture notes
 
-## Local development setup
-
-### Prerequisites
-
-Install the following:
-- Node.js 18+ and npm
-- Rust toolchain (stable) via `rustup`
-- Tauri system dependencies for your OS
-
-Official Tauri prerequisites:
-- [Linux prerequisites](https://tauri.app/start/prerequisites/)
-- [Windows prerequisites](https://tauri.app/start/prerequisites/)
-
-### Install dependencies
-
-From project root:
-
-```bash
-npm install
-```
-
-### Run frontend only (Vite)
-
-```bash
-npm run dev
-```
-
-### Run desktop app (Tauri + frontend)
-
-```bash
-npm run tauri dev
-```
-
-### Build frontend bundle
-
-```bash
-npm run build
-```
-
-### Build distributable app
-
-```bash
-npm run tauri build
-```
-
-## Runtime data location
-
-The app creates and manages data under the Tauri app data directory, including:
-- `sop-builder.db` (SQLite database)
-- `images/{uuid}/original.{ext}`
-- `images/{uuid}/annotated.png`
-
-No image blobs are stored in SQLite; DB records reference image UUIDs.
-
-## Key architecture notes
-
-- Auto-save is designed to happen on field changes with debounce.
+- Auto-save triggers on field changes with debounce.
 - SQLite runs in WAL mode with foreign keys enabled.
-- DB integrity check runs during initialization.
-- `sops.approval_status` is intended to mirror latest revision status.
+- DB integrity check runs at initialization.
+- Images are stored on disk by UUID; SQLite holds only references.
 - SOP IDs follow `SOP-{YYYY}-{6CHAR}` format with an unambiguous character set.
+- Updates are served via a signed `latest.json` on GitHub Releases.
 
-See the spec for complete behavior rules and constraints.
+See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 
-## Useful scripts
+---
 
-- `npm run dev` - Start Vite dev server
-- `npm run build` - TypeScript check + Vite production build
-- `npm run preview` - Preview production frontend build
-- `npm run tauri dev` - Run Tauri app in development
-- `npm run tauri build` - Build Tauri app for distribution
+## Development workflow
 
-## Recommended development workflow
+- Read `docs/SOP_BUILDER_SPEC.md` before implementing behavior changes.
+- Keep UI aligned with `docs/sop-builder-ui-reference.html`.
+- Use Tauri commands for all persistent writes.
+- Validate both frontend (`npm run build`) and Rust (`cargo check` in `src-tauri/`) after meaningful changes.
 
-- Read `docs/SOP_BUILDER_SPEC.md` before implementing behavior changes
-- Keep UI behavior aligned with `docs/sop-builder-ui-reference.html`
-- Use Tauri commands for persistent writes
-- Prefer small, phase-aligned commits
-- Validate both frontend (`npm run build`) and Rust (`cargo check` in `src-tauri`) after meaningful changes
+---
 
-## Contributing notes
+## License
 
-- Keep changes consistent with current phase goals and constraints
-- Avoid introducing features explicitly marked out-of-scope in the spec
-- Preserve local-first/offline design assumptions
-- Ensure migrations/schema changes remain compatible with existing data
+Licensed by **SOP Builder Software** under the **MIT License + Commons Clause**.
 
-## License & Liability
+- **Free for use:** Individuals and organizations can use, modify, and self-host for free.
+- **No resale:** You cannot sell this software or offer it as a paid SaaS.
+- **No liability:** Authors are not responsible for data loss, physical harm, or business interruption.
+- **Trademarks:** "SOP Builder" and its logos cannot be used to brand a competing service.
 
-This project is licensed by **SOP Builder Software** under the **MIT License + Commons Clause**. 
-
-### **Key Terms:**
-- **Free for Use:** Individuals and organizations can use, modify, and self-host the software for free.
-- **No Resale:** You cannot sell this software or offer it as a paid service (SaaS) where the value is derived from the software itself.
-- **No Liability:** The authors are **not responsible** for any data loss, physical harm, or business interruption resulting from the use of this software. It is a documentation tool, not a substitute for professional safety advice.
-- **Trademarks:** The name "SOP Builder" and its logos are protected. You cannot use them to brand a competing service.
-
-See the [LICENSE](LICENSE) file for the full legal text.
+See [LICENSE](LICENSE) for the full legal text.
