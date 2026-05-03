@@ -14,6 +14,7 @@ interface SopState {
   stepsFull: StepFull[];
 
   isDirty: boolean;
+  hasUnsavedRevision: boolean;
   isSaving: boolean;
   lastSavedAt: string | null;
 
@@ -41,6 +42,7 @@ interface SopState {
   updateStepField: (stepId: string, field: keyof Step, value: any) => void;
 
   setDirty: (dirty: boolean) => void;
+  setHasUnsavedRevision: (val: boolean) => void;
   setSaving: (saving: boolean) => void;
   setLastSavedAt: (time: string | null) => void;
 }
@@ -61,6 +63,7 @@ export const useSopStore = create<SopState>((set, get) => ({
   stepsFull: [],
 
   isDirty: false,
+  hasUnsavedRevision: false,
   isSaving: false,
   lastSavedAt: null,
 
@@ -79,6 +82,7 @@ export const useSopStore = create<SopState>((set, get) => ({
     items: [],
     stepsFull: [],
     isDirty: false,
+    hasUnsavedRevision: false,
     isSaving: false,
     lastSavedAt: null,
   }),
@@ -86,7 +90,7 @@ export const useSopStore = create<SopState>((set, get) => ({
   setActiveSopId: (id) => set({ activeSopId: id }),
   setEditorOrigin: (origin) => set({ editorOrigin: origin }),
   
-  setCurrentSop: (sop) => set({ currentSop: sop, isDirty: false }),
+  setCurrentSop: (sop) => set({ currentSop: sop, isDirty: false, hasUnsavedRevision: false }),
   
   updateSopField: (field, value) => {
     set((state) => {
@@ -94,6 +98,7 @@ export const useSopStore = create<SopState>((set, get) => ({
       return {
         currentSop: { ...state.currentSop, [field]: value },
         isDirty: true,
+        hasUnsavedRevision: true,
         isSaving: true,
       };
     });
@@ -126,6 +131,7 @@ export const useSopStore = create<SopState>((set, get) => ({
         d.id === id ? { ...d, [field]: value } : d
       ),
       isDirty: true,
+      hasUnsavedRevision: true,
       isSaving: true,
     }));
 
@@ -161,6 +167,7 @@ export const useSopStore = create<SopState>((set, get) => ({
         s.step.id === stepId ? { ...s, step: { ...s.step, [field]: value } } : s
       ),
       isDirty: true,
+      hasUnsavedRevision: true,
       isSaving: true,
     }));
 
@@ -183,5 +190,6 @@ export const useSopStore = create<SopState>((set, get) => ({
     }, 500);
   },
 
-  setDirty: (dirty) => set({ isDirty: dirty })
+  setDirty: (dirty) => set({ isDirty: dirty }),
+  setHasUnsavedRevision: (val) => set({ hasUnsavedRevision: val })
 }));

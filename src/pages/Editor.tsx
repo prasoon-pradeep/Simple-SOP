@@ -11,6 +11,8 @@ import { ItemsSection } from '@/components/editor/sections/ItemsSection';
 import { ProcedureSection } from '@/components/editor/sections/ProcedureSection';
 import { DefinitionsSection } from '@/components/editor/sections/DefinitionsSection';
 import { ApprovalSection } from '@/components/editor/sections/ApprovalSection';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { RevisionModal } from '@/components/editor/RevisionModal';
 import { Header } from '@/components/layout/Header';
 
@@ -31,11 +33,21 @@ export default function Editor() {
   const [activeSection, setActiveSection] = useState('header');
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [modalMode, setModalMode] = useState<'exit' | 'log'>('exit');
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { 
-    isDirty, currentSop, editorOrigin, 
-    setDirty, setCurrentSop, setRevisions, 
-    setTools, setItems, setStepsFull, setDefinitions 
+    hasUnsavedRevision,
+    currentSop, 
+    editorOrigin, 
+    setDirty, 
+    setHasUnsavedRevision,
+    setCurrentSop, 
+    setRevisions, 
+    setTools, 
+    setItems, 
+    setStepsFull, 
+    setDefinitions 
   } = useSopStore();
+
 
   useEffect(() => {
     if (id) {
@@ -66,9 +78,8 @@ export default function Editor() {
   };
 
   const handleBack = () => {
-    if (isDirty) {
-      setModalMode('exit');
-      setShowRevisionModal(true);
+    if (hasUnsavedRevision) {
+      setShowExitConfirm(true);
     } else {
       exitCleanly();
     }
@@ -96,6 +107,7 @@ export default function Editor() {
       });
       
       setDirty(false);
+      setHasUnsavedRevision(false);
       setShowRevisionModal(false);
       
       if (modalMode === 'exit') {
@@ -113,6 +125,7 @@ export default function Editor() {
 
   const handleRevisionDiscard = () => {
     setDirty(false);
+    setHasUnsavedRevision(false);
     setShowRevisionModal(false);
     exitCleanly();
   };
@@ -193,6 +206,38 @@ export default function Editor() {
           </div>
         </main>
       </div>
+
+      <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Unsaved Revision Changes</DialogTitle>
+            <DialogDescription className="pt-2">
+              You have made changes in this session. Would you like to log a revision for document control before exiting?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setShowExitConfirm(false);
+                exitCleanly();
+              }}
+              className="text-text-tertiary"
+            >
+              Exit Without Logging
+            </Button>
+            <Button 
+              onClick={() => {
+                setShowExitConfirm(false);
+                setModalMode('exit');
+                setShowRevisionModal(true);
+              }}
+            >
+              Yes, Log Revision
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <RevisionModal 
         open={showRevisionModal} 
