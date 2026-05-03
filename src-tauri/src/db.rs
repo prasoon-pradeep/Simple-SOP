@@ -39,6 +39,9 @@ pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool> {
     // Create Tables
     create_tables(&pool).await?;
 
+    // Migration: Add is_deleted and deleted_at if they don't exist
+    migrate_db(&pool).await?;
+
     // Run Integrity Check
     let row: (String,) = sqlx::query_as("PRAGMA integrity_check;")
         .fetch_one(&pool)
@@ -74,7 +77,9 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
             training_required   INTEGER DEFAULT 0,
             training_details    TEXT,
             created_at          TEXT NOT NULL,
-            updated_at          TEXT NOT NULL
+            updated_at          TEXT NOT NULL,
+            is_deleted          INTEGER NOT NULL DEFAULT 0,
+            deleted_at          TEXT
         );"#,
         r#"CREATE TABLE IF NOT EXISTS revisions (
             id              TEXT PRIMARY KEY,
@@ -158,6 +163,32 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
     for query in queries {
         sqlx::query(query).execute(pool).await?;
     }
+
+    Ok(())
+}
+
+async fn migrate_db(pool: &SqlitePool) -> Result<()> {
+    // Check if is_deleted column exists
+    let row: (i64,) = sqlx::query_as("SELECT count(*) FROM pragma_table_info('sops') WHERE name='is_deleted'")
+        .fetch_one(pool)
+        .await?;
+
+    if row.0 == 0 {
+        sqlx::query("ALTER TABLE sops ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0")
+            .execute(pool)
+            .await?;
+        sqlx::query("ALTER TABLE sops ADD COLUMN deleted_at TEXT")
+            .execute(pool)
+            .await?;
+    }
+
+    // Migration: Standardize 'Review' -> 'Under Review'
+    sqlx::query("UPDATE sops SET approval_status = 'Under Review' WHERE approval_status = 'Review'")
+        .execute(pool)
+        .await?;
+    sqlx::query("UPDATE revisions SET approval_status = 'Under Review' WHERE approval_status = 'Review'")
+        .execute(pool)
+        .await?;
 
     Ok(())
 }

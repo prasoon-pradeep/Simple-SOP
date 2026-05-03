@@ -117,7 +117,7 @@ export default function Viewer() {
     switch (status) {
       case 'Approved': return <CheckCircle2 className="w-4 h-4 mr-2 text-status-green" />;
       case 'Rejected': return <XCircle className="w-4 h-4 mr-2 text-status-red" />;
-      case 'Review': return <Clock className="w-4 h-4 mr-2 text-status-amber" />;
+      case 'Under Review': return <Clock className="w-4 h-4 mr-2 text-status-amber" />;
       default: return <AlertCircle className="w-4 h-4 mr-2 text-text-tertiary" />;
     }
   };

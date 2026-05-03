@@ -21,10 +21,12 @@ import {
   FileText, 
   FilterX, 
   Pencil,
-  Eye
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { cn } from '@/lib/utils';
+import { DeleteSopModal } from '@/components/shared/DeleteSopModal';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -40,6 +42,8 @@ export default function Home() {
   } = useSopStore();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [sopToDelete, setSopToDelete] = useState<SOP | null>(null);
 
   useEffect(() => {
     loadSops();
@@ -69,6 +73,22 @@ export default function Home() {
     }
   };
 
+  const handleDeleteClick = (e: React.MouseEvent, sop: SOP) => {
+    e.stopPropagation();
+    setSopToDelete(sop);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!sopToDelete) return;
+    try {
+      await invoke('soft_delete_sop', { id: sopToDelete.id });
+      await loadSops();
+    } catch (error) {
+      console.error("Failed to delete SOP", error);
+    }
+  };
+
   const filteredSops = useMemo(() => {
     return sops.filter(sop => {
       const matchesSearch = !searchTerm || 
@@ -86,7 +106,7 @@ export default function Home() {
     switch (status) {
       case 'Approved': return 'bg-status-green-bg text-status-green border-none';
       case 'Rejected': return 'bg-status-red-bg text-status-red border-none';
-      case 'Review': return 'bg-status-amber-bg text-status-amber border-none';
+      case 'Under Review': return 'bg-status-amber-bg text-status-amber border-none';
       default: return 'bg-secondary text-text-tertiary border-none';
     }
   };
@@ -218,12 +238,15 @@ export default function Home() {
                           V{sop.version}
                         </TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                           <div className="flex justify-end items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <div className="flex justify-end items-center space-x-1 transition-opacity">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-text-tertiary hover:text-brand" onClick={(e) => handleEditClick(e, sop)} title="Edit SOP">
                                  <Pencil className="w-3.5 h-3.5" />
                               </Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-text-tertiary hover:text-text-primary" onClick={() => handleRowClick(sop)} title="View SOP">
                                  <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-text-tertiary hover:text-status-red" onClick={(e) => handleDeleteClick(e, sop)} title="Delete SOP">
+                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                            </div>
                         </TableCell>
@@ -243,6 +266,13 @@ export default function Home() {
            </div>
         </div>
       </main>
+
+      <DeleteSopModal 
+        open={isDeleteModalOpen} 
+        onOpenChange={setIsDeleteModalOpen}
+        sopIdDisplay={sopToDelete?.sop_id || ''}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

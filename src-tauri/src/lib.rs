@@ -24,6 +24,7 @@ pub fn run() {
             commands::create_sop,
             commands::get_sops,
             commands::get_sop,
+            commands::soft_delete_sop,
             commands::get_revisions,
             commands::save_sop,
             commands::save_revision,

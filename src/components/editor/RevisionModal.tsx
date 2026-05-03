@@ -84,7 +84,7 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="Draft">Draft</option>
-                  <option value="Review">In Review</option>
+                  <option value="Under Review">Under Review</option>
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
                 </select>

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "temp_app",
+  "productName": "SOP Builder",
   "version": "0.1.0",
   "identifier": "com.pp.temp_app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "temp_app",
+        "title": "SOP Builder",
         "width": 800,
         "height": 600
       }

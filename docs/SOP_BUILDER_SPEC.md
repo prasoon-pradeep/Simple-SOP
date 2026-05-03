@@ -87,10 +87,17 @@ CREATE TABLE sops (
   safety_notes        TEXT,
   training_required   INTEGER DEFAULT 0,       -- 0 = No, 1 = Yes
   training_details    TEXT,
+  is_deleted          INTEGER NOT NULL DEFAULT 0, -- soft delete flag: 0 = active, 1 = deleted
+  deleted_at          TEXT,                    -- ISO8601 datetime, set on soft delete
   created_at          TEXT NOT NULL,           -- ISO8601 datetime auto
   updated_at          TEXT NOT NULL            -- ISO8601 datetime auto
 );
 ```
+
+For existing databases, add a migration that:
+- Adds `is_deleted INTEGER NOT NULL DEFAULT 0` to `sops`
+- Adds `deleted_at TEXT` to `sops`
+- Leaves all existing SOP rows as active (`is_deleted = 0`)
 
 ### 4.2 SOP ID Format
 No sequence table needed. SOP ID is generated from current year + millisecond epoch timestamp suffix.
@@ -261,12 +268,13 @@ The sidebar has three modes. Only one is visible at a time. Mode switches instan
 
 ### 6.3 Home Screen (`/`)
 - Clean flat list/table of all SOPs
-- Columns: **SOP ID | Project | Title | Date Released | Status | Version**
+- Columns: **SOP ID | Project | Title | Date Released | Status | Version | Actions**
 - Search bar: filter by SOP ID, Project, Title, Department, Status (metadata only, no full-text search)
 - Filter chips: Status, Department, Project
 - **Create SOP** button: top-right of page header AND in sidebar Mode A
 - **Import .sop** button: also on home screen (placement: top-right, alongside Create SOP)
-- Each row click → opens **Viewer** (`/sop/:id/view`), never editor directly
+- Each row click → opens **Viewer** (`/sop/:id/view`)
+- **Actions column** (always visible, not hover-only): three icon buttons per row — **View** (opens Viewer), **Edit** (opens Editor directly, sets `editorOrigin = 'home'`), **Delete** (soft-delete confirm modal)
 - Project filter in sidebar: clicking a project filters the list to that project tag. "All SOPs" clears filter.
 - No dashboard, no stats, no kanban
 
@@ -822,6 +830,21 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [ ] Back link "← All SOPs" → navigate to Home (no dirty check needed — viewer is read-only)
 - [ ] "Export PDF" in sidebar → triggers print-to-PDF (same pipeline as Phase 9)
 
+### PHASE 8A — SOP Soft Delete
+- [x] Add SOP delete action to the Home screen actions column
+- [x] SOP delete uses a soft-delete flow only. No hard delete, no child-row deletion, no image-file deletion
+- [x] Add a `Delete SOP` button in the Home table actions for each SOP row
+- [x] Clicking `Delete SOP` opens a confirmation modal
+- [x] Modal instructs user to type exactly `DELETEDDMMYY`
+- [x] Delete confirm stays disabled until input exactly matches `DELETEDDMMYY`
+- [x] On confirm: set `sops.is_deleted = 1`, set `sops.deleted_at = current ISO8601 datetime`
+- [x] Soft-deleted SOPs are excluded from the default Home list
+- [x] `get_sops` returns only rows where `is_deleted = 0`
+- [x] No restore flow is required in this phase
+- [x] No purge/hard-delete flow is required in this phase
+- [x] No changes to related child tables are required in this phase
+- [x] No image folder cleanup is required in this phase
+
 ### PHASE 9 — .SOP Export/Import
 - [ ] Export: serialize SOP data to JSON, bundle with images, zip as .sop (Rust)
 - [ ] Import: unzip, validate manifest, reconstruct DB records and image files (Rust)
@@ -952,11 +975,12 @@ Sidebar switches mode based on context. Transition is instant (no animation need
 [toolbar: search box | filter chips]
 [full-width scrollable table]
 ```
-- Table columns: SOP ID | Project | Title | Date Released | Status | Version
+- Table columns: SOP ID | Project | Title | Date Released | Status | Version | Actions
 - SOP ID and Version rendered in monospace font (`DM Mono`)
 - Project shown as a small pill/tag
 - Status shown as coloured dot + label badge
-- Row click → opens SOP in editor (switches sidebar to Mode B immediately)
+- Row click → opens SOP in Viewer (`/sop/:id/view`)
+- Actions column always visible (never hidden behind hover): View icon → Viewer, Edit icon → Editor (origin = home), Delete icon → soft-delete confirm modal
 - Create SOP button (top right of page header, also in sidebar) → generates new SOP ID → opens editor
 
 ### 18.6 Editor Layout
@@ -1065,7 +1089,7 @@ Sidebar switches mode based on context. Transition is instant (no animation need
 12. **No user accounts or authentication.** App opens directly to home screen.
 13. **Mac support: not in scope for initial build.** Do not configure or test.
 14. **Electron is forbidden.** Tauri v2 only.
-15. **Row click on home always opens Viewer, never Editor directly.** Editor is only entered via "Edit SOP" button in Viewer sidebar or "Create SOP" flow.
+15. **Row click on home opens Viewer.** The Actions column Edit button may also open the Editor directly from Home (with `editorOrigin = 'home'`). Editor is otherwise entered via "Edit SOP" in the Viewer sidebar or "Create SOP" flow.
 16. **Editor back navigation depends on origin.** If user came from Viewer → back goes to Viewer. If user came from Create SOP → back goes to Home. Track in Zustand (`editorOrigin`).
 17. **Viewer is always read-only.** No input fields, no auto-save, no dirty flag in viewer.
 18. **Import .sop always opens Viewer after completion.** Never opens editor directly.

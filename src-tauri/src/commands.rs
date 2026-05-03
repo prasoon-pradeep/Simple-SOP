@@ -46,7 +46,7 @@ pub fn generate_sop_id() -> String {
 // Data Structures
 // --------------------------------------------------------
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
 pub struct SOP {
     pub id: String,
     pub sop_id: String,
@@ -70,6 +70,8 @@ pub struct SOP {
     pub training_details: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub is_deleted: i64,
+    pub deleted_at: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
@@ -246,8 +248,10 @@ pub async fn get_sops(state: tauri::State<'_, SqlitePool>) -> Result<Vec<SOP>, S
         SELECT id, sop_id, version, title, project_tag, department, document_owner,
                created_by, created_date, active_date, next_review_date, approval_status,
                regulatory_ref, distribution_list, related_documents, purpose, scope,
-               safety_notes, training_required, training_details, created_at, updated_at
+               safety_notes, training_required, training_details, created_at, updated_at,
+               is_deleted, deleted_at
         FROM sops
+        WHERE is_deleted = 0
         ORDER BY updated_at DESC
         "#
     )
@@ -265,7 +269,8 @@ pub async fn get_sop(id: String, state: tauri::State<'_, SqlitePool>) -> Result<
         SELECT id, sop_id, version, title, project_tag, department, document_owner,
                created_by, created_date, active_date, next_review_date, approval_status,
                regulatory_ref, distribution_list, related_documents, purpose, scope,
-               safety_notes, training_required, training_details, created_at, updated_at
+               safety_notes, training_required, training_details, created_at, updated_at,
+               is_deleted, deleted_at
         FROM sops
         WHERE id = ?
         "#
@@ -276,6 +281,18 @@ pub async fn get_sop(id: String, state: tauri::State<'_, SqlitePool>) -> Result<
     .map_err(|e| e.to_string())?;
 
     Ok(sop)
+}
+
+#[tauri::command]
+pub async fn soft_delete_sop(id: String, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    let ts = Utc::now().to_rfc3339();
+    sqlx::query("UPDATE sops SET is_deleted = 1, deleted_at = ? WHERE id = ?")
+        .bind(&ts)
+        .bind(id)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]

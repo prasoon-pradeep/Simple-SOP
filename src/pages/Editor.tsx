@@ -31,7 +31,11 @@ export default function Editor() {
   const [activeSection, setActiveSection] = useState('header');
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [modalMode, setModalMode] = useState<'exit' | 'log'>('exit');
-  const { isDirty, currentSop, editorOrigin, setDirty, setCurrentSop, setRevisions, setTools, setItems, setStepsFull } = useSopStore();
+  const { 
+    isDirty, currentSop, editorOrigin, 
+    setDirty, setCurrentSop, setRevisions, 
+    setTools, setItems, setStepsFull, setDefinitions 
+  } = useSopStore();
 
   useEffect(() => {
     if (id) {
@@ -41,12 +45,13 @@ export default function Editor() {
 
   const loadData = async () => {
     try {
-      const [sop, revs, tools, items, steps] = await Promise.all([
+      const [sop, revs, tools, items, steps, defs] = await Promise.all([
         invoke<any>('get_sop', { id }),
         invoke<any[]>('get_revisions', { sopId: id }),
         invoke<any[]>('get_tools', { sopId: id }),
         invoke<any[]>('get_items', { sopId: id }),
         invoke<any[]>('get_steps_full', { sopId: id }),
+        invoke<any[]>('get_definitions', { sopId: id }),
       ]);
 
       setCurrentSop(sop);
@@ -54,6 +59,7 @@ export default function Editor() {
       setTools(tools);
       setItems(items);
       setStepsFull(steps);
+      setDefinitions(defs);
     } catch (error) {
       console.error("Failed to load SOP data", error);
     }
