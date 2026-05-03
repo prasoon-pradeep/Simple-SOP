@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    temp_app_lib::run()
+    sop_builder_lib::run()
 }
