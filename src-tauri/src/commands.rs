@@ -1733,11 +1733,14 @@ pub async fn export_pdf(
         step_items_data = q.fetch_all(pool).await.map_err(|e| e.to_string())?;
     }
 
-    // Build image URL helper (asset protocol)
+    // Build image URL helper — embed as base64 data URI to avoid asset:// protocol issues in PDF webview
     let app_data = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
     let image_url = |uuid: &str| -> String {
         let path = app_data.join("images").join(uuid).join("annotated.png");
-        format!("asset://localhost{}", path.to_string_lossy())
+        match std::fs::read(&path) {
+            Ok(bytes) => format!("data:image/png;base64,{}", BASE64_STANDARD.encode(&bytes)),
+            Err(_) => String::new(),
+        }
     };
 
     // Build tool lookup map
@@ -1862,23 +1865,18 @@ pub async fn export_pdf(
 
     let json_str = serde_json::to_string(&sop_data).map_err(|e| e.to_string())?;
 
-    // Escape backticks and backslashes for safe injection into JS template literal
-    let safe_json = json_str.replace('\\', "\\\\").replace('`', "\\`");
-
-    let init_script = format!(
-        "window.SOP_DATA = JSON.parse(`{}`);",
-        safe_json
-    );
-
     let suggested_filename = format!("{}-V{}.pdf", sop.sop_id, sop.version);
 
-    let print_script = format!(
-        "document.addEventListener('DOMContentLoaded', function() {{ \
-            document.title = '{}';\
-            setTimeout(function() {{ window.print(); }}, 800);\
-        }});",
-        suggested_filename
+    // Inject JSON directly (no template literal — avoids backtick/`${` breakage in user data)
+    // Set document.title early so WebKitGTK can read it before the print dialog opens
+    let init_script = format!(
+        "window.SOP_DATA = {}; document.title = '{}';",
+        json_str, suggested_filename
     );
+
+    let print_script = "document.addEventListener('DOMContentLoaded', function() { \
+        setTimeout(function() { window.print(); }, 800); \
+    });";
 
     let full_init = format!("{}\n{}", init_script, print_script);
 
