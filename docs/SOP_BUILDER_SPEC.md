@@ -919,7 +919,7 @@ All filters applied client-side from SQLite query. No full-text search on step c
 
 **Automatic DB backups + corruption recovery screen:**
 
-On first app launch each calendar day, run `PRAGMA wal_checkpoint(TRUNCATE)` to fold WAL sidecar files into the main DB, then copy it to `$APPDATA/backups/sop-builder-YYYY-MM-DD.db`. Retain the 30 most recent backups (delete oldest beyond that). Track last backup date in `app_config` key `last_backup_date`.
+On first app launch each calendar day, create a backup using SQLite's `VACUUM INTO '$APPDATA/backups/sop-builder-YYYY-MM-DD.db'` command. `VACUUM INTO` produces a clean, self-contained snapshot without locking the original DB for writes — the app remains fully usable while the backup runs. It also avoids WAL sidecar file issues since the output is always a single consistent file. The backup task is spawned with `tauri::async_runtime::spawn` so it runs entirely in the background and never blocks the UI. Retain the 30 most recent backups (delete oldest beyond that). Track last backup date in `app_config` key `last_backup_date`.
 
 If `init_db` fails (corrupt DB), catch the error before the main window opens and show a plain full-screen error window instead (no DB calls, no React — pure static HTML). The screen must display OS-specific recovery instructions with the exact folder paths:
 
