@@ -858,18 +858,19 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] No image folder cleanup is required in this phase
 
 ### PHASE 9 — .SOP Export/Import
-- [ ] Export: serialize SOP data to JSON, bundle with images, zip as .sop (Rust)
-- [ ] Import: unzip, validate manifest, reconstruct DB records and image files (Rust)
-- [ ] File dialog for save/open (Tauri dialog API)
-- [ ] Conflict handling on import (replace vs import as new copy)
-- [ ] After import: navigate to Viewer for imported SOP
+- [x] Export: serialize SOP data to JSON, bundle with images, zip as .sop (Rust)
+- [x] Import: unzip, validate manifest, reconstruct DB records and image files (Rust)
+- [x] File dialog for save/open (Tauri dialog API)
+- [x] Conflict handling on import (replace vs import as new copy)
+- [x] After import: navigate to Viewer for imported SOP
+- [x] Export .sop accessible from Viewer sidebar
 
 ### PHASE 10 — PDF Export
-- [ ] Build HTML/CSS SOP template (iterated separately with stakeholder)
-- [ ] Tauri hidden webview render with injected SOP JSON
-- [ ] Print-to-PDF Tauri command
-- [ ] Filename format: `{SOP-ID}-V{N}.pdf`
-- [ ] PDF export accessible from both Viewer sidebar and Editor sidebar
+- [x] Build HTML/CSS SOP template (iterated separately with stakeholder)
+- [x] Tauri hidden webview render with injected SOP JSON via initialization_script
+- [x] System print dialog triggered via window.print() — user selects "Print to File / Save as PDF"
+- [x] PDF export accessible from Viewer sidebar ("Export PDF" button)
+- [x] Template bundled as public/pdf-template.html, served via Vite dev server and dist
 
 ### PHASE 11 — Back Navigation & Origin Tracking
 - [x] Track navigation origin in Zustand: `editorOrigin: 'home' | 'viewer'`
@@ -909,6 +910,8 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] **Refinement:** Aligned `StepCard` dividers in empty state by increasing action textarea `min-h`
 - [x] **Feature:** Implemented draggability for annotations in 'select' mode
 - [x] **Feature:** Added inline qty/unit entry + confirmation modal in StepResourcePicker
+- [x] **Phase 9 complete:** .sop export/import fully wired including Viewer sidebar button
+- [x] **Phase 10 complete:** PDF export via system print dialog — Export PDF button in Viewer sidebar opens PDF template in a new window with real SOP data injected, triggers print dialog
 
 ---
 

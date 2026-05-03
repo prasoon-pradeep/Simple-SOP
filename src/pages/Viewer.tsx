@@ -187,9 +187,12 @@ export default function Viewer() {
                  <FileArchive className="w-4 h-4 mr-2" />
                  Export .sop
               </Button>
-              <Button className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center opacity-50 cursor-not-allowed" disabled>
+              <Button
+                onClick={async () => { try { await invoke('export_pdf', { sopIdUuid: currentSop.id }); } catch(e) { alert('PDF export failed: ' + e); } }}
+                className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center"
+              >
                  <Download className="w-4 h-4 mr-2" />
-                 Export PDF (Soon)
+                 Export PDF
               </Button>
            </div>
         </div>

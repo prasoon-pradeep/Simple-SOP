@@ -1677,3 +1677,214 @@ pub async fn finalize_import(
 
     Ok(final_sop_uuid)
 }
+
+// --------------------------------------------------------
+// PDF Export
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn export_pdf(
+    sop_id_uuid: String,
+    state: tauri::State<'_, SqlitePool>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let pool = state.inner();
+
+    // Fetch all data
+    let sop = sqlx::query_as::<sqlx::Sqlite, SOP>("SELECT * FROM sops WHERE id = ?")
+        .bind(&sop_id_uuid).fetch_one(pool).await.map_err(|e| e.to_string())?;
+
+    let revisions = sqlx::query_as::<sqlx::Sqlite, Revision>("SELECT * FROM revisions WHERE sop_id = ? ORDER BY version DESC")
+        .bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+    let definitions = sqlx::query_as::<sqlx::Sqlite, Definition>("SELECT * FROM definitions WHERE sop_id = ? ORDER BY sort_order")
+        .bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+    let tools = sqlx::query_as::<sqlx::Sqlite, Tool>("SELECT * FROM tools WHERE sop_id = ?")
+        .bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+    let items = sqlx::query_as::<sqlx::Sqlite, Item>("SELECT * FROM items WHERE sop_id = ?")
+        .bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+    let steps = sqlx::query_as::<sqlx::Sqlite, Step>("SELECT * FROM steps WHERE sop_id = ? ORDER BY sort_order")
+        .bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+    let step_ids: Vec<String> = steps.iter().map(|s| s.id.clone()).collect();
+    let mut step_images: Vec<StepImage> = Vec::new();
+    let mut step_tools_data: Vec<StepTool> = Vec::new();
+    let mut step_items_data: Vec<StepItem> = Vec::new();
+
+    if !step_ids.is_empty() {
+        let placeholders = step_ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+
+        let q_imgs = format!("SELECT * FROM step_images WHERE step_id IN ({}) ORDER BY sort_order", placeholders);
+        let mut q = sqlx::query_as::<sqlx::Sqlite, StepImage>(&q_imgs);
+        for id in &step_ids { q = q.bind(id); }
+        step_images = q.fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+        let q_st = format!("SELECT * FROM step_tools WHERE step_id IN ({})", placeholders);
+        let mut q = sqlx::query_as::<sqlx::Sqlite, StepTool>(&q_st);
+        for id in &step_ids { q = q.bind(id); }
+        step_tools_data = q.fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+        let q_si = format!("SELECT * FROM step_items WHERE step_id IN ({})", placeholders);
+        let mut q = sqlx::query_as::<sqlx::Sqlite, StepItem>(&q_si);
+        for id in &step_ids { q = q.bind(id); }
+        step_items_data = q.fetch_all(pool).await.map_err(|e| e.to_string())?;
+    }
+
+    // Build image URL helper (asset protocol)
+    let app_data = app_handle.path().app_data_dir().map_err(|e| e.to_string())?;
+    let image_url = |uuid: &str| -> String {
+        let path = app_data.join("images").join(uuid).join("annotated.png");
+        format!("asset://localhost{}", path.to_string_lossy())
+    };
+
+    // Build tool lookup map
+    let tool_map: std::collections::HashMap<String, &Tool> = tools.iter().map(|t| (t.id.clone(), t)).collect();
+    let item_map: std::collections::HashMap<String, &Item> = items.iter().map(|i| (i.id.clone(), i)).collect();
+
+    // Build SOP_DATA JSON
+    let tools_json: Vec<serde_json::Value> = tools.iter().map(|t| {
+        serde_json::json!({
+            "name": t.name,
+            "type": t.r#type,
+            "model_part_no": t.model_part_no,
+            "specification": t.specification,
+            "calibration_required": t.calibration_required,
+            "calibration_due_date": t.calibration_due_date,
+            "image_url": t.image_uuid.as_ref().map(|u| image_url(u))
+        })
+    }).collect();
+
+    let items_json: Vec<serde_json::Value> = items.iter().map(|i| {
+        serde_json::json!({
+            "name": i.name,
+            "part_no": i.part_no,
+            "description": i.description,
+            "unit": i.unit,
+            "image_url": i.image_uuid.as_ref().map(|u| image_url(u))
+        })
+    }).collect();
+
+    let steps_json: Vec<serde_json::Value> = steps.iter().map(|s| {
+        let s_images: Vec<serde_json::Value> = step_images.iter()
+            .filter(|i| i.step_id == s.id)
+            .map(|i| serde_json::json!({ "url": image_url(&i.image_uuid) }))
+            .collect();
+
+        let s_tools: Vec<serde_json::Value> = step_tools_data.iter()
+            .filter(|t| t.step_id == s.id)
+            .map(|t| {
+                let name = t.tool_id.as_ref()
+                    .and_then(|id| tool_map.get(id))
+                    .map(|tool| tool.name.clone())
+                    .or_else(|| t.free_text.clone())
+                    .unwrap_or_default();
+                serde_json::json!({ "name": name, "is_library": t.tool_id.is_some() })
+            }).collect();
+
+        let s_items: Vec<serde_json::Value> = step_items_data.iter()
+            .filter(|i| i.step_id == s.id)
+            .map(|i| {
+                let (name, unit) = i.item_id.as_ref()
+                    .and_then(|id| item_map.get(id))
+                    .map(|item| (item.name.clone(), item.unit.clone().unwrap_or_default()))
+                    .unwrap_or_else(|| (i.free_text.clone().unwrap_or_default(), i.unit.clone().unwrap_or_default()));
+                serde_json::json!({
+                    "name": name,
+                    "quantity": i.quantity,
+                    "unit": unit,
+                    "is_library": i.item_id.is_some()
+                })
+            }).collect();
+
+        serde_json::json!({
+            "step_number": s.step_number,
+            "action": s.action,
+            "expected_output": s.expected_output,
+            "notes": s.notes,
+            "tools": s_tools,
+            "items": s_items,
+            "images": s_images
+        })
+    }).collect();
+
+    let definitions_json: Vec<serde_json::Value> = definitions.iter().map(|d| {
+        serde_json::json!({ "term": d.term, "meaning": d.meaning })
+    }).collect();
+
+    let revisions_json: Vec<serde_json::Value> = revisions.iter().map(|r| {
+        serde_json::json!({
+            "version": r.version,
+            "revision_notes": r.revision_notes,
+            "revised_by": r.revised_by,
+            "revision_date": r.revision_date,
+            "approval_status": r.approval_status,
+            "approved_by": r.approved_by,
+            "approval_date": r.approval_date
+        })
+    }).collect();
+
+    let sop_data = serde_json::json!({
+        "settings": {
+            "company_name": "SOP Builder",
+            "brand_color": "#c84b2f",
+            "company_logo_url": null
+        },
+        "sop": {
+            "sop_id": sop.sop_id,
+            "version": sop.version,
+            "title": sop.title,
+            "project_tag": sop.project_tag,
+            "department": sop.department,
+            "document_owner": sop.document_owner,
+            "created_by": sop.created_by,
+            "created_date": sop.created_date,
+            "active_date": sop.active_date,
+            "next_review_date": sop.next_review_date,
+            "approval_status": sop.approval_status,
+            "regulatory_ref": sop.regulatory_ref,
+            "distribution_list": sop.distribution_list,
+            "related_documents": sop.related_documents,
+            "purpose": sop.purpose,
+            "scope": sop.scope,
+            "safety_notes": sop.safety_notes,
+            "training_required": sop.training_required,
+            "training_details": sop.training_details
+        },
+        "tools": tools_json,
+        "items": items_json,
+        "steps": steps_json,
+        "definitions": definitions_json,
+        "revisions": revisions_json
+    });
+
+    let json_str = serde_json::to_string(&sop_data).map_err(|e| e.to_string())?;
+
+    // Escape backticks and backslashes for safe injection into JS template literal
+    let safe_json = json_str.replace('\\', "\\\\").replace('`', "\\`");
+
+    let init_script = format!(
+        "window.SOP_DATA = JSON.parse(`{}`);",
+        safe_json
+    );
+
+    let print_script = "document.addEventListener('DOMContentLoaded', function() { setTimeout(function() { window.print(); }, 800); });";
+
+    let full_init = format!("{}\n{}", init_script, print_script);
+
+    // Create a hidden webview window with the PDF template
+    tauri::WebviewWindowBuilder::new(
+        &app_handle,
+        "pdf-export",
+        tauri::WebviewUrl::App("pdf-template.html".into()),
+    )
+    .title("Print SOP")
+    .inner_size(1024.0, 768.0)
+    .initialization_script(&full_init)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}

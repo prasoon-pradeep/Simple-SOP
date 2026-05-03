@@ -57,6 +57,7 @@ pub fn run() {
             commands::export_sop,
             commands::import_sop_preview,
             commands::finalize_import,
+            commands::export_pdf,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
