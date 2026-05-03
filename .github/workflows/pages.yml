@@ -1,10 +1,6 @@
 name: Deploy GitHub Pages
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - 'docs/**'
   workflow_dispatch:
 
 permissions:
