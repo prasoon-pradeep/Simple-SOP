@@ -96,4 +96,19 @@
   ::-webkit-scrollbar-thumb {
     @apply bg-border-standard rounded-full;
   }
-}
+
+  .sop-pdf-card {
+    break-inside: auto;
+  }
+
+  .sop-pdf-card tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  @media screen {
+    .sop-pdf-card {
+      box-shadow: 0 0 0 1px #bbb;
+    }
+  }
+  }

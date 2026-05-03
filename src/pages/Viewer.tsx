@@ -184,9 +184,8 @@ export default function Viewer() {
       </aside>
 
       {/* PDF Content Area */}
-      <main className="flex-1 overflow-y-auto bg-[#c8c8c8] p-10 flex flex-col items-center">
-        {/* Page 1: Header + Purpose + Safety */}
-        <div className="pdf-page sop-pdf-card">
+      <main className="flex-1 overflow-y-auto bg-[#c8c8c8] p-10 flex justify-center">
+        <div className="sop-pdf-card bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[15mm] text-[#1a1a1a]">
           {/* Header Block */}
           <div className="pdf-title-block">
              <div className="pdf-title-block__top">
@@ -269,92 +268,85 @@ export default function Viewer() {
                </div>
             </div>
           )}
-        </div>
 
-        {/* Page 2: Tools & Items */}
-        {(tools.length > 0 || items.length > 0) && (
-          <div className="pdf-page sop-pdf-card">
-            {/* 3. Tools */}
-            {tools.length > 0 && (
-              <div className="pdf-section">
-                <div className="pdf-section-header">3. Equipment & Tools Required</div>
+          {/* 3. Tools */}
+          {tools.length > 0 && (
+            <div className="pdf-section mt-4">
+               <div className="pdf-section-header">3. Equipment & Tools Required</div>
+               <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
+                  <thead>
+                     <tr className="bg-[#ebebeb]">
+                        <th className="border border-[#c0c0c0] p-1 w-[24px] text-center italic">#</th>
+                        <th className="border border-[#c0c0c0] p-1 w-[48px] text-center">Image</th>
+                        <th className="border border-[#c0c0c0] p-1 text-left">Tool Name / Description</th>
+                        <th className="border border-[#c0c0c0] p-1 text-center w-[60px]">Type</th>
+                        <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Model #</th>
+                        <th className="border border-[#c0c0c0] p-1 text-left">Specification</th>
+                        <th className="border border-[#c0c0c0] p-1 text-center w-[50px]">Cal. Req</th>
+                        <th className="border border-[#c0c0c0] p-1 text-center w-[60px]">Cal. Due</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {tools.map((t, idx) => (
+                        <tr key={t.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
+                           <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
+                           <td className="border border-[#c0c0c0] p-1 text-center align-middle">
+                              <ImageFrame 
+                                src={t.image_uuid ? imageUrls[t.image_uuid] : null} 
+                                className="w-10 h-6 border-none bg-transparent"
+                              />
+                           </td>
+                           <td className="border border-[#c0c0c0] p-1 font-bold">{t.name}</td>
+                           <td className="border border-[#c0c0c0] p-1 text-center">{t.type || '—'}</td>
+                           <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{t.model_part_no || '—'}</td>
+                           <td className="border border-[#c0c0c0] p-1 italic">{t.specification || '—'}</td>
+                           <td className="border border-[#c0c0c0] p-1 text-center">{t.calibration_required ? 'Yes' : 'No'}</td>
+                           <td className="border border-[#c0c0c0] p-1 text-center">{fmtDate(t.calibration_due_date)}</td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+          )}
+
+          {/* 4. Items */}
+          {items.length > 0 && (
+             <div className="pdf-section mt-4">
+                <div className="pdf-section-header">4. Materials & Parts Required</div>
                 <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
-                    <thead>
+                   <thead>
                       <tr className="bg-[#ebebeb]">
-                          <th className="border border-[#c0c0c0] p-1 w-[24px] text-center italic">#</th>
-                          <th className="border border-[#c0c0c0] p-1 w-[48px] text-center">Image</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left">Tool Name / Description</th>
-                          <th className="border border-[#c0c0c0] p-1 text-center w-[60px]">Type</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Model #</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left">Specification</th>
-                          <th className="border border-[#c0c0c0] p-1 text-center w-[50px]">Cal. Req</th>
-                          <th className="border border-[#c0c0c0] p-1 text-center w-[60px]">Cal. Due</th>
+                         <th className="border border-[#c0c0c0] p-1 w-[24px] text-center italic">#</th>
+                         <th className="border border-[#c0c0c0] p-1 w-[48px] text-center">Image</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left">Item Name</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left w-[100px]">Part No / SKU</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left">Description</th>
+                         <th className="border border-[#c0c0c0] p-1 text-center w-[40px]">Unit</th>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {tools.map((t, idx) => (
-                          <tr key={t.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
+                   </thead>
+                   <tbody>
+                      {items.map((i, idx) => (
+                         <tr key={i.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
                             <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
                             <td className="border border-[#c0c0c0] p-1 text-center align-middle">
-                                <ImageFrame 
-                                  src={t.image_uuid ? imageUrls[t.image_uuid] : null} 
-                                  className="w-10 h-6 border-none bg-transparent"
-                                />
+                               <ImageFrame 
+                                 src={i.image_uuid ? imageUrls[i.image_uuid] : null} 
+                                 className="w-10 h-6 border-none bg-transparent"
+                               />
                             </td>
-                            <td className="border border-[#c0c0c0] p-1 font-bold">{t.name}</td>
-                            <td className="border border-[#c0c0c0] p-1 text-center">{t.type || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{t.model_part_no || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1 italic">{t.specification || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1 text-center">{t.calibration_required ? 'Yes' : 'No'}</td>
-                            <td className="border border-[#c0c0c0] p-1 text-center">{fmtDate(t.calibration_due_date)}</td>
-                          </tr>
+                            <td className="border border-[#c0c0c0] p-1 font-bold">{i.name}</td>
+                            <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{i.part_no || '—'}</td>
+                            <td className="border border-[#c0c0c0] p-1 italic">{i.description || '—'}</td>
+                            <td className="border border-[#c0c0c0] p-1 text-center font-bold">{i.unit || '—'}</td>
+                         </tr>
                       ))}
-                    </tbody>
+                   </tbody>
                 </table>
-              </div>
-            )}
+             </div>
+          )}
 
-            {/* 4. Items */}
-            {items.length > 0 && (
-              <div className="pdf-section mt-4">
-                  <div className="pdf-section-header">4. Materials & Parts Required</div>
-                  <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
-                    <thead>
-                        <tr className="bg-[#ebebeb]">
-                          <th className="border border-[#c0c0c0] p-1 w-[24px] text-center italic">#</th>
-                          <th className="border border-[#c0c0c0] p-1 w-[48px] text-center">Image</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left">Item Name</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[100px]">Part No / SKU</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left">Description</th>
-                          <th className="border border-[#c0c0c0] p-1 text-center w-[40px]">Unit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((i, idx) => (
-                          <tr key={i.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                              <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
-                              <td className="border border-[#c0c0c0] p-1 text-center align-middle">
-                                <ImageFrame 
-                                  src={i.image_uuid ? imageUrls[i.image_uuid] : null} 
-                                  className="w-10 h-6 border-none bg-transparent"
-                                />
-                              </td>
-                              <td className="border border-[#c0c0c0] p-1 font-bold">{i.name}</td>
-                              <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{i.part_no || '—'}</td>
-                              <td className="border border-[#c0c0c0] p-1 italic">{i.description || '—'}</td>
-                              <td className="border border-[#c0c0c0] p-1 text-center font-bold">{i.unit || '—'}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Page 3: Procedure (Can be multiple, but we'll start a new page) */}
-        <div className="pdf-page sop-pdf-card h-auto min-h-[297mm]">
-          <div className="pdf-section">
+          {/* 5. Procedure */}
+          <div className="pdf-section mt-4">
              <div className="pdf-section-header">5. Procedure</div>
              <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[8pt]">
                 <thead>
@@ -403,7 +395,7 @@ export default function Viewer() {
                            </td>
                         </tr>
                         {s.images.length > 0 && (
-                          <tr>
+                          <tr className="step-images-row">
                              <td className="border border-[#c0c0c0] p-1 text-center text-[#999] align-middle">&#x21b3;</td>
                              <td colSpan={4} className="border border-[#c0c0c0] p-2 border-t-0 border-dashed">
                                 <div className="flex flex-wrap gap-3">
@@ -425,68 +417,63 @@ export default function Viewer() {
                 </tbody>
              </table>
           </div>
+
+          {/* 6. Definitions */}
+          {definitions.length > 0 && (
+             <div className="pdf-section mt-4">
+                <div className="pdf-section-header">6. Definitions & Abbreviations</div>
+                <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[8pt]">
+                   <thead>
+                      <tr className="bg-[#ebebeb]">
+                         <th className="border border-[#c0c0c0] p-1 w-[120px] text-left">Term / Abbreviation</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left">Definition / Meaning</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      {definitions.map((d, idx) => (
+                         <tr key={d.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
+                            <td className="border border-[#c0c0c0] p-1.5 font-mono font-bold text-[8.5pt]">{d.term}</td>
+                            <td className="border border-[#c0c0c0] p-1.5">{d.meaning}</td>
+                         </tr>
+                      ))}
+                   </tbody>
+                </table>
+             </div>
+          )}
+
+          {/* 7. Revision History */}
+          {revisions.length > 0 && (
+             <div className="pdf-section mt-4">
+                <div className="pdf-section-header">7. Document Revision History</div>
+                <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
+                   <thead>
+                      <tr className="bg-[#ebebeb]">
+                         <th className="border border-[#c0c0c0] p-1 w-[32px] text-center">Ver.</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left">Revision Notes</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Revised By</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left w-[72px]">Rev. Date</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Status</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Approved By</th>
+                         <th className="border border-[#c0c0c0] p-1 text-left w-[72px]">Appr. Date</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      {revisions.map((r, idx) => (
+                         <tr key={r.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
+                            <td className="border border-[#c0c0c0] p-1 text-center font-bold font-mono">V{r.version}</td>
+                            <td className={cn("border border-[#c0c0c0] p-1", r.version === 1 && "italic text-[#888]")}>{r.revision_notes}</td>
+                            <td className="border border-[#c0c0c0] p-1">{r.revised_by || '—'}</td>
+                            <td className="border border-[#c0c0c0] p-1">{fmtDate(r.revision_date)}</td>
+                            <td className="border border-[#c0c0c0] p-1 font-medium">{r.approval_status || 'Draft'}</td>
+                            <td className="border border-[#c0c0c0] p-1">{r.approved_by || '—'}</td>
+                            <td className="border border-[#c0c0c0] p-1">{fmtDate(r.approval_date)}</td>
+                         </tr>
+                      ))}
+                   </tbody>
+                </table>
+             </div>
+          )}
         </div>
-
-        {/* Page 4: Definitions & Revision History */}
-        {(definitions.length > 0 || revisions.length > 0) && (
-          <div className="pdf-page sop-pdf-card">
-            {/* 6. Definitions */}
-            {definitions.length > 0 && (
-              <div className="pdf-section">
-                  <div className="pdf-section-header">6. Definitions & Abbreviations</div>
-                  <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[8pt]">
-                    <thead>
-                        <tr className="bg-[#ebebeb]">
-                          <th className="border border-[#c0c0c0] p-1 w-[120px] text-left">Term / Abbreviation</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left">Definition / Meaning</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {definitions.map((d, idx) => (
-                          <tr key={d.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                              <td className="border border-[#c0c0c0] p-1.5 font-mono font-bold text-[8.5pt]">{d.term}</td>
-                              <td className="border border-[#c0c0c0] p-1.5">{d.meaning}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-              </div>
-            )}
-
-            {/* 7. Revision History */}
-            {revisions.length > 0 && (
-              <div className="pdf-section mt-4">
-                  <div className="pdf-section-header">7. Document Revision History</div>
-                  <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
-                    <thead>
-                        <tr className="bg-[#ebebeb]">
-                          <th className="border border-[#c0c0c0] p-1 w-[32px] text-center">Ver.</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left">Revision Notes</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Revised By</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[72px]">Rev. Date</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Status</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Approved By</th>
-                          <th className="border border-[#c0c0c0] p-1 text-left w-[72px]">Appr. Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {revisions.map((r, idx) => (
-                          <tr key={r.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                              <td className="border border-[#c0c0c0] p-1 text-center font-bold font-mono">V{r.version}</td>
-                              <td className={cn("border border-[#c0c0c0] p-1", r.version === 1 && "italic text-[#888]")}>{r.revision_notes}</td>
-                              <td className="border border-[#c0c0c0] p-1">{r.revised_by || '—'}</td>
-                              <td className="border border-[#c0c0c0] p-1">{fmtDate(r.revision_date)}</td>
-                              <td className="border border-[#c0c0c0] p-1 font-medium">{r.approval_status || 'Draft'}</td>
-                              <td className="border border-[#c0c0c0] p-1">{r.approved_by || '—'}</td>
-                              <td className="border border-[#c0c0c0] p-1">{fmtDate(r.approval_date)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-              </div>
-            )}
-          </div>
-        )}
       </main>
     </div>
   );
