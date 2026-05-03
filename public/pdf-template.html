@@ -92,6 +92,8 @@
 
     @media print {
       #sop-root { padding: 0; }
+      .pdf-page { page-break-after: always; }
+      .pdf-page:last-child { page-break-after: auto; }
       a { color: inherit; text-decoration: none; }
     }
 
@@ -1454,6 +1456,132 @@ function renderRevisions(revisions, n) {
 }
 
 /* ============================================================
+   PAGINATION
+   Wraps content in explicit A4 page containers (.pdf-page) so
+   WebKitGTK applies @page margins correctly at every page break.
+   ============================================================ */
+function paginate(staging, root) {
+  /* Measure actual px-per-mm at current DPI using a probe element */
+  var probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;width:100mm;height:0;left:-9999px;';
+  document.body.appendChild(probe);
+  var pxPerMm = probe.offsetWidth / 100;
+  document.body.removeChild(probe);
+
+  /* 267mm = 297mm A4 minus 15mm top and bottom @page margins.
+     Subtract a small safety margin to avoid off-by-one pixel overflows. */
+  var PAGE_H = Math.round(267 * pxPerMm) - 10;
+
+  var blocks = Array.from(staging.children);
+  var pages  = [[]];
+  var pageHs = [0];
+
+  function ci()      { return pages.length - 1; }
+  function newPage() { pages.push([]); pageHs.push(0); }
+  function fits(h)   { return pageHs[ci()] === 0 || pageHs[ci()] + h <= PAGE_H; }
+  function addEl(el, h) { pages[ci()].push(el); pageHs[ci()] += h; }
+
+  /* Temporarily attach a detached element to measure its rendered height */
+  function measureH(el) {
+    staging.appendChild(el);
+    var h = el.offsetHeight;
+    staging.removeChild(el);
+    return h;
+  }
+
+  /* Group tbody rows: keep a step row together with its image sub-row(s) */
+  function groupRows(tbody) {
+    var rows = Array.from(tbody.rows);
+    var groups = [], i = 0;
+    while (i < rows.length) {
+      var g = [rows[i++]];
+      while (i < rows.length && rows[i].classList.contains('step-images-row'))
+        g.push(rows[i++]);
+      groups.push(g);
+    }
+    return groups;
+  }
+
+  /* Build a section div containing a subset of row-groups.
+     includeSecHeader = false on continuation chunks (avoid repeating the numbered header). */
+  function buildChunk(origBlock, thead, rowGroups, includeSecHeader) {
+    var tableEl = origBlock.querySelector('table');
+    var secHdr  = origBlock.querySelector('.section__header');
+    var div = document.createElement('div');
+    div.className = origBlock.className;
+    if (includeSecHeader && secHdr) div.appendChild(secHdr.cloneNode(true));
+    var tbl = document.createElement(tableEl.tagName);
+    tbl.className = tableEl.className;
+    if (thead) tbl.appendChild(thead.cloneNode(true));
+    var tb = document.createElement('tbody');
+    rowGroups.forEach(function(g) {
+      g.forEach(function(r) { tb.appendChild(r.cloneNode(true)); });
+    });
+    tbl.appendChild(tb);
+    div.appendChild(tbl);
+    return div;
+  }
+
+  blocks.forEach(function(block) {
+    var bh    = block.offsetHeight;
+    var tbody = block.querySelector('tbody');
+
+    /* Fits on current page as-is */
+    if (fits(bh)) { addEl(block, bh); return; }
+
+    /* Doesn't fit and not splittable (no tbody) → new page */
+    if (!tbody) { newPage(); addEl(block, bh); return; }
+
+    /* Split at row-group boundaries */
+    var thead  = block.querySelector('thead');
+    var groups = groupRows(tbody);
+
+    var isFirst  = true;
+    var pending  = [];
+    var pendingH = 0;
+
+    function flush() {
+      if (!pending.length) return false;
+      var chunk = buildChunk(block, thead, pending, isFirst);
+      var ch = measureH(chunk);
+      var startedNew = false;
+      if (!fits(ch)) { newPage(); startedNew = true; }
+      addEl(chunk, ch);
+      isFirst  = false;
+      pending  = [];
+      pendingH = 0;
+      return startedNew;
+    }
+
+    groups.forEach(function(g) {
+      var gh = g.reduce(function(s, r) { return s + r.offsetHeight; }, 0);
+      var secHdrEl = isFirst ? block.querySelector('.section__header') : null;
+      var secHdrH  = secHdrEl ? secHdrEl.offsetHeight : 0;
+      var theadH   = thead ? thead.offsetHeight : 0;
+      var estimated = secHdrH + theadH + pendingH + gh;
+
+      if (pending.length > 0 && !fits(estimated)) {
+        var startedNew = flush();
+        if (!startedNew) newPage();
+      }
+      pending.push(g);
+      pendingH += gh;
+    });
+
+    flush();
+  });
+
+  /* Build DOM: wrap each page's blocks in a .pdf-page div */
+  root.innerHTML = '';
+  pages.forEach(function(pageBlocks) {
+    var div = document.createElement('div');
+    div.className = 'pdf-page';
+    pageBlocks.forEach(function(el) { div.appendChild(el); });
+    root.appendChild(div);
+  });
+}
+
+/* ============================================================
    MAIN — build all sections sequentially, skip empty ones
    ============================================================ */
 (function init() {
@@ -1473,12 +1601,21 @@ function renderRevisions(revisions, n) {
   h = renderTools(data.tools, n);   if (h) { out += h; n++; }
   h = renderItems(data.items, n);   if (h) { out += h; n++; }
 
-  out += renderSteps(data.steps, n); n++;  /* always shown */
+  out += renderSteps(data.steps, n); n++;
 
   h = renderDefinitions(data.definitions, n); if (h) { out += h; n++; }
   h = renderRevisions(data.revisions, n);     if (h) { out += h; n++; }
 
-  document.getElementById('sop-root').innerHTML = out;
+  /* Render into a hidden staging div for accurate measurement */
+  var staging = document.createElement('div');
+  staging.style.cssText = 'position:absolute;left:-9999px;top:0;width:180mm;visibility:hidden;';
+  document.body.appendChild(staging);
+  staging.innerHTML = out;
+
+  var root = document.getElementById('sop-root');
+  paginate(staging, root);
+
+  document.body.removeChild(staging);
 }());
 </script>
 </body>

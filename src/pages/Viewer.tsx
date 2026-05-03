@@ -26,6 +26,7 @@ export default function Viewer() {
   } = useSopStore();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [pdfExporting, setPdfExporting] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -188,12 +189,25 @@ export default function Viewer() {
                  Export .sop
               </Button>
               <Button
-                onClick={async () => { try { await invoke('export_pdf', { sopIdUuid: currentSop.id }); } catch(e) { alert('PDF export failed: ' + e); } }}
-                className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center"
+                disabled={pdfExporting}
+                onClick={async () => {
+                  try {
+                    setPdfExporting(true);
+                    await invoke('export_pdf', { sopIdUuid: currentSop.id });
+                    setTimeout(() => setPdfExporting(false), 10000);
+                  } catch(e) {
+                    setPdfExporting(false);
+                    alert('PDF export failed: ' + e);
+                  }
+                }}
+                className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                 <Download className="w-4 h-4 mr-2" />
-                 Export PDF
+                <Download className="w-4 h-4 mr-2" />
+                {pdfExporting ? 'Generating PDF…' : 'Export PDF'}
               </Button>
+              {pdfExporting && (
+                <p className="text-xs text-center text-muted-foreground">Button re-enables in 10 s</p>
+              )}
            </div>
         </div>
 
