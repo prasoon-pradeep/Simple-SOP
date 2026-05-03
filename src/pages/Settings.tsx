@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import licenseText from '../../LICENSE?raw';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -43,7 +44,9 @@ export default function Settings() {
       </header>
 
       <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-lg space-y-8">
+        <div className="max-w-lg space-y-10">
+
+          {/* Organisation */}
           <div>
             <h2 className="text-base font-semibold text-text-primary mb-1">Organisation</h2>
             <p className="text-xs text-text-tertiary mb-4">Appears in the PDF header on every exported document.</p>
@@ -58,16 +61,32 @@ export default function Settings() {
                 onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
               />
             </div>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="mt-4 bg-brand hover:bg-brand-hover text-white font-semibold"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save Settings'}
+            </Button>
           </div>
 
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-brand hover:bg-brand-hover text-white font-semibold"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save Settings'}
-          </Button>
+          <div className="border-t border-border-standard" />
+
+          {/* Licence Agreement */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <ScrollText className="w-4 h-4 text-text-tertiary" />
+              <h2 className="text-base font-semibold text-text-primary">Licence Agreement</h2>
+            </div>
+            <p className="text-xs text-text-tertiary mb-4">
+              By installing and using SOP Builder you agree to the terms of the licence below.
+            </p>
+            <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 whitespace-pre-wrap font-mono overflow-y-auto max-h-72">
+              {licenseText}
+            </pre>
+          </div>
+
         </div>
       </div>
     </div>
