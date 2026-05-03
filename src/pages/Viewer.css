@@ -173,3 +173,24 @@
 .pdf-steps-tbody tr.step-images-row td {
   border-top: 1px dashed #cccccc;
 }
+
+.pdf-page {
+  width: 210mm;
+  height: 297mm;
+  padding: 15mm;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  page-break-after: always;
+}
+
+@media print {
+  .pdf-page {
+    margin: 0;
+    box-shadow: none;
+  }
+}
