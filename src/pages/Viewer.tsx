@@ -206,7 +206,7 @@ export default function Viewer() {
       </aside>
 
       {/* PDF Content Area */}
-      <main className="flex-1 overflow-y-auto bg-[#c8c8c8] p-10 flex justify-center">
+      <main className="flex-1 overflow-y-auto bg-[#c8c8c8] p-10 flex justify-center items-start">
         <div className="sop-pdf-card bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[15mm] text-[#1a1a1a]">
           {/* Header Block */}
           <div className="pdf-title-block">
