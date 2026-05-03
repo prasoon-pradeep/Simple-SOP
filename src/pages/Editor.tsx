@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke } from '@tauri-apps/api/core';
-import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Save } from 'lucide-react';
+import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, CheckSquare } from 'lucide-react';
 import { HeaderSection } from '@/components/editor/sections/HeaderSection';
 import { ScopeSection } from '@/components/editor/sections/ScopeSection';
 import { SafetySection } from '@/components/editor/sections/SafetySection';
@@ -187,20 +187,6 @@ export default function Editor() {
             <h1 className="text-lg font-bold text-text-primary">
               {SECTIONS.find(s => s.id === activeSection)?.label}
             </h1>
-            <div className="flex items-center space-x-3">
-              {isDirty && (
-                 <button 
-                   onClick={() => {
-                     setModalMode('log');
-                     setShowRevisionModal(true);
-                   }}
-                   className="flex items-center px-3 py-1.5 bg-brand text-white rounded text-sm font-medium hover:bg-brand-hover transition-colors"
-                 >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Draft
-                 </button>
-              )}
-            </div>
           </header>
           <div className="flex-1 overflow-y-auto">
              {renderSection()}
