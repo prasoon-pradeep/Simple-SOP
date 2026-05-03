@@ -2,7 +2,7 @@
 name = "sop-builder"
 version = "0.1.0"
 description = "SOP Builder — Standard Operating Procedure management tool"
-authors = ["you"]
+authors = ["SOP Builder Authors"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -32,4 +32,6 @@ zip = "8.6.0"
 tempfile = "3.27.0"
 walkdir = "2.5.0"
 tauri-plugin-dialog = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 

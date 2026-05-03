@@ -1,0 +1,191 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag (e.g. v0.2.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build — Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libayatana-appindicator3-dev \
+            patchelf
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Tauri app (Linux)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        run: npm run tauri build
+
+      - name: Upload Linux bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bundles
+          retention-days: 90
+          path: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/appimage/*.AppImage.tar.gz
+            src-tauri/target/release/bundle/appimage/*.AppImage.tar.gz.sig
+
+  build-windows:
+    name: Build — Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Tauri app (Windows)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        run: npm run tauri build
+
+      - name: Upload Windows bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-bundles
+          retention-days: 90
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/msi/*.msi.sig
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/nsis/*.exe.sig
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux bundles
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-bundles
+          path: artifacts/linux
+
+      - name: Download Windows bundles
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-bundles
+          path: artifacts/windows
+
+      - name: Read version from Cargo.toml
+        id: version
+        run: |
+          VERSION=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build latest.json
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          LINUX_APPIMAGE=$(find artifacts/linux -name "*.AppImage.tar.gz" | head -1)
+          LINUX_SIG=$(find artifacts/linux -name "*.AppImage.tar.gz.sig" | head -1)
+          WINDOWS_NSIS=$(find artifacts/windows -name "*.exe" | head -1)
+          WINDOWS_NSIS_SIG=$(find artifacts/windows -name "*.exe.sig" | head -1)
+          WINDOWS_MSI=$(find artifacts/windows -name "*.msi" | head -1)
+          WINDOWS_MSI_SIG=$(find artifacts/windows -name "*.msi.sig" | head -1)
+
+          LINUX_SIG_CONTENT=$(cat "$LINUX_SIG")
+          WINDOWS_NSIS_SIG_CONTENT=$(cat "$WINDOWS_NSIS_SIG")
+          WINDOWS_MSI_SIG_CONTENT=$(cat "$WINDOWS_MSI_SIG")
+
+          REPO_URL="https://github.com/prasoon-pradeep/Simple-SOP/releases/download/${TAG}"
+
+          cat > latest.json << EOF
+          {
+            "version": "${VERSION}",
+            "notes": "See release notes on GitHub.",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "platforms": {
+              "linux-x86_64": {
+                "signature": "${LINUX_SIG_CONTENT}",
+                "url": "${REPO_URL}/$(basename $LINUX_APPIMAGE)"
+              },
+              "windows-x86_64": {
+                "signature": "${WINDOWS_NSIS_SIG_CONTENT}",
+                "url": "${REPO_URL}/$(basename $WINDOWS_NSIS)"
+              }
+            }
+          }
+          EOF
+
+          cat latest.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: SOP Builder ${{ github.event.inputs.tag }}
+          body: |
+            ## SOP Builder ${{ github.event.inputs.tag }}
+
+            ### Installation
+            - **Windows**: Download and run the `.exe` (NSIS installer) or `.msi`
+            - **Linux**: Download the `.AppImage` (portable) or `.deb` (Debian/Ubuntu)
+
+            The app will automatically check for future updates on launch.
+          files: |
+            artifacts/linux/**/*.deb
+            artifacts/linux/**/*.AppImage
+            artifacts/linux/**/*.AppImage.tar.gz
+            artifacts/linux/**/*.AppImage.tar.gz.sig
+            artifacts/windows/**/*.msi
+            artifacts/windows/**/*.msi.sig
+            artifacts/windows/**/*.exe
+            artifacts/windows/**/*.exe.sig
+            latest.json
+          draft: false
+          prerelease: false

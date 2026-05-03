@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowLeft, Save, ScrollText } from 'lucide-react';
+import { getVersion } from '@tauri-apps/api/app';
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { ArrowLeft, Save, ScrollText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,11 +16,46 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const [appVersion, setAppVersion] = useState('');
+  type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'installing' | 'error';
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
+  const [updateVersion, setUpdateVersion] = useState('');
+
   useEffect(() => {
     invoke<string | null>('get_config_value', { key: 'company_name' }).then(val => {
       setCompanyName(val ?? '');
     });
+    getVersion().then(setAppVersion);
   }, []);
+
+  const handleCheckForUpdates = async () => {
+    setUpdateStatus('checking');
+    setUpdateVersion('');
+    try {
+      const update = await check();
+      if (update?.available) {
+        setUpdateVersion(update.version);
+        setUpdateStatus('available');
+      } else {
+        setUpdateStatus('up-to-date');
+      }
+    } catch {
+      setUpdateStatus('error');
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    setUpdateStatus('installing');
+    try {
+      const update = await check();
+      if (update) {
+        await update.downloadAndInstall();
+        await relaunch();
+      }
+    } catch {
+      setUpdateStatus('error');
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -69,6 +107,41 @@ export default function Settings() {
               <Save className="w-4 h-4 mr-2" />
               {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save Settings'}
             </Button>
+          </div>
+
+          <div className="border-t border-border-standard" />
+
+          {/* Updates */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <RefreshCw className="w-4 h-4 text-text-tertiary" />
+              <h2 className="text-base font-semibold text-text-primary">Updates</h2>
+            </div>
+            <p className="text-xs text-text-tertiary mb-4">
+              Current version: <span className="font-mono font-bold text-text-secondary">v{appVersion || '…'}</span>
+            </p>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                className="border-border-strong font-semibold"
+                onClick={updateStatus === 'available' ? handleInstallUpdate : handleCheckForUpdates}
+                disabled={updateStatus === 'checking' || updateStatus === 'installing'}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${updateStatus === 'checking' || updateStatus === 'installing' ? 'animate-spin' : ''}`} />
+                {updateStatus === 'checking' && 'Checking…'}
+                {updateStatus === 'installing' && 'Installing…'}
+                {updateStatus === 'available' && `Install v${updateVersion} & Restart`}
+                {(updateStatus === 'idle' || updateStatus === 'up-to-date' || updateStatus === 'error') && 'Check for Updates'}
+              </Button>
+
+              {updateStatus === 'up-to-date' && (
+                <span className="text-xs text-status-green font-semibold">You're on the latest version.</span>
+              )}
+              {updateStatus === 'error' && (
+                <span className="text-xs text-status-red font-semibold">Could not reach update server.</span>
+              )}
+            </div>
           </div>
 
           <div className="border-t border-border-standard" />
