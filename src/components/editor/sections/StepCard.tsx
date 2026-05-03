@@ -177,7 +177,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                value={step.action || ''}
                onChange={(e) => updateStepField(step.id, 'action', e.target.value)}
                placeholder="What needs to be done?"
-               className="min-h-[120px] text-[13.5px] border-none focus-visible:ring-0 resize-none placeholder:italic"
+               className="min-h-[103px] text-[13.5px] border-none focus-visible:ring-0 resize-none placeholder:italic"
              />
           </div>
 
