@@ -22,7 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 
 export function ProcedureSection() {
-  const { currentSop, stepsFull, setStepsFull } = useSopStore();
+  const { currentSop, stepsFull, setStepsFull, setSaving } = useSopStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const sensors = useSensors(
@@ -85,12 +85,15 @@ export function ProcedureSection() {
 
       // Persist reorder
       const stepIds = newStepsFull.map(s => s.step.id);
+      setSaving(true);
       try {
         await invoke('reorder_steps', { sopId: currentSop?.id, stepIds });
         await loadSteps(); // Refresh to get normalized step numbers
       } catch (error) {
         console.error("Failed to persist reorder", error);
-        loadSteps(); // revert on error
+        await loadSteps(); // revert on error
+      } finally {
+        setSaving(false);
       }
     }
   };

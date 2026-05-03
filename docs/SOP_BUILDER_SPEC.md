@@ -838,9 +838,9 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] Renders HTML/CSS PDF template inline (same template used for PDF export)
 - [x] Read-only — no editable fields
 - [x] Sidebar Mode C: back link (← All SOPs) | SOP ID | title | status badge | Edit SOP button | Export PDF button | DB health
-- [ ] "Edit SOP" button → navigate to Editor, back link in editor reads "← View SOP"
-- [ ] Back link "← All SOPs" → navigate to Home (no dirty check needed — viewer is read-only)
-- [ ] "Export PDF" in sidebar → triggers print-to-PDF (same pipeline as Phase 9)
+- [x] "Edit SOP" button → navigate to Editor, back link in editor reads "← View SOP"
+- [x] Back link "← All SOPs" → navigate to Home (no dirty check needed — viewer is read-only)
+- [x] "Export PDF" in sidebar → triggers print-to-PDF (same pipeline as Phase 9)
 
 ### PHASE 8A — SOP Soft Delete
 - [x] Add SOP delete action to the Home screen actions column
@@ -872,15 +872,39 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [ ] PDF export accessible from both Viewer sidebar and Editor sidebar
 
 ### PHASE 11 — Back Navigation & Origin Tracking
-- [ ] Track navigation origin in Zustand: `editorOrigin: 'home' | 'viewer'`
-- [ ] Editor back link reads "← View SOP" if origin = viewer, "← All SOPs" if origin = home
-- [ ] On exit from editor: navigate to origin (viewer or home) after dirty check resolves
+- [x] Track navigation origin in Zustand: `editorOrigin: 'home' | 'viewer'`
+- [x] Editor back link reads "← View SOP" if origin = viewer, "← All SOPs" if origin = home
+- [x] On exit from editor: navigate to origin (viewer or home) after dirty check resolves
 
 ### PHASE 12 — Polish & Testing
 - [ ] Linux end-to-end test: create → view → edit → export PDF → export .sop → import on fresh install
 - [ ] Windows end-to-end test: same flow
 - [ ] Edge cases: empty steps, missing images, DB integrity check on launch, SOP ID collision guard
 - [ ] App icon, window title, about screen
+
+### BUG FIXES & REFINEMENTS (Session 2026-05-03)
+- [x] **Bug 01:** Fixed Definitions loading in Editor (prevented data loss/duplication)
+- [x] **Bug 02:** Aligned Home screen navigation with spec while adding Edit shortcut
+- [x] **Bug 03:** Standardized 'Under Review' status across UI/DB with migration
+- [x] **Bug 04:** Removed misleading 'Save Draft' button from header (Auto-save is sufficient)
+- [x] **Bug 07:** Added missing 'Approval Date' column to Revision History table
+- [x] **Bug 08:** Fixed immediate image preview in Tool dialogs
+- [x] **Bug 09:** Improved Switch toggle contrast for 'unchecked' state
+- [x] **Bug 10:** Enhanced CropWindow aspect ratio selector with visual SVG indicators
+- [x] **Bug 11:** Enabled Tauri `protocol-asset` to fix broken images across the app
+- [x] **Bug 12:** Fixed transparent Select dropdowns by defining shadcn HSL variables
+- [x] **Bug 13:** Replaced native Date inputs with custom DatePicker for Linux compatibility
+- [x] **Bug 14:** Standardized all images to fixed 16:9 `ImageFrame` with `object-contain`
+- [x] **Bug 15:** Fixed 'jump' bug in AnnotationWindow drag-to-move logic
+- [x] **Bug 16:** Prevented CropBox overflow when switching aspect ratios
+- [x] **Bug 17:** Eliminated 'No Image' flicker by passing base64 directly to previews
+- [x] **Bug 18:** Replaced blocking `window.prompt()` with inline text input in AnnotationWindow
+- [x] **Bug 19:** Restored horizontal padding to StepCard textareas
+- [x] **Bug 20:** Decoupled auto-save from revision flow using `hasUnsavedRevision` flag
+- [x] **Bug 21:** Paginated PDF preview with natural A4 flow (CSS `break-inside` rules)
+- [x] **Bug 22:** Renamed app to 'SOP Builder' in `package.json`
+- [x] **Feature:** Implemented draggability for annotations in 'select' mode
+- [x] **Feature:** Added inline qty/unit entry + confirmation modal in StepResourcePicker
 
 ---
 
