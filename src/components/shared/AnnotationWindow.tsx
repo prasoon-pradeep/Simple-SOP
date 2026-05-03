@@ -105,7 +105,7 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
         const newPoints = ann.points.map((p, i) => i % 2 === 0 ? p + dx : p + dy);
         return { ...ann, points: newPoints };
       } else if (ann.type === 'circle' || ann.type === 'text') {
-        return { ...ann, x: (ann.x || 0) + dx, y: (ann.y || 0) + dy };
+        return { ...ann, x: dx, y: dy };
       }
       return ann;
     }));
