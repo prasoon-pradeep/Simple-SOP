@@ -903,6 +903,9 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] **Bug 20:** Decoupled auto-save from revision flow using `hasUnsavedRevision` flag
 - [x] **Bug 21:** Paginated PDF preview with natural A4 flow (CSS `break-inside` rules)
 - [x] **Bug 22:** Renamed app to 'SOP Builder' in `package.json`
+- [x] **Bug 23:** Renamed project branding in `Cargo.toml` and `main.rs`
+- [x] **Refinement:** Showed saving indicator during step reorder in `ProcedureSection`
+- [x] **Refinement:** Widened Visual Aid section in `StepCard` by 30%
 - [x] **Feature:** Implemented draggability for annotations in 'select' mode
 - [x] **Feature:** Added inline qty/unit entry + confirmation modal in StepResourcePicker
 
