@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SOP Builder",
+  "productName": "SOP Builder (Alpha)",
   "identifier": "com.pp.sop-builder",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "SOP Builder",
+        "title": "SOP Builder (Alpha)",
         "width": 800,
         "height": 600
       }
