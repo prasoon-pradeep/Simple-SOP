@@ -100,6 +100,8 @@ jobs:
             src-tauri/target/release/bundle/msi/*.msi.sig
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/bundle/nsis/*.exe.sig
+            src-tauri/target/release/bundle/nsis/*.zip
+            src-tauri/target/release/bundle/nsis/*.zip.sig
 
   publish-release:
     name: Publish GitHub Release
@@ -140,20 +142,21 @@ jobs:
 
           # Discover files with flexible patterns
           LINUX_APPIMAGE=$(find artifacts/linux -name "*.AppImage.tar.gz" | head -1)
-          LINUX_SIG=$(find artifacts/linux -name "*.AppImage.tar.gz.sig" | head -1)
-          WINDOWS_NSIS=$(find artifacts/windows -name "*.exe" | head -1)
-          WINDOWS_NSIS_SIG=$(find artifacts/windows -name "*.exe.sig" | head -1)
-          WINDOWS_MSI=$(find artifacts/windows -name "*.msi" | head -1)
-          WINDOWS_MSI_SIG=$(find artifacts/windows -name "*.msi.sig" | head -1)
+          LINUX_SIG_FILE=$(find artifacts/linux -name "*.AppImage.tar.gz.sig" | head -1)
+          
+          # Target NSIS ZIP for Windows updates
+          WINDOWS_BUNDLE=$(find artifacts/windows -name "*.nsis.zip" | head -1)
+          WINDOWS_SIG_FILE=$(find artifacts/windows -name "*.nsis.zip.sig" | head -1)
 
-          # Validation and fallback
-          if [ -z "$LINUX_SIG" ]; then echo "WARNING: Linux signature not found"; fi
-          if [ -z "$WINDOWS_NSIS_SIG" ]; then echo "WARNING: Windows NSIS signature not found"; fi
+          # Validation
+          if [ -z "$LINUX_SIG_FILE" ]; then echo "ERROR: Linux signature not found"; exit 1; fi
+          if [ -z "$WINDOWS_SIG_FILE" ]; then echo "ERROR: Windows signature not found"; exit 1; fi
+          if [ -z "$LINUX_APPIMAGE" ]; then echo "ERROR: Linux bundle not found"; exit 1; fi
+          if [ -z "$WINDOWS_BUNDLE" ]; then echo "ERROR: Windows bundle not found"; exit 1; fi
 
-          # Read signature contents if they exist
-          LINUX_SIG_CONTENT=$([ -f "$LINUX_SIG" ] && cat "$LINUX_SIG" || echo "")
-          WINDOWS_NSIS_SIG_CONTENT=$([ -f "$WINDOWS_NSIS_SIG" ] && cat "$WINDOWS_NSIS_SIG" || echo "")
-          WINDOWS_MSI_SIG_CONTENT=$([ -f "$WINDOWS_MSI_SIG" ] && cat "$WINDOWS_MSI_SIG" || echo "")
+          # Read signature contents
+          LINUX_SIG=$(cat "$LINUX_SIG_FILE")
+          WINDOWS_SIG=$(cat "$WINDOWS_SIG_FILE")
 
           REPO_URL="https://github.com/prasoon-pradeep/Simple-SOP/releases/download/${TAG}"
 
@@ -164,12 +167,12 @@ jobs:
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "linux-x86_64": {
-                "signature": "${LINUX_SIG_CONTENT}",
+                "signature": "${LINUX_SIG}",
                 "url": "${REPO_URL}/$(basename "$LINUX_APPIMAGE")"
               },
               "windows-x86_64": {
-                "signature": "${WINDOWS_NSIS_SIG_CONTENT}",
-                "url": "${REPO_URL}/$(basename "$WINDOWS_NSIS")"
+                "signature": "${WINDOWS_SIG}",
+                "url": "${REPO_URL}/$(basename "$WINDOWS_BUNDLE")"
               }
             }
           }
