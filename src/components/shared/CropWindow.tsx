@@ -3,6 +3,7 @@ import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface CropWindowProps {
   open: boolean;
@@ -75,21 +76,38 @@ export function CropWindow({ open, imgSrc, onConfirm, onCancel }: CropWindowProp
           <DialogTitle>Crop Image</DialogTitle>
         </DialogHeader>
 
-        <div className="flex justify-center space-x-4 py-2 border-b border-border-standard">
-          <Button 
-            variant={aspect === 16 / 9 ? "default" : "outline"} 
+        <div className="flex justify-center space-x-6 py-4 border-b border-border-standard">
+          <button 
             onClick={() => setAspect(16 / 9)}
-            size="sm"
+            className={cn(
+              "flex flex-col items-center space-y-2 p-3 rounded-lg border-2 transition-all",
+              aspect === 16 / 9 
+                ? "border-brand bg-brand-light text-brand shadow-sm" 
+                : "border-border-standard bg-surface text-text-tertiary hover:border-border-strong hover:text-text-secondary"
+            )}
           >
-            16:9
-          </Button>
-          <Button 
-            variant={aspect === 4 / 3 ? "default" : "outline"} 
+            <div className={cn(
+              "w-12 h-6 border-2 rounded-sm mb-1",
+              aspect === 16 / 9 ? "border-brand" : "border-text-quaternary opacity-50"
+            )}></div>
+            <span className="text-xs font-bold uppercase tracking-wider">Landscape 16:9</span>
+          </button>
+
+          <button 
             onClick={() => setAspect(4 / 3)}
-            size="sm"
+            className={cn(
+              "flex flex-col items-center space-y-2 p-3 rounded-lg border-2 transition-all",
+              aspect === 4 / 3 
+                ? "border-brand bg-brand-light text-brand shadow-sm" 
+                : "border-border-standard bg-surface text-text-tertiary hover:border-border-strong hover:text-text-secondary"
+            )}
           >
-            4:3
-          </Button>
+            <div className={cn(
+              "w-8 h-6 border-2 rounded-sm mb-1",
+              aspect === 4 / 3 ? "border-brand" : "border-text-quaternary opacity-50"
+            )}></div>
+            <span className="text-xs font-bold uppercase tracking-wider">Standard 4:3</span>
+          </button>
         </div>
 
         <div className="flex justify-center py-4 bg-background border border-border-standard rounded max-h-[60vh] overflow-auto">

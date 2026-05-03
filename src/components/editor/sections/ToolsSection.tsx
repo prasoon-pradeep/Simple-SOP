@@ -107,8 +107,18 @@ export function ToolsSection() {
     }
   };
 
-  const handleImageSaved = (uuid: string) => {
+  const handleImageSaved = async (uuid: string) => {
     setEditingTool(prev => prev ? { ...prev, image_uuid: uuid } : null);
+    
+    // Resolve and inject the new image URL immediately for preview
+    try {
+      const baseDir = await appDataDir();
+      const filePath = await join(baseDir, 'images', uuid, 'annotated.png');
+      const resolvedUrl = convertFileSrc(filePath);
+      setImageUrls(prev => ({ ...prev, [uuid]: resolvedUrl }));
+    } catch (error) {
+      console.error("Failed to resolve preview URL", error);
+    }
   };
 
   const handleCloneTool = async (toolId: string) => {
