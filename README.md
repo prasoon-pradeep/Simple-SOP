@@ -20,6 +20,30 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 
 ---
 
+## Screenshots
+
+**SOP Library** — browse, search, and filter all documents by project tag and approval status.
+
+![SOP Library](docs/screenshots/01-home-sop-library.png)
+
+**Document Viewer** — structured read-only view with full header, purpose, scope, safety notes, and step procedure rendered as a formatted document.
+
+![Document Viewer](docs/screenshots/02-viewer-document.png)
+
+**Step Editor** — author sequential steps with action text, notes, expected output, visual aids, and attached tools and parts.
+
+![Step Editor](docs/screenshots/03-editor-procedure-steps.png)
+
+**Revision History** — full audit trail of every revision with status, approver, and date.
+
+![Revision History](docs/screenshots/04-editor-revisions.png)
+
+**Document Header** — structured metadata including department, owner, dates, regulatory references, and distribution list.
+
+![Document Header](docs/screenshots/05-editor-header.png)
+
+---
+
 ## Tech stack
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui
