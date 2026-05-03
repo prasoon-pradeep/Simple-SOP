@@ -140,19 +140,19 @@ jobs:
           TAG="${{ github.event.inputs.tag }}"
           VERSION="${{ steps.version.outputs.version }}"
 
-          # Discover files with flexible patterns
-          LINUX_APPIMAGE=$(find artifacts/linux -name "*.AppImage.tar.gz" | head -1)
-          LINUX_SIG_FILE=$(find artifacts/linux -name "*.AppImage.tar.gz.sig" | head -1)
+          # Discover binaries
+          LINUX_BUNDLE=$(find artifacts/linux -name "*.AppImage" | head -1)
+          WINDOWS_BUNDLE=$(find artifacts/windows -name "*.exe" | head -1)
           
-          # Target NSIS ZIP for Windows updates
-          WINDOWS_BUNDLE=$(find artifacts/windows -name "*.nsis.zip" | head -1)
-          WINDOWS_SIG_FILE=$(find artifacts/windows -name "*.nsis.zip.sig" | head -1)
+          # Discover signatures
+          LINUX_SIG_FILE=$(find artifacts/linux -name "*.AppImage.sig" | head -1)
+          WINDOWS_SIG_FILE=$(find artifacts/windows -name "*.exe.sig" | head -1)
 
-          # Validation
-          if [ -z "$LINUX_SIG_FILE" ]; then echo "ERROR: Linux signature not found"; exit 1; fi
-          if [ -z "$WINDOWS_SIG_FILE" ]; then echo "ERROR: Windows signature not found"; exit 1; fi
-          if [ -z "$LINUX_APPIMAGE" ]; then echo "ERROR: Linux bundle not found"; exit 1; fi
-          if [ -z "$WINDOWS_BUNDLE" ]; then echo "ERROR: Windows bundle not found"; exit 1; fi
+          # Validation - fail build if signatures missing
+          if [ -z "$LINUX_SIG_FILE" ]; then echo "ERROR: Linux signature (.sig) not found"; exit 1; fi
+          if [ -z "$WINDOWS_SIG_FILE" ]; then echo "ERROR: Windows signature (.sig) not found"; exit 1; fi
+          if [ -z "$LINUX_BUNDLE" ]; then echo "ERROR: Linux AppImage not found"; exit 1; fi
+          if [ -z "$WINDOWS_BUNDLE" ]; then echo "ERROR: Windows EXE not found"; exit 1; fi
 
           # Read signature contents
           LINUX_SIG=$(cat "$LINUX_SIG_FILE")
@@ -168,7 +168,7 @@ jobs:
             "platforms": {
               "linux-x86_64": {
                 "signature": "${LINUX_SIG}",
-                "url": "${REPO_URL}/$(basename "$LINUX_APPIMAGE")"
+                "url": "${REPO_URL}/$(basename "$LINUX_BUNDLE")"
               },
               "windows-x86_64": {
                 "signature": "${WINDOWS_SIG}",
