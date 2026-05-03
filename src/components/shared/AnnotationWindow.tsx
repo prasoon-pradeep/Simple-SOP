@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text, Label as KonvaLabel, Tag } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text, Label as KonvaLabel, Tag, Group } from 'react-konva';
 import useImage from 'use-image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -94,6 +94,39 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
     }
   };
 
+  const handleDragEnd = (e: any, id: string) => {
+    const dx = e.target.x();
+    const dy = e.target.y();
+    
+    setAnnotations(prev => prev.map(ann => {
+      if (ann.id !== id) return ann;
+      
+      if (ann.type === 'arrow' && ann.points) {
+        const newPoints = ann.points.map((p, i) => i % 2 === 0 ? p + dx : p + dy);
+        return { ...ann, points: newPoints };
+      } else if (ann.type === 'circle' || ann.type === 'text') {
+        return { ...ann, x: (ann.x || 0) + dx, y: (ann.y || 0) + dy };
+      }
+      return ann;
+    }));
+
+    // Reset node position to avoid cumulative offsets in state
+    e.target.x(0);
+    e.target.y(0);
+  };
+
+  const handleMouseEnter = (e: any) => {
+    if (tool === 'select') {
+      const container = e.target.getStage().container();
+      container.style.cursor = 'move';
+    }
+  };
+
+  const handleMouseLeave = (e: any) => {
+    const container = e.target.getStage().container();
+    container.style.cursor = 'default';
+  };
+
   const handleUndo = () => {
     setAnnotations(annotations.slice(0, -1));
   };
@@ -147,10 +180,45 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
               <Layer>
                 {annotations.map((ann) => (
                   <React.Fragment key={ann.id}>
-                    {ann.type === 'arrow' && <Arrow points={ann.points || []} stroke={ann.color} fill={ann.color} strokeWidth={4} pointerLength={10} pointerWidth={10} />}
-                    {ann.type === 'circle' && <Circle x={ann.x} y={ann.y} radius={ann.radius} stroke={ann.color} strokeWidth={6} />}
+                    {ann.type === 'arrow' && (
+                      <Group 
+                        draggable={tool === 'select'} 
+                        onDragEnd={(e) => handleDragEnd(e, ann.id)}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        <Arrow 
+                          points={ann.points || []} 
+                          stroke={ann.color} 
+                          fill={ann.color} 
+                          strokeWidth={4} 
+                          pointerLength={10} 
+                          pointerWidth={10} 
+                        />
+                      </Group>
+                    )}
+                    {ann.type === 'circle' && (
+                      <Circle 
+                        x={ann.x} 
+                        y={ann.y} 
+                        radius={ann.radius} 
+                        stroke={ann.color} 
+                        strokeWidth={6} 
+                        draggable={tool === 'select'}
+                        onDragEnd={(e) => handleDragEnd(e, ann.id)}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                      />
+                    )}
                     {ann.type === 'text' && (
-                      <KonvaLabel x={ann.x} y={ann.y}>
+                      <KonvaLabel 
+                        x={ann.x} 
+                        y={ann.y}
+                        draggable={tool === 'select'}
+                        onDragEnd={(e) => handleDragEnd(e, ann.id)}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                      >
                         <Tag fill="rgba(255, 255, 255, 0.85)" cornerRadius={4} />
                         <Text text={ann.text} fontSize={20} fill={ann.color} fontStyle="bold" padding={6} />
                       </KonvaLabel>
