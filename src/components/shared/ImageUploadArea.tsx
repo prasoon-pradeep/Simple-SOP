@@ -4,7 +4,7 @@ import { CropWindow } from './CropWindow';
 import { AnnotationWindow } from './AnnotationWindow';
 
 interface ImageUploadAreaProps {
-  onImageSaved: (uuid: string) => void;
+  onImageSaved: (uuid: string, base64: string) => void;
   className?: string;
   children?: React.ReactNode;
 }
@@ -95,7 +95,7 @@ export function ImageUploadArea({ onImageSaved, className, children }: ImageUplo
         }
       });
       
-      onImageSaved(uuid);
+      onImageSaved(uuid, annotatedBase64);
       
     } catch (error) {
       console.error("Failed to save image", error);

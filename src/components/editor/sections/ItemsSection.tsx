@@ -20,12 +20,19 @@ export function ItemsSection() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<Item> | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentSop) {
       loadItems();
     }
   }, [currentSop]);
+
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setPreviewDataUrl(null);
+    }
+  }, [isDialogOpen]);
 
   useEffect(() => {
     loadImages();
@@ -104,8 +111,19 @@ export function ItemsSection() {
     }
   };
 
-  const handleImageSaved = (uuid: string) => {
+  const handleImageSaved = async (uuid: string, base64: string) => {
     setEditingItem(prev => prev ? { ...prev, image_uuid: uuid } : null);
+    setPreviewDataUrl(base64);
+    
+    // Background resolve for imageUrls (so it's ready for the main table later)
+    try {
+      const baseDir = await appDataDir();
+      const filePath = await join(baseDir, 'images', uuid, 'annotated.png');
+      const resolvedUrl = convertFileSrc(filePath);
+      setImageUrls(prev => ({ ...prev, [uuid]: resolvedUrl }));
+    } catch (error) {
+      console.error("Failed to resolve preview URL", error);
+    }
   };
 
   const handleCloneItem = async (itemId: string) => {
@@ -244,7 +262,7 @@ export function ItemsSection() {
               <div className="col-span-3 flex flex-col space-y-2">
                  <ImageUploadArea onImageSaved={handleImageSaved}>
                    <ImageFrame 
-                     src={editingItem?.image_uuid ? imageUrls[editingItem.image_uuid] : null} 
+                     src={previewDataUrl || (editingItem?.image_uuid ? imageUrls[editingItem.image_uuid] : null)} 
                      alt="Preview" 
                      className="w-full"
                    />

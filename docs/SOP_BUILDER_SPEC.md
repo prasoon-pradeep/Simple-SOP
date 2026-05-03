@@ -493,6 +493,18 @@ All fields are free text unless noted.
 - Fallback: type free text → press enter → appears as tag (different visual style from library tags)
 - Both types can coexist in same step
 
+**Item linking UX (items only — tools have no qty/unit):**
+- When a library item is selected, it appears inline with two fields alongside the item name:
+  - **Unit** — pre-filled read-only from `items.unit` in the library. If the library item has no unit defined, shows an editable text input
+  - **Qty** — small number input, empty by default, placeholder "qty"
+- When a free-text item is added, both qty (number input) and unit (editable text input) are shown empty
+- If user clicks Link/Add without entering a qty, show a small confirmation modal:
+  - Title: "No Quantity Entered"
+  - Message: "You haven't specified a quantity for [Item Name]. Do you want to add it without a quantity?"
+  - Buttons: **"Add Anyway"** (links with qty = null, renders as "—" in PDF) | **"Go Back"** (dismisses modal, returns to input)
+- If qty is filled it must be a valid positive number — do not allow 0 or negative
+- Unit pre-fills automatically from the library record and is never editable for library items
+
 ### 7.7 Definitions Section (End of SOP)
 - Dynamic table: user adds/removes rows
 - Columns: **Term | Meaning**

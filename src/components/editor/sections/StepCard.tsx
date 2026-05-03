@@ -75,7 +75,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
     }
   };
 
-  const handleAddImage = async (uuid: string) => {
+  const handleAddImage = async (uuid: string, _base64: string) => {
     try {
       await invoke('save_step_image', {
         payload: {

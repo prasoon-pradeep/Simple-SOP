@@ -23,12 +23,19 @@ export function ToolsSection() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Partial<Tool> | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentSop) {
       loadTools();
     }
   }, [currentSop]);
+
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setPreviewDataUrl(null);
+    }
+  }, [isDialogOpen]);
 
   useEffect(() => {
     loadImages();
@@ -109,10 +116,11 @@ export function ToolsSection() {
     }
   };
 
-  const handleImageSaved = async (uuid: string) => {
+  const handleImageSaved = async (uuid: string, base64: string) => {
     setEditingTool(prev => prev ? { ...prev, image_uuid: uuid } : null);
+    setPreviewDataUrl(base64);
     
-    // Resolve and inject the new image URL immediately for preview
+    // Background resolve for imageUrls (so it's ready for the main table later)
     try {
       const baseDir = await appDataDir();
       const filePath = await join(baseDir, 'images', uuid, 'annotated.png');
@@ -291,7 +299,7 @@ export function ToolsSection() {
               <div className="col-span-3 flex flex-col space-y-2">
                  <ImageUploadArea onImageSaved={handleImageSaved}>
                    <ImageFrame 
-                     src={editingTool?.image_uuid ? imageUrls[editingTool.image_uuid] : null} 
+                     src={previewDataUrl || (editingTool?.image_uuid ? imageUrls[editingTool.image_uuid] : null)} 
                      alt="Preview" 
                      className="w-full"
                    />
