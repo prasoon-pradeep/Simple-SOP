@@ -97,11 +97,9 @@ jobs:
           retention-days: 90
           path: |
             src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/msi/*.msi.sig
             src-tauri/target/release/bundle/nsis/*.exe
-            src-tauri/target/release/bundle/nsis/*.exe.sig
-            src-tauri/target/release/bundle/nsis/*.zip
-            src-tauri/target/release/bundle/nsis/*.zip.sig
+            src-tauri/target/release/bundle/nsis/*.exe.zip
+            src-tauri/target/release/bundle/nsis/*.exe.zip.sig
 
   publish-release:
     name: Publish GitHub Release
@@ -140,19 +138,21 @@ jobs:
           TAG="${{ github.event.inputs.tag }}"
           VERSION="${{ steps.version.outputs.version }}"
 
-          # Discover binaries
-          LINUX_BUNDLE=$(find artifacts/linux -name "*.AppImage" | head -1)
-          WINDOWS_BUNDLE=$(find artifacts/windows -name "*.exe" | head -1)
-          
-          # Discover signatures
-          LINUX_SIG_FILE=$(find artifacts/linux -name "*.AppImage.sig" | head -1)
-          WINDOWS_SIG_FILE=$(find artifacts/windows -name "*.exe.sig" | head -1)
+          # Discover update bundles (Tauri createUpdaterArtifacts output)
+          # Linux:   *.AppImage.tar.gz + *.AppImage.tar.gz.sig
+          # Windows: *-setup.exe.zip   + *-setup.exe.zip.sig
+          LINUX_BUNDLE=$(find artifacts/linux -name "*.AppImage.tar.gz" | head -1)
+          WINDOWS_BUNDLE=$(find artifacts/windows -name "*.exe.zip" | head -1)
 
-          # Validation - fail build if signatures missing
-          if [ -z "$LINUX_SIG_FILE" ]; then echo "ERROR: Linux signature (.sig) not found"; exit 1; fi
-          if [ -z "$WINDOWS_SIG_FILE" ]; then echo "ERROR: Windows signature (.sig) not found"; exit 1; fi
-          if [ -z "$LINUX_BUNDLE" ]; then echo "ERROR: Linux AppImage not found"; exit 1; fi
-          if [ -z "$WINDOWS_BUNDLE" ]; then echo "ERROR: Windows EXE not found"; exit 1; fi
+          # Discover signatures
+          LINUX_SIG_FILE=$(find artifacts/linux -name "*.AppImage.tar.gz.sig" | head -1)
+          WINDOWS_SIG_FILE=$(find artifacts/windows -name "*.exe.zip.sig" | head -1)
+
+          # Validation - fail build if bundles or signatures missing
+          if [ -z "$LINUX_SIG_FILE" ]; then echo "ERROR: Linux signature (.AppImage.tar.gz.sig) not found"; exit 1; fi
+          if [ -z "$WINDOWS_SIG_FILE" ]; then echo "ERROR: Windows signature (.exe.zip.sig) not found"; exit 1; fi
+          if [ -z "$LINUX_BUNDLE" ]; then echo "ERROR: Linux update bundle (.AppImage.tar.gz) not found"; exit 1; fi
+          if [ -z "$WINDOWS_BUNDLE" ]; then echo "ERROR: Windows update bundle (.exe.zip) not found"; exit 1; fi
 
           # Read signature contents
           LINUX_SIG=$(cat "$LINUX_SIG_FILE")
@@ -200,9 +200,9 @@ jobs:
             artifacts/linux/**/*.AppImage.tar.gz
             artifacts/linux/**/*.AppImage.tar.gz.sig
             artifacts/windows/**/*.msi
-            artifacts/windows/**/*.msi.sig
             artifacts/windows/**/*.exe
-            artifacts/windows/**/*.exe.sig
+            artifacts/windows/**/*.exe.zip
+            artifacts/windows/**/*.exe.zip.sig
             latest.json
           draft: false
           prerelease: false

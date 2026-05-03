@@ -4,6 +4,22 @@
 
 Simple SOP is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
+---
+
+## About SOP Builder
+
+SOP Builder was created to bridge the gap between "paper and pencil" and "complex enterprise SaaS." Technical and industrial teams often struggle with documentation that is either too messy to follow or locked behind expensive, cloud-only subscriptions.
+
+**Our Mission:** Provide a professional-grade, local-first tool that gives teams full ownership of their knowledge.
+
+### Why use SOP Builder?
+- **Data Sovereignty:** Your SOPs are stored in a local SQLite vault. No cloud, no login, no data tracking.
+- **Industrial Rigor:** Built-in support for revision history, approval workflows, and unique SOP ID tracking.
+- **Visual First:** Integrated image annotation tools designed specifically for step-by-step mechanical and technical instructions.
+- **Portable Intelligence:** Export your library to self-contained `.sop` bundles for offline sharing across high-security facilities.
+
+---
+
 It is built with:
 - Tauri v2 for the desktop shell
 - React + TypeScript for the UI
