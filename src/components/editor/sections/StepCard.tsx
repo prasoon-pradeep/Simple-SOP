@@ -177,7 +177,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                value={step.action || ''}
                onChange={(e) => updateStepField(step.id, 'action', e.target.value)}
                placeholder="What needs to be done?"
-               className="min-h-[80px] text-[13.5px] border-none focus-visible:ring-0 px-0 resize-none placeholder:italic"
+               className="min-h-[80px] text-[13.5px] border-none focus-visible:ring-0 resize-none placeholder:italic"
              />
           </div>
 
@@ -192,7 +192,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                   value={step.notes || ''}
                   onChange={(e) => updateStepField(step.id, 'notes', e.target.value)}
                   placeholder="Safety notes, tips..."
-                  className="min-h-[60px] text-xs border-none focus-visible:ring-0 px-0 resize-none bg-transparent"
+                  className="min-h-[60px] text-xs border-none focus-visible:ring-0 resize-none bg-transparent"
                 />
              </div>
              <div className="space-y-1.5">
@@ -205,7 +205,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                   value={step.expected_output || ''}
                   onChange={(e) => updateStepField(step.id, 'expected_output', e.target.value)}
                   placeholder="Result of this step..."
-                  className="min-h-[60px] text-xs border-none focus-visible:ring-0 px-0 resize-none bg-transparent"
+                  className="min-h-[60px] text-xs border-none focus-visible:ring-0 resize-none bg-transparent"
                 />
              </div>
           </div>
