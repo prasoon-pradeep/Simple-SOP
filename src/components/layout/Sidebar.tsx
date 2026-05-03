@@ -141,7 +141,7 @@ export function Sidebar() {
           />
         </div>
         {appVersion && (
-          <p className="px-3 pb-1 text-[10px] text-text-quaternary font-mono">v{appVersion}</p>
+          <p className="pb-1 text-center text-[10px] text-text-quaternary font-mono">v{appVersion}</p>
         )}
       </div>
     </aside>
