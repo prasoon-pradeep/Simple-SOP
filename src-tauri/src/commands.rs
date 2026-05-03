@@ -1679,6 +1679,40 @@ pub async fn finalize_import(
 }
 
 // --------------------------------------------------------
+// App Config
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn get_config_value(
+    key: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Option<String>, String> {
+    let row: Option<(String,)> = sqlx::query_as("SELECT value FROM app_config WHERE key = ?")
+        .bind(&key)
+        .fetch_optional(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(row.map(|(v,)| v))
+}
+
+#[tauri::command]
+pub async fn set_config_value(
+    key: String,
+    value: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+    )
+    .bind(&key)
+    .bind(&value)
+    .execute(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+// --------------------------------------------------------
 // PDF Export
 // --------------------------------------------------------
 
@@ -1829,11 +1863,17 @@ pub async fn export_pdf(
         })
     }).collect();
 
+    let company_name: String = sqlx::query_as::<sqlx::Sqlite, (String,)>(
+        "SELECT value FROM app_config WHERE key = 'company_name'"
+    )
+    .fetch_optional(pool).await.map_err(|e| e.to_string())?
+    .map(|(v,)| v)
+    .unwrap_or_else(|| "My Company".to_string());
+
     let sop_data = serde_json::json!({
         "settings": {
-            "company_name": "SOP Builder",
-            "brand_color": "#c84b2f",
-            "company_logo_url": null
+            "company_name": company_name,
+            "brand_color": "#c84b2f"
         },
         "sop": {
             "sop_id": sop.sop_id,

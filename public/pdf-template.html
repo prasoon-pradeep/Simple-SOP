@@ -127,28 +127,6 @@
       border-right: 1px solid rgba(255,255,255,0.15);
     }
 
-    .title-block__logo {
-      width: 30px;
-      height: 30px;
-      flex-shrink: 0;
-      object-fit: contain;
-      background: rgba(255,255,255,0.12);
-      border-radius: 3px;
-      border: 1px solid rgba(255,255,255,0.25);
-      padding: 3px;
-    }
-
-    .title-block__logo-placeholder {
-      width: 30px;
-      height: 30px;
-      flex-shrink: 0;
-      background: rgba(255,255,255,0.1);
-      border-radius: 3px;
-      border: 1px solid rgba(255,255,255,0.22);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
 
     /*
       BRAND COLOUR — ONLY USAGE IN THE ENTIRE DOCUMENT.
@@ -739,9 +717,8 @@ var MOCK_STEP_IMG = (function () {
    ============================================================ */
 window.SOP_DATA = window.SOP_DATA || {
   settings: {
-    company_name:     "Meridian Industrial Corp.",
-    brand_color:      "#c84b2f",
-    company_logo_url: null
+    company_name: "Meridian Industrial Corp.",
+    brand_color:  "#c84b2f"
   },
   sop: {
     sop_id:            "SOP-2025-8F3AB2",
@@ -1056,17 +1033,6 @@ function renderTitleBlock(data) {
   var s   = data.settings || {};
   var sop = data.sop;
 
-  var logoHtml = s.company_logo_url
-    ? '<img class="title-block__logo" src="' + esc(s.company_logo_url) + '" alt="Logo">'
-    : '<div class="title-block__logo-placeholder">'
-    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"'
-    +       ' stroke="rgba(255,255,255,0.55)" stroke-width="2.2"'
-    +       ' stroke-linecap="round" stroke-linejoin="round">'
-    +     '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>'
-    +     '<polyline points="14 2 14 8 20 8"/>'
-    +   '</svg>'
-    + '</div>';
-
   var relRow = sop.related_documents
     ? '<div class="meta-row"><span class="meta-label">Related Docs:</span>'
     + '<span class="meta-value meta-mono" style="font-size:7pt;">' + esc(sop.related_documents) + '</span></div>'
@@ -1094,8 +1060,7 @@ function renderTitleBlock(data) {
     /* ① Dark top bar — company name in brand colour, doc type white */
     + '<div class="title-block__top">'
     +   '<div class="title-block__company">'
-    +     logoHtml
-    +     '<div class="title-block__company-name">' + esc(s.company_name || 'Company Name') + '</div>'
+    +     '<div class="title-block__company-name">' + esc(s.company_name || 'My Company') + '</div>'
     +   '</div>'
     +   '<div class="title-block__doc-type">'
     +     '<div class="title-block__doc-type-label">Document Type</div>'

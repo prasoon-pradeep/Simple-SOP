@@ -160,6 +160,10 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
             unit        TEXT,
             FOREIGN KEY (step_id) REFERENCES steps(id)
         );"#,
+        r#"CREATE TABLE IF NOT EXISTS app_config (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );"#,
     ];
 
     for query in queries {

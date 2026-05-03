@@ -28,6 +28,7 @@ export default function Viewer() {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfExporting, setPdfExporting] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [companyName, setCompanyName] = useState('My Company');
 
   useEffect(() => {
     if (id) {
@@ -45,14 +46,16 @@ export default function Viewer() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [sop, revs, defs, toolsData, itemsData, steps] = await Promise.all([
+      const [sop, revs, defs, toolsData, itemsData, steps, configName] = await Promise.all([
         invoke<SOP>('get_sop', { id }),
         invoke<Revision[]>('get_revisions', { sopId: id }),
         invoke<Definition[]>('get_definitions', { sopId: id }),
         invoke<Tool[]>('get_tools', { sopId: id }),
         invoke<Item[]>('get_items', { sopId: id }),
         invoke<StepFull[]>('get_steps_full', { sopId: id }),
+        invoke<string | null>('get_config_value', { key: 'company_name' }),
       ]);
+      setCompanyName(configName ?? 'My Company');
 
       setCurrentSop(sop);
       setRevisions(revs);
@@ -229,8 +232,7 @@ export default function Viewer() {
           <div className="pdf-title-block">
              <div className="pdf-title-block__top">
                 <div className="pdf-title-block__company">
-                   <div className="pdf-title-block__logo-placeholder">SOP</div>
-                   <div className="pdf-title-block__company-name">SimpleSOP Industrial</div>
+                   <div className="pdf-title-block__company-name">{companyName}</div>
                 </div>
                 <div className="pdf-title-block__doc-type">
                    <div className="pdf-title-block__doc-type-label">Document Type</div>

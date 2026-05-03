@@ -106,7 +106,10 @@ export function Sidebar() {
 
       {/* Footer Nav */}
       <div className="p-3 border-t border-border-standard space-y-1 bg-panel/50">
-        <button className="w-full flex items-center px-3 py-2 rounded-md text-xs font-medium text-text-tertiary hover:bg-hover hover:text-text-primary transition-colors">
+        <button
+          onClick={() => navigate('/settings')}
+          className="w-full flex items-center px-3 py-2 rounded-md text-xs font-medium text-text-tertiary hover:bg-hover hover:text-text-primary transition-colors"
+        >
           <Settings className="w-3.5 h-3.5 mr-3" />
           Settings
         </button>
