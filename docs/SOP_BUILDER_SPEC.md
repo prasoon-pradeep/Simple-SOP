@@ -916,7 +916,28 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] **PDF export UX:** Export PDF button disables for 10 s after click with "Generating PDF…" label to prevent duplicate triggers
 
 ### FUTURE REQUIREMENTS
-- **Automatic DB backups:** On first app launch each calendar day, copy the SQLite DB to `$APPDATA/backups/sop-builder-YYYY-MM-DD.db`. Retain the 30 most recent backups (delete oldest beyond that). Run `PRAGMA wal_checkpoint(TRUNCATE)` before copying to ensure WAL sidecar files are folded in. Track last backup date in `app_config` key `last_backup_date`. Settings page should list available backups with a "Restore" button that copies the selected backup over the main DB and restarts the app.
+
+**Automatic DB backups + corruption recovery screen:**
+
+On first app launch each calendar day, run `PRAGMA wal_checkpoint(TRUNCATE)` to fold WAL sidecar files into the main DB, then copy it to `$APPDATA/backups/sop-builder-YYYY-MM-DD.db`. Retain the 30 most recent backups (delete oldest beyond that). Track last backup date in `app_config` key `last_backup_date`.
+
+If `init_db` fails (corrupt DB), catch the error before the main window opens and show a plain full-screen error window instead (no DB calls, no React — pure static HTML). The screen must display OS-specific recovery instructions with the exact folder paths:
+
+- **Linux:** `~/.local/share/com.pp.sop-builder/`
+- **Windows:** `C:\Users\{username}\AppData\Roaming\com.pp.sop-builder\`
+- **macOS:** `~/Library/Application Support/com.pp.sop-builder/`
+
+Recovery instructions shown to user:
+1. Close this window
+2. Open the folder above in your file manager
+3. Delete or rename `sop-builder.db`
+4. Open the `backups/` subfolder and copy the most recent file (e.g. `sop-builder-2026-05-03.db`)
+5. Paste it into the parent folder and rename it to `sop-builder.db`
+6. Relaunch SOP Builder
+
+The OS is detected at runtime in Rust (`std::env::consts::OS`) so the correct path is shown. No in-app restore button — user does the file operation manually.
+
+**App identifier fix:** Current identifier `com.pp.temp_app` in `tauri.conf.json` should be changed to `com.pp.sop-builder` before first production release. Note: changing the identifier changes the `$APPDATA` path, so existing user data will not migrate automatically — plan a one-time migration or do this before any users have production data.
 
 ### KNOWN ISSUES
 - **PDF filename (Linux):** GTK print dialog hardcodes `output.pdf` — `document.title` is ignored by WebKitGTK. On Windows, WebView2 respects `document.title` so the correct `{SOP-ID}-V{N}.pdf` filename appears. No fix available without a different PDF engine.
