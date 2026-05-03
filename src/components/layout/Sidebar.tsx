@@ -141,7 +141,9 @@ export function Sidebar() {
           />
         </div>
         {appVersion && (
-          <p className="pb-1 text-center text-[10px] text-text-quaternary font-mono">v{appVersion}</p>
+          <p className="pb-1 text-center text-[10px] text-text-quaternary font-mono uppercase tracking-tighter">
+            v{appVersion}{!appVersion.includes('alpha') && '-alpha'}
+          </p>
         )}
       </div>
     </aside>

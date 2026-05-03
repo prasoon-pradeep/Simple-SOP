@@ -25,6 +25,9 @@ export function Header({ onBack }: HeaderProps) {
         )}
         <div className="font-bold text-text-primary flex items-center">
           <span className="text-brand mr-2">SimpleSOP</span>
+          <span className="px-1.5 py-0.5 rounded bg-brand/10 text-brand text-[9px] font-black uppercase tracking-wider border border-brand/20 mr-2">
+            Alpha
+          </span>
           {currentSop && (
             <span className="text-text-tertiary font-normal text-sm">
               / {currentSop.sop_id}

@@ -1,4 +1,6 @@
-# Simple SOP
+# Simple SOP (Alpha)
+
+> **⚠️ ALPHA STATUS:** This software is currently in an early development phase. While functional, it may contain bugs or breaking changes. Use with caution in production environments and **always maintain independent backups of your SOP data.**
 
 Simple SOP is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
@@ -167,8 +169,14 @@ See the spec for complete behavior rules and constraints.
 - Preserve local-first/offline design assumptions
 - Ensure migrations/schema changes remain compatible with existing data
 
-## License
+## License & Liability
 
-This project is licensed under **MIT License + Commons Clause**.
+This project is licensed by **SOP Builder Software** under the **MIT License + Commons Clause**. 
 
-See `LICENSE` for the full terms.
+### **Key Terms:**
+- **Free for Use:** Individuals and organizations can use, modify, and self-host the software for free.
+- **No Resale:** You cannot sell this software or offer it as a paid service (SaaS) where the value is derived from the software itself.
+- **No Liability:** The authors are **not responsible** for any data loss, physical harm, or business interruption resulting from the use of this software. It is a documentation tool, not a substitute for professional safety advice.
+- **Trademarks:** The name "SOP Builder" and its logos are protected. You cannot use them to brand a competing service.
+
+See the [LICENSE](LICENSE) file for the full legal text.

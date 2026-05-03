@@ -1,8 +1,8 @@
 [package]
 name = "sop-builder"
-version = "0.1.0"
+version = "0.1.0-alpha"
 description = "SOP Builder — Standard Operating Procedure management tool"
-authors = ["SOP Builder Authors"]
+authors = ["SOP Builder Software"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
