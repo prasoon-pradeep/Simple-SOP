@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
 
 export function Sidebar() {
   const location = useLocation();
@@ -27,11 +28,13 @@ export function Sidebar() {
   } = useSopStore();
 
   const [dbHealthy, setDbHealthy] = useState<boolean | null>(null);
+  const [appVersion, setAppVersion] = useState('');
 
   useEffect(() => {
     invoke<boolean>('check_db_health')
       .then(ok => setDbHealthy(ok))
       .catch(() => setDbHealthy(false));
+    getVersion().then(setAppVersion);
   }, []);
 
   // Extract unique projects from sops list
@@ -137,6 +140,9 @@ export function Sidebar() {
             )}
           />
         </div>
+        {appVersion && (
+          <p className="px-3 pb-1 text-[10px] text-text-quaternary font-mono">v{appVersion}</p>
+        )}
       </div>
     </aside>
   );
