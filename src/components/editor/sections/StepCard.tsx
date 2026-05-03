@@ -212,7 +212,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
         </div>
 
         {/* Right Column: Visuals & Attachments */}
-        <div className="w-full md:w-[280px] bg-panel/30 p-4 space-y-4">
+        <div className="w-full md:w-[364px] bg-panel/30 p-4 space-y-4">
            {/* Images */}
            <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-text-tertiary tracking-wider">Visual Aids</Label>
