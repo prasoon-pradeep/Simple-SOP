@@ -162,16 +162,40 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
 
         <div className="flex items-center justify-between p-2 border border-border-standard rounded bg-background">
           <div className="flex space-x-2">
-            <Button variant={tool === 'select' ? 'default' : 'ghost'} size="icon" onClick={() => setTool('select')} title="Select/Move">
+            <Button 
+              variant={tool === 'select' ? 'default' : 'ghost'} 
+              size="icon" 
+              onClick={() => setTool('select')} 
+              title="Select/Move"
+              className={tool === 'select' ? 'ring-2 ring-brand ring-offset-1' : ''}
+            >
               <MousePointer2 className="w-4 h-4" />
             </Button>
-            <Button variant={tool === 'arrow' ? 'default' : 'ghost'} size="icon" onClick={() => setTool('arrow')} title="Arrow">
+            <Button 
+              variant={tool === 'arrow' ? 'default' : 'ghost'} 
+              size="icon" 
+              onClick={() => setTool('arrow')} 
+              title="Arrow"
+              className={tool === 'arrow' ? 'ring-2 ring-brand ring-offset-1' : ''}
+            >
               <MoveUpRight className="w-4 h-4" />
             </Button>
-            <Button variant={tool === 'circle' ? 'default' : 'ghost'} size="icon" onClick={() => setTool('circle')} title="Circle">
+            <Button 
+              variant={tool === 'circle' ? 'default' : 'ghost'} 
+              size="icon" 
+              onClick={() => setTool('circle')} 
+              title="Circle"
+              className={tool === 'circle' ? 'ring-2 ring-brand ring-offset-1' : ''}
+            >
               <CircleIcon className="w-4 h-4" />
             </Button>
-            <Button variant={tool === 'text' ? 'default' : 'ghost'} size="icon" onClick={() => setTool('text')} title="Text Label">
+            <Button 
+              variant={tool === 'text' ? 'default' : 'ghost'} 
+              size="icon" 
+              onClick={() => setTool('text')} 
+              title="Text Label"
+              className={tool === 'text' ? 'ring-2 ring-brand ring-offset-1' : ''}
+            >
               <Type className="w-4 h-4" />
             </Button>
           </div>
