@@ -13,6 +13,7 @@ import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { StepResourcePicker } from './StepResourcePicker';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { ImageFrame } from '@/components/shared/ImageFrame';
 
 interface StepCardProps {
   stepFull: StepFull;
@@ -217,10 +218,12 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
               <Label className="text-[10px] font-bold uppercase text-text-tertiary tracking-wider">Visual Aids</Label>
               <div className="grid grid-cols-2 gap-2">
                  {images.map((img) => (
-                   <div key={img.id} className="relative group aspect-video bg-background border border-border-standard rounded overflow-hidden">
-                      {imageUrls[img.image_uuid] && (
-                        <img src={imageUrls[img.image_uuid]} alt="Step visual" className="w-full h-full object-cover" />
-                      )}
+                   <div key={img.id} className="relative group">
+                      <ImageFrame 
+                        src={imageUrls[img.image_uuid] || null} 
+                        alt="Step visual" 
+                        className="w-full"
+                      />
                       <button 
                         onClick={() => handleDeleteImage(img.id)}
                         className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"

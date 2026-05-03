@@ -10,10 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Image as ImageIcon, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
+import { ImageFrame } from '@/components/shared/ImageFrame';
+import { DatePicker } from '@/components/shared/DatePicker';
 
 export function ToolsSection() {
   const { currentSop, tools, setTools, setDirty, setSaving, setLastSavedAt } = useSopStore();
@@ -178,17 +180,11 @@ export function ToolsSection() {
               tools.map((tool) => (
                 <TableRow key={tool.id}>
                   <TableCell>
-                    {tool.image_uuid && imageUrls[tool.image_uuid] ? (
-                      <img 
-                        src={imageUrls[tool.image_uuid]} 
-                        alt={tool.name} 
-                        className="w-[108px] h-[60.75px] object-cover rounded border border-border-subtle"
-                      />
-                    ) : (
-                      <div className="w-[108px] h-[60.75px] bg-background border border-dashed border-border-standard rounded flex items-center justify-center text-text-quaternary">
-                        <ImageIcon className="w-6 h-6" />
-                      </div>
-                    )}
+                    <ImageFrame 
+                      src={tool.image_uuid ? imageUrls[tool.image_uuid] : null} 
+                      alt={tool.name} 
+                      className="w-[108px]"
+                    />
                   </TableCell>
                   <TableCell className="font-medium text-text-primary">{tool.name}</TableCell>
                   <TableCell className="text-text-secondary">
@@ -281,13 +277,12 @@ export function ToolsSection() {
             {editingTool?.calibration_required && (
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="cal-date" className="text-right">Due Date</Label>
-                <Input 
-                  id="cal-date" 
-                  type="date"
-                  value={editingTool?.calibration_due_date || ''} 
-                  onChange={e => setEditingTool(prev => prev ? { ...prev, calibration_due_date: e.target.value } : null)}
-                  className="col-span-3" 
-                />
+                <div className="col-span-3">
+                  <DatePicker 
+                    value={editingTool?.calibration_due_date || ''} 
+                    onChange={val => setEditingTool(prev => prev ? { ...prev, calibration_due_date: val } : null)}
+                  />
+                </div>
               </div>
             )}
 
@@ -295,13 +290,11 @@ export function ToolsSection() {
               <Label className="text-right pt-2">Image</Label>
               <div className="col-span-3 flex flex-col space-y-2">
                  <ImageUploadArea onImageSaved={handleImageSaved}>
-                   {editingTool?.image_uuid && imageUrls[editingTool.image_uuid] ? (
-                     <img 
-                       src={imageUrls[editingTool.image_uuid]} 
-                       alt="Preview" 
-                       className="w-full h-full object-cover rounded"
-                     />
-                   ) : null}
+                   <ImageFrame 
+                     src={editingTool?.image_uuid ? imageUrls[editingTool.image_uuid] : null} 
+                     alt="Preview" 
+                     className="w-full"
+                   />
                  </ImageUploadArea>
                  <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-tight">Click or Paste to change image</p>
               </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { useSopStore } from '@/store';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/shared/DatePicker';
 
 export function HeaderSection() {
   const { currentSop, updateSopField } = useSopStore();
@@ -49,15 +50,15 @@ export function HeaderSection() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="created_date">Created Date</Label>
-            <Input id="created_date" type="date" value={currentSop.created_date || ''} onChange={handleChange('created_date')} />
+            <DatePicker value={currentSop.created_date || ''} onChange={(val) => updateSopField('created_date', val)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="active_date">Active Date</Label>
-            <Input id="active_date" type="date" value={currentSop.active_date || ''} onChange={handleChange('active_date')} />
+            <DatePicker value={currentSop.active_date || ''} onChange={(val) => updateSopField('active_date', val)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="next_review_date">Next Review Date</Label>
-            <Input id="next_review_date" type="date" value={currentSop.next_review_date || ''} onChange={handleChange('next_review_date')} />
+            <DatePicker value={currentSop.next_review_date || ''} onChange={(val) => updateSopField('next_review_date', val)} />
           </div>
         </div>
       </div>

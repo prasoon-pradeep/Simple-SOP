@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/shared/DatePicker';
 
 interface RevisionModalProps {
   open: boolean;
@@ -103,11 +104,9 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="appr-date">Approval Date</Label>
-                  <Input 
-                    id="appr-date" 
-                    type="date"
+                  <DatePicker 
                     value={approvalDate} 
-                    onChange={(e) => setApprovalDate(e.target.value)} 
+                    onChange={setApprovalDate} 
                   />
                 </div>
               </div>

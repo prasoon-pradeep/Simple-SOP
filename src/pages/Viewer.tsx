@@ -7,6 +7,7 @@ import { ArrowLeft, Pencil, Download, Database, CheckCircle2, Clock, XCircle, Al
 import { Button } from '@/components/ui/button';
 import { Definition, SOP, Revision, Tool, Item, StepFull } from '@/types';
 import { cn } from '@/lib/utils';
+import { ImageFrame } from '@/components/shared/ImageFrame';
 import './Viewer.css';
 
 export default function Viewer() {
@@ -290,9 +291,10 @@ export default function Viewer() {
                         <tr key={t.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
                            <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
                            <td className="border border-[#c0c0c0] p-1 text-center align-middle">
-                              {t.image_uuid && imageUrls[t.image_uuid] ? (
-                                <img src={imageUrls[t.image_uuid]} className="w-10 h-6 object-cover mx-auto" />
-                              ) : <div className="w-10 h-6 bg-[#ececec] border border-dashed border-[#c0c0c0] mx-auto"></div>}
+                              <ImageFrame 
+                                src={t.image_uuid ? imageUrls[t.image_uuid] : null} 
+                                className="w-10 h-6 border-none bg-transparent"
+                              />
                            </td>
                            <td className="border border-[#c0c0c0] p-1 font-bold">{t.name}</td>
                            <td className="border border-[#c0c0c0] p-1 text-center">{t.type || '—'}</td>
@@ -327,9 +329,10 @@ export default function Viewer() {
                          <tr key={i.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
                             <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
                             <td className="border border-[#c0c0c0] p-1 text-center align-middle">
-                               {i.image_uuid && imageUrls[i.image_uuid] ? (
-                                 <img src={imageUrls[i.image_uuid]} className="w-10 h-6 object-cover mx-auto" />
-                               ) : <div className="w-10 h-6 bg-[#ececec] border border-dashed border-[#c0c0c0] mx-auto"></div>}
+                               <ImageFrame 
+                                 src={i.image_uuid ? imageUrls[i.image_uuid] : null} 
+                                 className="w-10 h-6 border-none bg-transparent"
+                               />
                             </td>
                             <td className="border border-[#c0c0c0] p-1 font-bold">{i.name}</td>
                             <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{i.part_no || '—'}</td>
@@ -398,7 +401,10 @@ export default function Viewer() {
                                 <div className="flex flex-wrap gap-3">
                                    {s.images.map(img => (
                                       <div key={img.id} className="text-center">
-                                         <img src={imageUrls[img.image_uuid]} className="max-w-[150px] max-h-[100px] border border-[#c0c0c0] rounded-sm" alt="" />
+                                         <ImageFrame 
+                                           src={imageUrls[img.image_uuid] || null} 
+                                           className="w-[150px] border-[#c0c0c0]"
+                                         />
                                          <div className="text-[6.5pt] text-[#888] mt-1 italic">Step {s.step.step_number} / Fig. {img.sort_order}</div>
                                       </div>
                                    ))}
