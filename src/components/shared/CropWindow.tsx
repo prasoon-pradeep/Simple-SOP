@@ -28,14 +28,21 @@ export function CropWindow({ open, imgSrc, onConfirm, onCancel }: CropWindowProp
   useEffect(() => {
     if (imgRef.current && imgRef.current.width && imgRef.current.height) {
       const img = imgRef.current;
-      const cropWidth = 90;
-      const cropHeight = (cropWidth / aspect) * (img.width / img.height);
+      let width = 90;
+      let height = (width / aspect) * (img.width / img.height);
+      
+      // If height exceeds bounds, flip the constraint
+      if (height > 95) {
+        height = 90;
+        width = aspect * height * (img.height / img.width);
+      }
+
       setCrop({
         unit: '%',
-        width: cropWidth,
-        height: cropHeight,
-        x: (100 - cropWidth) / 2,
-        y: (100 - cropHeight) / 2
+        width,
+        height,
+        x: (100 - width) / 2,
+        y: (100 - height) / 2
       });
     }
   }, [aspect]);
