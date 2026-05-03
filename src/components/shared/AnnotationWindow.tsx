@@ -3,7 +3,7 @@ import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text, Label as KonvaL
 import useImage from 'use-image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { MousePointer2, MoveUpRight, Circle as CircleIcon, Type, Undo2, SkipForward } from 'lucide-react';
+import { MousePointer2, MoveUpRight, Circle as CircleIcon, Type, Undo2, SkipForward, Check } from 'lucide-react';
 
 interface AnnotationWindowProps {
   open: boolean;
@@ -33,6 +33,8 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [newAnnotation, setNewAnnotation] = useState<Annotation | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [pendingTextPos, setPendingTextPos] = useState<{ x: number, y: number } | null>(null);
+  const [pendingText, setPendingText] = useState('');
 
   useEffect(() => {
     if (image) {
@@ -61,12 +63,26 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
     } else if (tool === 'circle') {
       setNewAnnotation({ id, type: 'circle', x: pos.x, y: pos.y, radius: 0, color });
     } else if (tool === 'text') {
-      const text = window.prompt('Enter text label:');
-      if (text) {
-        setAnnotations([...annotations, { id, type: 'text', x: pos.x, y: pos.y, text, color }]);
-      }
-      setTool('select');
+      setPendingTextPos({ x: pos.x, y: pos.y });
+      setPendingText('');
     }
+  };
+
+  const handleConfirmText = () => {
+    if (pendingText.trim() && pendingTextPos) {
+      const id = Date.now().toString();
+      const color = '#ff0000';
+      setAnnotations([...annotations, { 
+        id, 
+        type: 'text', 
+        x: pendingTextPos.x, 
+        y: pendingTextPos.y, 
+        text: pendingText.trim(), 
+        color 
+      }]);
+    }
+    setPendingTextPos(null);
+    setTool('select');
   };
 
   const handleMouseMove = (e: any) => {
@@ -165,71 +181,99 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
         </div>
 
         <div className="flex justify-center bg-panel border border-border-standard overflow-hidden rounded relative" style={{ minHeight: '300px' }}>
-          {image && canvasSize.width > 0 && (
-            <Stage
-              width={canvasSize.width}
-              height={canvasSize.height}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              ref={stageRef}
-            >
-              <Layer>
-                <KonvaImage image={image} width={canvasSize.width} height={canvasSize.height} />
-              </Layer>
-              <Layer>
-                {annotations.map((ann) => (
-                  <React.Fragment key={ann.id}>
-                    {ann.type === 'arrow' && (
-                      <Group 
-                        draggable={tool === 'select'} 
-                        onDragEnd={(e) => handleDragEnd(e, ann.id)}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseLeave={handleMouseLeave}
-                      >
-                        <Arrow 
-                          points={ann.points || []} 
+          <div className="relative" style={{ width: canvasSize.width, height: canvasSize.height }}>
+            {image && canvasSize.width > 0 && (
+              <Stage
+                width={canvasSize.width}
+                height={canvasSize.height}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                ref={stageRef}
+              >
+                <Layer>
+                  <KonvaImage image={image} width={canvasSize.width} height={canvasSize.height} />
+                </Layer>
+                <Layer>
+                  {annotations.map((ann) => (
+                    <React.Fragment key={ann.id}>
+                      {ann.type === 'arrow' && (
+                        <Group 
+                          draggable={tool === 'select'} 
+                          onDragEnd={(e) => handleDragEnd(e, ann.id)}
+                          onMouseEnter={handleMouseEnter}
+                          onMouseLeave={handleMouseLeave}
+                        >
+                          <Arrow 
+                            points={ann.points || []} 
+                            stroke={ann.color} 
+                            fill={ann.color} 
+                            strokeWidth={4} 
+                            pointerLength={10} 
+                            pointerWidth={10} 
+                          />
+                        </Group>
+                      )}
+                      {ann.type === 'circle' && (
+                        <Circle 
+                          x={ann.x} 
+                          y={ann.y} 
+                          radius={ann.radius} 
                           stroke={ann.color} 
-                          fill={ann.color} 
-                          strokeWidth={4} 
-                          pointerLength={10} 
-                          pointerWidth={10} 
+                          strokeWidth={6} 
+                          draggable={tool === 'select'}
+                          onDragEnd={(e) => handleDragEnd(e, ann.id)}
+                          onMouseEnter={handleMouseEnter}
+                          onMouseLeave={handleMouseLeave}
                         />
-                      </Group>
-                    )}
-                    {ann.type === 'circle' && (
-                      <Circle 
-                        x={ann.x} 
-                        y={ann.y} 
-                        radius={ann.radius} 
-                        stroke={ann.color} 
-                        strokeWidth={6} 
-                        draggable={tool === 'select'}
-                        onDragEnd={(e) => handleDragEnd(e, ann.id)}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseLeave={handleMouseLeave}
-                      />
-                    )}
-                    {ann.type === 'text' && (
-                      <KonvaLabel 
-                        x={ann.x} 
-                        y={ann.y}
-                        draggable={tool === 'select'}
-                        onDragEnd={(e) => handleDragEnd(e, ann.id)}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseLeave={handleMouseLeave}
-                      >
-                        <Tag fill="rgba(255, 255, 255, 0.85)" cornerRadius={4} />
-                        <Text text={ann.text} fontSize={20} fill={ann.color} fontStyle="bold" padding={6} />
-                      </KonvaLabel>
-                    )}
-                  </React.Fragment>
-                ))}
-                {newAnnotation && newAnnotation.type === 'arrow' && <Arrow points={newAnnotation.points || []} stroke={newAnnotation.color} fill={newAnnotation.color} strokeWidth={4} pointerLength={10} pointerWidth={10} />}
-                {newAnnotation && newAnnotation.type === 'circle' && <Circle x={newAnnotation.x} y={newAnnotation.y} radius={newAnnotation.radius} stroke={newAnnotation.color} strokeWidth={6} />}
-              </Layer>
-            </Stage>
-          )}
+                      )}
+                      {ann.type === 'text' && (
+                        <KonvaLabel 
+                          x={ann.x} 
+                          y={ann.y}
+                          draggable={tool === 'select'}
+                          onDragEnd={(e) => handleDragEnd(e, ann.id)}
+                          onMouseEnter={handleMouseEnter}
+                          onMouseLeave={handleMouseLeave}
+                        >
+                          <Tag fill="rgba(255, 255, 255, 0.85)" cornerRadius={4} />
+                          <Text text={ann.text} fontSize={20} fill={ann.color} fontStyle="bold" padding={6} />
+                        </KonvaLabel>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  {newAnnotation && newAnnotation.type === 'arrow' && <Arrow points={newAnnotation.points || []} stroke={newAnnotation.color} fill={newAnnotation.color} strokeWidth={4} pointerLength={10} pointerWidth={10} />}
+                  {newAnnotation && newAnnotation.type === 'circle' && <Circle x={newAnnotation.x} y={newAnnotation.y} radius={newAnnotation.radius} stroke={newAnnotation.color} strokeWidth={6} />}
+                </Layer>
+              </Stage>
+            )}
+
+            {pendingTextPos && (
+              <div 
+                className="absolute z-50 flex items-center bg-surface border-2 border-brand rounded shadow-xl p-1"
+                style={{ 
+                  left: pendingTextPos.x, 
+                  top: pendingTextPos.y,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <input 
+                  autoFocus
+                  className="bg-transparent border-none outline-none text-sm font-bold text-brand px-2 w-32"
+                  value={pendingText}
+                  onChange={e => setPendingText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleConfirmText();
+                    if (e.key === 'Escape') setPendingTextPos(null);
+                  }}
+                  placeholder="Label text..."
+                />
+                <Button size="icon" className="h-7 w-7 bg-brand hover:bg-brand-hover text-white rounded-md" onClick={handleConfirmText}>
+                  <Check className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter className="flex justify-between items-center sm:justify-between">
