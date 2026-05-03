@@ -5,7 +5,7 @@ import { appDataDir, join } from '@tauri-apps/api/path';
 import { StepFull } from '@/types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Copy, Trash2, ImageIcon, Wrench, Package, Info, Target, Plus, X } from 'lucide-react';
+import { GripVertical, Copy, Trash2, ImageIcon, Wrench, Package, Info, Target, Plus, X, ZoomIn } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { StepResourcePicker } from './StepResourcePicker';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ImageFrame } from '@/components/shared/ImageFrame';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface StepCardProps {
   stepFull: StepFull;
@@ -26,6 +27,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
   
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [pickerType, setPickerType] = useState<'tool' | 'item' | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   const {
     attributes,
@@ -224,12 +226,22 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                         alt="Step visual" 
                         className="w-full"
                       />
-                      <button 
-                        onClick={() => handleDeleteImage(img.id)}
-                        className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => setLightboxSrc(imageUrls[img.image_uuid])}
+                          className="p-1 bg-black/50 text-white rounded hover:bg-black/70"
+                          title="View Fullscreen"
+                        >
+                          <ZoomIn className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteImage(img.id)}
+                          className="p-1 bg-black/50 text-white rounded hover:bg-status-red"
+                          title="Delete Image"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                    </div>
                  ))}
                  <ImageUploadArea onImageSaved={handleAddImage} className="aspect-video w-full h-auto border-dashed border-border-strong rounded flex flex-col items-center justify-center text-text-tertiary hover:bg-surface transition-colors cursor-pointer">
@@ -303,6 +315,12 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
         selectedIds={pickerType === 'tool' ? tools.map(t => t.tool_id) : items.map(i => i.item_id)}
         onAdd={handleAddResource}
       />
+
+      <Dialog open={!!lightboxSrc} onOpenChange={(open) => !open && setLightboxSrc(null)}>
+        <DialogContent className="max-w-4xl w-full bg-black border-none p-2 overflow-hidden flex items-center justify-center">
+          <img src={lightboxSrc || ''} alt="Visual Aid" className="w-full h-auto object-contain max-h-[85vh]" />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
