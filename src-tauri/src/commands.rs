@@ -1870,11 +1870,24 @@ pub async fn export_pdf(
         safe_json
     );
 
-    let print_script = "document.addEventListener('DOMContentLoaded', function() { setTimeout(function() { window.print(); }, 800); });";
+    let suggested_filename = format!("{}-V{}.pdf", sop.sop_id, sop.version);
+
+    let print_script = format!(
+        "document.addEventListener('DOMContentLoaded', function() {{ \
+            document.title = '{}';\
+            setTimeout(function() {{ window.print(); }}, 800);\
+        }});",
+        suggested_filename
+    );
 
     let full_init = format!("{}\n{}", init_script, print_script);
 
-    // Create a hidden webview window with the PDF template
+    // Close any existing pdf-export window to avoid duplicate label error
+    if let Some(existing) = app_handle.get_webview_window("pdf-export") {
+        let _ = existing.close();
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+
     tauri::WebviewWindowBuilder::new(
         &app_handle,
         "pdf-export",
@@ -1882,6 +1895,7 @@ pub async fn export_pdf(
     )
     .title("Print SOP")
     .inner_size(1024.0, 768.0)
+    .visible(false)
     .initialization_script(&full_init)
     .build()
     .map_err(|e| e.to_string())?;
