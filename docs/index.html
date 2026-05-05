@@ -62,6 +62,39 @@
 
     nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
 
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      padding: 0.5rem;
+      cursor: pointer;
+      color: var(--text);
+      border-radius: var(--radius);
+    }
+    .menu-toggle:hover { background: var(--surface); }
+
+    @media (max-width: 640px) {
+      nav { padding: 0 1.25rem; }
+      .menu-toggle { display: block; }
+      
+      nav .nav-links {
+        display: none;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.25rem 1.5rem;
+        gap: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      }
+
+      nav .nav-links.active { display: flex; }
+    }
+
     /* ── Hero ── */
     .hero {
       max-width: 760px;
@@ -179,15 +212,22 @@
       padding: 1.25rem 1.5rem;
     }
 
-    .feature-icon {
-      font-size: 1.25rem;
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       margin-bottom: 0.6rem;
+    }
+
+    .feature-icon {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
     }
 
     .feature h3 {
       font-size: 0.95rem;
       font-weight: 700;
-      margin-bottom: 0.35rem;
     }
 
     .feature p {
@@ -302,6 +342,40 @@
 
     footer a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
     footer a:hover { color: var(--text); }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+      padding: 2rem;
+    }
+
+    .lightbox.active { display: flex; }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 85vh;
+      border-radius: var(--radius);
+      box-shadow: 0 0 50px rgba(0,0,0,0.5);
+      cursor: default;
+    }
+
+    .screenshot-wrap img, .gallery-item img {
+      cursor: zoom-in;
+      transition: transform 0.2s ease;
+    }
+    .screenshot-wrap img:hover, .gallery-item img:hover {
+      transform: scale(1.01);
+    }
   </style>
 </head>
 <body>
@@ -311,7 +385,10 @@
     <div class="nav-logo">
       <span class="sop">SOP</span> BUILDER
     </div>
-    <div class="nav-links">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="nav-links" id="nav-links">
       <a class="nav-link" href="#features">Features</a>
       <a class="nav-link" href="#screenshots">Screenshots</a>
       <a class="nav-link" href="#download">Download</a>
@@ -321,11 +398,15 @@
 
   <!-- Hero -->
   <section class="hero">
-    <div class="alpha-badge">Alpha — v0.1.5</div>
+    <div class="alpha-badge" id="alpha-badge">Alpha — v0.1.7</div>
+    <div id="last-updated" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: -0.75rem; margin-bottom: 1.5rem; display: none;">Updated: --</div>
     <h1>SOP documentation that stays<br><em>on your machine</em></h1>
     <p>A professional-grade, offline-first desktop app for creating, editing, and exporting Standard Operating Procedures. No cloud. No login. No subscriptions.</p>
     <div class="btn-group">
-      <a class="btn btn-primary" href="#download">↓ Download for free</a>
+      <a class="btn btn-primary" href="#download">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+        Download for free
+      </a>
       <a class="btn btn-secondary" href="https://github.com/prasoon-pradeep/Simple-SOP">View on GitHub</a>
     </div>
   </section>
@@ -341,33 +422,57 @@
     <h2>Everything you need. Nothing you don't.</h2>
     <div class="features">
       <div class="feature">
-        <div class="feature-icon">🔒</div>
-        <h3>Data Sovereignty</h3>
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <h3>Data Sovereignty</h3>
+        </div>
         <p>All SOPs live in a local SQLite database on your machine. No account required, no data leaves your network.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">📋</div>
-        <h3>Structured Editor</h3>
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          </div>
+          <h3>Structured Editor</h3>
+        </div>
         <p>Purpose, scope, safety notes, tools, items, and sequential steps — each field has a home. Auto-saves as you type.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">🖼️</div>
-        <h3>Visual Steps</h3>
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <h3>Visual Steps</h3>
+        </div>
         <p>Attach annotated photos to each step. Draw arrows, circles, and labels directly in the app.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">📄</div>
-        <h3>PDF Export</h3>
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </div>
+          <h3>PDF Export</h3>
+        </div>
         <p>Generate a printable, text-selectable PDF from any SOP in one click. No formatting work required.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">📦</div>
-        <h3>Portable Bundles</h3>
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          </div>
+          <h3>Portable Bundles</h3>
+        </div>
         <p>Export any SOP as a self-contained <code>.sop</code> file. Share it offline, import it anywhere SOP Builder is installed.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">🔁</div>
-        <h3>Revision History</h3>
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </div>
+          <h3>Revision History</h3>
+        </div>
         <p>Log every revision with notes, approver, and date. Full audit trail built in, no plugins needed.</p>
       </div>
     </div>
@@ -406,22 +511,26 @@
       <div class="download-card">
         <div class="os">Windows</div>
         <div class="formats">
-          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_x64-setup.exe">
-            ↓ Installer (.exe) <span>recommended</span>
+          <a id="win-exe" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.7_x64-setup.exe">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            Installer (.exe) <span>recommended</span>
           </a>
-          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_x64_en-US.msi">
-            ↓ MSI package
+          <a id="win-msi" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.7_x64_en-US.msi">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            MSI package
           </a>
         </div>
       </div>
       <div class="download-card">
         <div class="os">Linux</div>
         <div class="formats">
-          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_amd64.AppImage">
-            ↓ AppImage <span>portable</span>
+          <a id="linux-appimage" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.7_amd64.AppImage">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            AppImage <span>portable</span>
           </a>
-          <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.5_amd64.deb">
-            ↓ .deb package <span>Debian/Ubuntu</span>
+          <a id="linux-deb" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.7_amd64.deb">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            .deb package <span>Debian/Ubuntu</span>
           </a>
         </div>
       </div>
@@ -430,11 +539,100 @@
 
   <!-- Footer -->
   <footer>
+    <div style="max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.5; color: var(--text-secondary); font-size: 0.75rem;">
+      <strong>Note:</strong> SOP Builder is currently in <em>Alpha</em>. While we strive for stability, the application is under active development. We recommend regular backups of your local data for any mission-critical documentation.
+    </div>
     <p>
       <a href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a> &nbsp;·&nbsp;
       <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases">Release notes</a> &nbsp;·&nbsp;
       <a href="https://github.com/prasoon-pradeep/Simple-SOP/blob/master/LICENSE">License</a>
+    </p>
   </footer>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="Expanded screenshot" id="lightbox-img" />
+  </div>
+
+  <script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+
+    // Close menu when clicking a link
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+      });
+    });
+
+    // Lightbox Logic
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const images = document.querySelectorAll('.screenshot-wrap img, .gallery-item img');
+
+    images.forEach(img => {
+      img.addEventListener('click', () => {
+        lightboxImg.src = img.src;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+      });
+    });
+
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = 'auto'; // Re-enable scroll
+    });
+
+    // Prevent image click from closing the lightbox (only background clicks)
+    lightboxImg.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    // Dynamic Version & Download Update
+    async function updateVersionInfo() {
+      try {
+        const response = await fetch('https://api.github.com/repos/prasoon-pradeep/Simple-SOP/releases/latest');
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const rawVersion = data.tag_name; // e.g., "v0.1.7"
+        const cleanVersion = rawVersion.startsWith('v') ? rawVersion.slice(1) : rawVersion;
+        const displayVersion = rawVersion.startsWith('v') ? rawVersion : `v${rawVersion}`;
+
+        // Update Alpha Badge
+        document.getElementById('alpha-badge').textContent = `Alpha — ${displayVersion}`;
+
+        // Update Last Updated Date
+        if (data.published_at) {
+          const date = new Date(data.published_at);
+          const formattedDate = date.toLocaleDateString(undefined, { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          const dateEl = document.getElementById('last-updated');
+          dateEl.textContent = `Last updated: ${formattedDate}`;
+          dateEl.style.display = 'block';
+        }
+
+        // Update Download Links
+        const baseUrl = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/';
+        
+        document.getElementById('win-exe').href = `${baseUrl}sop-builder_${cleanVersion}_x64-setup.exe`;
+        document.getElementById('win-msi').href = `${baseUrl}sop-builder_${cleanVersion}_x64_en-US.msi`;
+        document.getElementById('linux-appimage').href = `${baseUrl}sop-builder_${cleanVersion}_amd64.AppImage`;
+        document.getElementById('linux-deb').href = `${baseUrl}sop-builder_${cleanVersion}_amd64.deb`;
+      } catch (err) {
+        console.warn('Failed to fetch latest version info, using static defaults.');
+      }
+    }
+
+    updateVersionInfo();
+  </script>
 
 </body>
 </html>
