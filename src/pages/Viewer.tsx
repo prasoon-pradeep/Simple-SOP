@@ -26,7 +26,8 @@ export default function Viewer() {
   } = useSopStore();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [pdfExporting, setPdfExporting] = useState(false);
+  type PdfStatus = 'idle' | 'saving' | 'rendering' | 'error';
+  const [pdfStatus, setPdfStatus] = useState<PdfStatus>('idle');
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [companyName, setCompanyName] = useState('My Company');
 
@@ -136,6 +137,26 @@ export default function Viewer() {
     }
   };
 
+  const handleExportPdf = async () => {
+    if (!currentSop) return;
+    setPdfStatus('saving');
+    try {
+      const suggestedName = `${currentSop.sop_id}-V${currentSop.version}.pdf`;
+      const outputPath = await save({
+        filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
+        defaultPath: suggestedName,
+      });
+      if (!outputPath) { setPdfStatus('idle'); return; }
+      setPdfStatus('rendering');
+      await invoke('export_pdf', { sopIdUuid: currentSop.id, outputPath });
+      setPdfStatus('idle');
+    } catch (e) {
+      console.error('PDF export failed:', e);
+      setPdfStatus('error');
+      setTimeout(() => setPdfStatus('idle'), 4000);
+    }
+  };
+
   const getStatusIcon = (status: string | null) => {
     switch (status) {
       case 'Approved': return <CheckCircle2 className="w-4 h-4 mr-2 text-status-green" />;
@@ -192,24 +213,21 @@ export default function Viewer() {
                  Export .sop
               </Button>
               <Button
-                disabled={pdfExporting}
-                onClick={async () => {
-                  try {
-                    setPdfExporting(true);
-                    await invoke('export_pdf', { sopIdUuid: currentSop.id });
-                    setTimeout(() => setPdfExporting(false), 10000);
-                  } catch(e) {
-                    setPdfExporting(false);
-                    alert('PDF export failed: ' + e);
-                  }
-                }}
+                disabled={pdfStatus !== 'idle'}
+                onClick={handleExportPdf}
                 className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4 mr-2" />
-                {pdfExporting ? 'Generating PDF…' : 'Export PDF'}
+                {pdfStatus === 'saving' && 'Choose save location…'}
+                {pdfStatus === 'rendering' && 'Rendering PDF…'}
+                {pdfStatus === 'error' && 'Export Failed'}
+                {pdfStatus === 'idle' && 'Export PDF'}
               </Button>
-              {pdfExporting && (
-                <p className="text-xs text-center text-muted-foreground">Button re-enables in 10 s</p>
+              {pdfStatus === 'rendering' && (
+                <p className="text-xs text-center text-text-tertiary">Generating with Chromium…</p>
+              )}
+              {pdfStatus === 'error' && (
+                <p className="text-xs text-center text-status-red font-semibold">Check console for details.</p>
               )}
            </div>
         </div>

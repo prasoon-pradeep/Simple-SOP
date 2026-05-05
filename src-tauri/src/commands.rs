@@ -1731,9 +1731,41 @@ pub async fn set_config_value(
 // PDF Export
 // --------------------------------------------------------
 
+fn find_chromium() -> Option<std::path::PathBuf> {
+    #[cfg(target_os = "windows")]
+    {
+        let mut candidates = vec![
+            std::path::PathBuf::from(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+            std::path::PathBuf::from(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+            std::path::PathBuf::from(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+            std::path::PathBuf::from(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+        ];
+        if let Ok(local) = std::env::var("LOCALAPPDATA") {
+            candidates.insert(0, std::path::PathBuf::from(&local).join(r"Microsoft\Edge\Application\msedge.exe"));
+        }
+        if let Ok(local) = std::env::var("PROGRAMFILES") {
+            candidates.push(std::path::PathBuf::from(&local).join(r"Microsoft\Edge\Application\msedge.exe"));
+        }
+        return candidates.into_iter().find(|p| p.exists());
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let candidates = [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+            "/snap/bin/chromium",
+            "/usr/bin/brave-browser",
+        ];
+        candidates.iter().map(std::path::PathBuf::from).find(|p| p.exists())
+    }
+}
+
 #[tauri::command]
 pub async fn export_pdf(
     sop_id_uuid: String,
+    output_path: String,
     state: tauri::State<'_, SqlitePool>,
     app_handle: tauri::AppHandle,
 ) -> Result<(), String> {
@@ -1920,38 +1952,51 @@ pub async fn export_pdf(
 
     let json_str = serde_json::to_string(&sop_data).map_err(|e| e.to_string())?;
 
-    let suggested_filename = format!("{}-V{}.pdf", sop.sop_id, sop.version);
+    // Locate a Chromium-based browser before doing any file work
+    let chrome = find_chromium().ok_or_else(|| {
+        "No Chromium browser found. Install Google Chrome, Microsoft Edge, or Chromium.".to_string()
+    })?;
 
-    // Inject JSON directly (no template literal — avoids backtick/`${` breakage in user data)
-    // Set document.title early so WebKitGTK can read it before the print dialog opens
-    let init_script = format!(
-        "window.SOP_DATA = {}; document.title = '{}';",
-        json_str, suggested_filename
-    );
+    // Embed template at compile time and inject real SOP_DATA before the mock-data script
+    let pdf_template = include_str!("../../public/pdf-template.html");
+    let injection = format!("<script>window.SOP_DATA = {};</script>", json_str);
+    let html = pdf_template.replacen("<head>", &format!("<head>\n{}", injection), 1);
 
-    let print_script = "document.addEventListener('DOMContentLoaded', function() { \
-        setTimeout(function() { window.print(); }, 800); \
-    });";
+    // Write standalone HTML to a temp directory (cleaned up on drop)
+    let temp_dir = tempfile::tempdir().map_err(|e| e.to_string())?;
+    let html_path = temp_dir.path().join("sop-export.html");
+    std::fs::write(&html_path, &html).map_err(|e| e.to_string())?;
 
-    let full_init = format!("{}\n{}", init_script, print_script);
+    // Build a file:// URL Chromium can load
+    #[cfg(target_os = "windows")]
+    let file_url = format!("file:///{}", html_path.to_string_lossy().replace('\\', "/"));
+    #[cfg(not(target_os = "windows"))]
+    let file_url = format!("file://{}", html_path.display());
 
-    // Close any existing pdf-export window to avoid duplicate label error
-    if let Some(existing) = app_handle.get_webview_window("pdf-export") {
-        let _ = existing.close();
-        std::thread::sleep(std::time::Duration::from_millis(200));
+    let print_to_pdf_arg = format!("--print-to-pdf={}", output_path);
+
+    let result = tokio::process::Command::new(&chrome)
+        .args([
+            "--headless",
+            "--disable-gpu",
+            "--no-sandbox",
+            "--no-pdf-header-footer",
+            "--run-all-compositor-stages-before-draw",
+            &print_to_pdf_arg,
+            &file_url,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to launch browser: {}", e))?;
+
+    // temp_dir drops here, deleting the HTML file
+    drop(temp_dir);
+
+    if !std::path::Path::new(&output_path).exists() {
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        let detail = stderr.lines().last().unwrap_or("unknown error").trim().to_string();
+        return Err(format!("PDF was not created. {}", detail));
     }
-
-    tauri::WebviewWindowBuilder::new(
-        &app_handle,
-        "pdf-export",
-        tauri::WebviewUrl::App("pdf-template.html".into()),
-    )
-    .title("Print SOP")
-    .inner_size(1024.0, 768.0)
-    .visible(false)
-    .initialization_script(&full_init)
-    .build()
-    .map_err(|e| e.to_string())?;
 
     Ok(())
 }
