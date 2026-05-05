@@ -922,21 +922,21 @@ The word `latest` is a first-class GitHub feature — it always redirects to the
 ```
 
 #### CI workflow changes
-- [ ] Both `build-linux.yml` and `build-windows.yml` updated to:
-  - Sign artifacts using `TAURI_SIGNING_PRIVATE_KEY` GitHub Secret
-  - Generate `latest.json` with correct version, platform URLs, and signatures
-  - Create a GitHub Release tagged `v{version}` and upload all installers + `latest.json`
-- [ ] Workflows remain manually triggered (`workflow_dispatch`) — you control when a release goes out
+- [x] Unified `release.yml` workflow: builds Linux + Windows, signs artifacts with `TAURI_SIGNING_PRIVATE_KEY`, generates `latest.json`, creates GitHub Release tagged `v{tag}`, uploads all installers + `latest.json`
+- [x] Workflow is manually triggered (`workflow_dispatch`) with a `tag` input — release timing is fully controlled
 
 #### Rust — update check on launch
-- [ ] Add `tauri-plugin-updater` to `Cargo.toml` and register in `lib.rs`
-- [ ] Configure endpoint in `tauri.conf.json`: points to the stable `latest.json` URL above
-- [ ] On app launch: async background check (non-blocking, does not delay startup)
-- [ ] If update available: emit event to frontend with new version number and release notes
+- [x] `tauri-plugin-updater` added to `Cargo.toml` and registered in `lib.rs`
+- [x] Endpoint configured in `tauri.conf.json`: `https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/latest.json`
+- [x] On app launch: async background check in `App.tsx` `useEffect` — non-blocking, does not delay startup
+- [x] If update available: `pendingUpdate` state set in `App.tsx`, triggers `UpdateDialog`
 
 #### Frontend — update UX (two touch points)
-- [ ] **On launch:** If update available, show a small non-intrusive dialog: *"Version X.X.X is available — update now? / Later"*. User clicks "Update now" → app downloads installer in background → installs → restarts. "Later" dismisses until next launch.
-- [ ] **Settings page:** Add *"Check for Updates"* button. Shows *"You are on the latest version (X.X.X)"* if up to date, or the same update prompt if a newer version is found. Both touch points call the same underlying updater function.
+- [x] **On launch:** `UpdateDialog` component (`src/App.tsx`) — shows new version number, optional release notes body, "Install & Restart" and "Later" buttons. "Later" dismisses until next launch.
+- [x] **Settings page** (`src/pages/Settings.tsx`): "Check for Updates" button with full status flow (connecting → downloading with progress bar → verifying → applying). Shows actual error message on failure with a fallback link to the releases page.
+
+#### Known limitation
+- Linux `.deb` installs: the Tauri updater can download but cannot replace a system-installed binary. Auto-update silently fails for `.deb` users. AppImage is required for auto-update on Linux. Tracked in GitHub issue #4.
 
 #### Windows note
 Without a paid code signing certificate, Windows SmartScreen shows an *"unrecognised app"* warning on the **initial** `.exe`/`.msi` install only. Once installed, all subsequent updates via the updater are silent and bypasses SmartScreen entirely. Acceptable for v1.
