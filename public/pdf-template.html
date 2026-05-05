@@ -405,10 +405,10 @@
        max-width: 100% lets the image scale down to fit its column.
        ============================================================ */
     .table-img {
-      max-width: 48px;
-      width: 100%;
-      height: auto;
-      object-fit: cover;
+      height: 60px;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
       border: 1px solid var(--border);
       border-radius: 2px;
       display: block;
@@ -416,9 +416,8 @@
     }
 
     .table-img-placeholder {
-      width: 100%;
-      max-width: 48px;
-      height: 34px;
+      width: 80px;
+      height: 60px;
       background: #ececec;
       border: 1px dashed #c0c0c0;
       border-radius: 2px;
@@ -470,11 +469,11 @@
       #3 + img10 + name16 + type10 + model13 + spec(31) + cal8 + due9 = 100%
     */
     .tools-table .col-num   { width: 3%;  text-align: center; }
-    .tools-table .col-img   { width: 10%; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
+    .tools-table .col-img   { width: 20%; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
     .tools-table .col-name  { width: 16%; }
     .tools-table .col-type  { width: 10%; text-align: center; }
     .tools-table .col-model { width: 13%; }
-    .tools-table .col-spec  { width: 31%; }
+    .tools-table .col-spec  { width: 21%; }
     .tools-table .col-cal   { width: 8%;  text-align: center; }
     .tools-table .col-due   { width: 9%;  text-align: center; }
 
@@ -488,9 +487,10 @@
        ITEMS TABLE
        Columns: # | Image | Name | Part No. | Description | Unit
        ============================================================ */
-    .items-table .col-num  { width: 26px; text-align: center; }
+    .items-table .col-num  { width: 26px;  text-align: center; }
+    .items-table .col-img  { width: 110px; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
     .items-table .col-part { width: 98px; }
-    .items-table .col-unit { width: 42px; text-align: center; }
+    .items-table .col-unit { width: 42px;  text-align: center; }
 
     .items-table td.col-num  { color: var(--text-faint); font-size: 7.5pt; text-align: center; }
     .items-table td.col-unit { text-align: center; font-weight: 600; }
@@ -691,12 +691,24 @@
    Plain grey SVG used as placeholder for image fields in the
    browser preview. At render time, Tauri injects real file URLs.
    ============================================================ */
-var MOCK_IMG = (function () {
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="42">'
-    + '<rect width="60" height="42" rx="2" fill="#e0e0e0"/>'
-    + '<rect x="17" y="10" width="26" height="18" rx="1" fill="none" stroke="#bbb" stroke-width="1.5"/>'
-    + '<circle cx="30" cy="19" r="5" fill="none" stroke="#bbb" stroke-width="1.5"/>'
-    + '<text x="30" y="36" font-size="7" text-anchor="middle" fill="#bbb" font-family="Arial,sans-serif">preview</text>'
+/* 4:3 — 80×60 */
+var MOCK_IMG_43 = (function () {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60">'
+    + '<rect width="80" height="60" rx="2" fill="#e0e0e0"/>'
+    + '<rect x="20" y="11" width="40" height="28" rx="1" fill="none" stroke="#bbb" stroke-width="1.5"/>'
+    + '<circle cx="40" cy="25" r="7" fill="none" stroke="#bbb" stroke-width="1.5"/>'
+    + '<text x="40" y="52" font-size="7" text-anchor="middle" fill="#bbb" font-family="Arial,sans-serif">4:3</text>'
+    + '</svg>';
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}());
+
+/* 16:9 — 107×60 */
+var MOCK_IMG_169 = (function () {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="107" height="60">'
+    + '<rect width="107" height="60" rx="2" fill="#e0e0e0"/>'
+    + '<rect x="30" y="11" width="47" height="28" rx="1" fill="none" stroke="#bbb" stroke-width="1.5"/>'
+    + '<circle cx="53" cy="25" r="7" fill="none" stroke="#bbb" stroke-width="1.5"/>'
+    + '<text x="53" y="52" font-size="7" text-anchor="middle" fill="#bbb" font-family="Arial,sans-serif">16:9</text>'
     + '</svg>';
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 }());
@@ -753,7 +765,7 @@ window.SOP_DATA = window.SOP_DATA || {
       specification:        "0–200 Nm range, ±2% accuracy at 20–100% full scale",
       calibration_required: true,
       calibration_due_date: "2025-08-01",
-      image_url:            MOCK_IMG
+      image_url:            MOCK_IMG_43
     },
     {
       name:                 "Surface Roughness Tester",
@@ -762,7 +774,7 @@ window.SOP_DATA = window.SOP_DATA || {
       specification:        "Ra 0.05–10.00 µm, ISO 4287; probe tip 5 µm radius",
       calibration_required: true,
       calibration_due_date: "2025-06-15",
-      image_url:            MOCK_IMG
+      image_url:            MOCK_IMG_169
     },
     {
       name:                 "Lint-Free Cleaning Cloth",
@@ -780,7 +792,7 @@ window.SOP_DATA = window.SOP_DATA || {
       specification:        "365 nm wavelength, min. 1000 µW/cm² at 38 cm",
       calibration_required: false,
       calibration_due_date: null,
-      image_url:            MOCK_IMG
+      image_url:            MOCK_IMG_43
     }
   ],
   items: [
@@ -789,14 +801,14 @@ window.SOP_DATA = window.SOP_DATA || {
       part_no:     "IPA-99-1L",
       description: "99% purity, technical grade, CAS 67-63-0",
       unit:        "ml",
-      image_url:   MOCK_IMG
+      image_url:   MOCK_IMG_169
     },
     {
       name:        "Surface Primer A",
       part_no:     "PRM-A-500",
       description: "Metal primer, grey, fast-dry (<5 min), food-safe grade",
       unit:        "ml",
-      image_url:   null
+      image_url:   MOCK_IMG_43
     },
     {
       name:        "Sealing Gasket M8",
