@@ -76,7 +76,7 @@
     @media (max-width: 640px) {
       nav { padding: 0 1.25rem; }
       .menu-toggle { display: block; }
-      
+
       nav .nav-links {
         display: none;
         position: absolute;
@@ -162,6 +162,23 @@
     }
     .btn-secondary:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
+    /* ── Privacy Strip ── */
+    .privacy-strip {
+      background: #f0fdf4;
+      border-top: 1px solid #bbf7d0;
+      border-bottom: 1px solid #bbf7d0;
+      padding: 0.75rem 2rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .privacy-strip svg { flex-shrink: 0; }
+
     /* ── Screenshot ── */
     .screenshot-wrap {
       max-width: 960px;
@@ -176,7 +193,7 @@
       box-shadow: 0 8px 40px rgba(0,0,0,0.10);
     }
 
-    /* ── Features ── */
+    /* ── Shared section layout ── */
     .section {
       max-width: 960px;
       margin: 0 auto;
@@ -199,6 +216,53 @@
       margin-bottom: 2.5rem;
     }
 
+    /* ── How it works ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0;
+      position: relative;
+    }
+
+    .step {
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      flex-shrink: 0;
+    }
+
+    .step h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .step p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    @media (min-width: 640px) {
+      .step:not(:last-child) {
+        border-right: 1px solid var(--border);
+      }
+    }
+
+    /* ── Features ── */
     .features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -258,6 +322,71 @@
       text-align: center;
     }
 
+    /* ── What's New ── */
+    .changelog {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .changelog-header {
+      background: var(--surface);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .changelog-version {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      background: var(--brand);
+      color: #fff;
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+
+    .changelog-date {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .changelog-body {
+      padding: 1.25rem 1.5rem;
+    }
+
+    .changelog-body ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .changelog-body li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .changelog-body li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--brand);
+      flex-shrink: 0;
+      margin-top: 0.45rem;
+    }
+
+    .changelog-body li strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
     /* ── Download ── */
     .download-section {
       background: var(--surface);
@@ -274,7 +403,7 @@
       margin-bottom: 0.5rem;
     }
 
-    .download-section p {
+    .download-section > p {
       color: var(--text-secondary);
       margin-bottom: 2rem;
       font-size: 0.95rem;
@@ -286,7 +415,7 @@
       justify-content: center;
       flex-wrap: wrap;
       max-width: 640px;
-      margin: 0 auto;
+      margin: 0 auto 2.5rem;
     }
 
     .download-card {
@@ -331,6 +460,133 @@
       font-weight: 400;
     }
 
+    /* ── System Requirements ── */
+    .sysreq {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .sysreq-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .sysreq-grid {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .sysreq-card {
+      flex: 1;
+      min-width: 180px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+
+    .sysreq-card .os-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .sysreq-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .sysreq-card li {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .sysreq-card.unsupported .os-name {
+      color: var(--text-secondary);
+    }
+
+    .sysreq-card.unsupported li {
+      font-style: italic;
+    }
+
+    /* ── FAQ ── */
+    .faq-section {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    .faq-section .section-label { margin-bottom: 0.5rem; }
+    .faq-section h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 2rem; }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:last-child { border-bottom: none; }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 1.1rem 1.5rem;
+      text-align: left;
+      font-size: 0.925rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: background 0.15s;
+    }
+
+    .faq-question:hover { background: var(--surface); }
+
+    .faq-chevron {
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+      color: var(--text-secondary);
+    }
+
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    .faq-answer {
+      display: none;
+      padding: 0 1.5rem 1.1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      background: var(--surface);
+    }
+
+    .faq-item.open .faq-answer { display: block; }
+
+    .faq-answer a {
+      color: var(--brand);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
     /* ── Footer ── */
     footer {
       padding: 2rem;
@@ -338,6 +594,20 @@
       font-size: 0.8rem;
       color: var(--text-secondary);
       border-top: 1px solid var(--border);
+    }
+
+    .footer-alpha-note {
+      max-width: 600px;
+      margin: 0 auto 1rem;
+      line-height: 1.5;
+      font-size: 0.75rem;
+    }
+
+    .footer-license-note {
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.5;
+      font-size: 0.75rem;
     }
 
     footer a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
@@ -389,9 +659,11 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
     </button>
     <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="#how-it-works">How it works</a>
       <a class="nav-link" href="#features">Features</a>
       <a class="nav-link" href="#screenshots">Screenshots</a>
       <a class="nav-link" href="#download">Download</a>
+      <a class="nav-link" href="#faq">FAQ</a>
       <a class="nav-link" href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a>
     </div>
   </nav>
@@ -399,7 +671,7 @@
   <!-- Hero -->
   <section class="hero">
     <div class="alpha-badge" id="alpha-badge">Alpha — v0.1.7</div>
-    <div id="last-updated" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: -0.75rem; margin-bottom: 1.5rem; display: none;">Updated: --</div>
+    <div id="last-updated" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: -0.75rem; margin-bottom: 1.5rem; display: none;"></div>
     <h1>SOP documentation that stays<br><em>on your machine</em></h1>
     <p>A professional-grade, offline-first desktop app for creating, editing, and exporting Standard Operating Procedures. No cloud. No login. No subscriptions.</p>
     <div class="btn-group">
@@ -411,10 +683,39 @@
     </div>
   </section>
 
+  <!-- Privacy strip -->
+  <div class="privacy-strip">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    <span>Zero data leaves your machine. No accounts, no telemetry, no network required — ever.</span>
+  </div>
+
   <!-- Hero screenshot -->
-  <div class="screenshot-wrap">
+  <div class="screenshot-wrap" style="margin-top: 3.5rem;">
     <img src="screenshots/01-home-sop-library.png" alt="SOP Builder — SOP Library" />
   </div>
+
+  <!-- How it works -->
+  <section class="section" id="how-it-works">
+    <div class="section-label">How it works</div>
+    <h2>Up and running in minutes.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Create an SOP</h3>
+        <p>Give it a title, fill in the purpose, scope, safety notes, and list the tools and materials required.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Build the procedure</h3>
+        <p>Add numbered steps with written instructions and annotated photos. Draw arrows, circles, and labels directly in the app.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Export and share</h3>
+        <p>Generate a print-ready PDF in one click, or export as a portable <code>.sop</code> bundle to share offline with anyone running SOP Builder.</p>
+      </div>
+    </div>
+  </section>
 
   <!-- Features -->
   <section class="section" id="features">
@@ -502,6 +803,26 @@
     </div>
   </section>
 
+  <!-- What's new -->
+  <section class="section" id="changelog">
+    <div class="section-label">Changelog</div>
+    <h2>What's new</h2>
+    <div class="changelog">
+      <div class="changelog-header">
+        <span class="changelog-version">v0.1.7</span>
+        <span class="changelog-date" id="changelog-date">May 2026</span>
+      </div>
+      <div class="changelog-body">
+        <ul>
+          <li><strong>PDF footer simplified</strong> — shows SOP ID and page numbers only, removing visual clutter from printed output.</li>
+          <li><strong>Running header removed</strong> — PDF pages now have a cleaner top margin without a repeated header band.</li>
+          <li><strong>Viewer consistency</strong> — table borders, company name colour, and border thickness now match the PDF template exactly.</li>
+          <li><strong>Build reliability</strong> — fixed a stale import that caused the Windows and Linux builds to fail.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <!-- Download -->
   <section class="download-section" id="download">
     <div class="section-label" style="color: var(--brand); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem;">Free Download</div>
@@ -535,12 +856,112 @@
         </div>
       </div>
     </div>
+
+    <!-- System requirements -->
+    <div class="sysreq">
+      <div class="sysreq-title">System requirements</div>
+      <div class="sysreq-grid">
+        <div class="sysreq-card">
+          <div class="os-name">Windows</div>
+          <ul>
+            <li>Windows 10 or later</li>
+            <li>64-bit only</li>
+          </ul>
+        </div>
+        <div class="sysreq-card">
+          <div class="os-name">Linux</div>
+          <ul>
+            <li>64-bit only</li>
+            <li>AppImage: most modern distros</li>
+            <li>.deb: Ubuntu 20.04+ / Debian 10+</li>
+          </ul>
+        </div>
+        <div class="sysreq-card unsupported">
+          <div class="os-name">macOS</div>
+          <ul>
+            <li>Not supported yet</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </section>
+
+  <!-- FAQ -->
+  <div class="faq-section" id="faq">
+    <div class="section-label">FAQ</div>
+    <h2>Common questions</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Is SOP Builder free?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          Yes — free for personal use and internal business use, with no time limit. The source code is available on <a href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a> under an MIT + Commons Clause licence. The Commons Clause means you cannot sell SOP Builder or offer it as a paid hosted service. See the full <a href="https://github.com/prasoon-pradeep/Simple-SOP/blob/master/LICENSE">licence</a> for details.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Does it work without an internet connection?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          Yes, fully. SOP Builder never requires a network connection — not at install time, not at runtime, and not for any feature. Everything runs locally.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Where is my data stored?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          All SOPs — including attached images — are stored in a single SQLite database in your operating system's app data directory. On Windows this is typically <code>%APPDATA%\sop-builder</code>; on Linux, <code>~/.local/share/sop-builder</code>. Nothing is transmitted or synced anywhere.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I back up my SOPs?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          Export individual SOPs as <code>.sop</code> bundles from within the app — each bundle is self-contained with all images. You can also copy the entire database file from the app data directory. During the alpha period we recommend regular exports for anything you can't afford to lose.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Is macOS supported?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          Not in the current version. Only Windows (10+, 64-bit) and Linux (64-bit) are supported. macOS may be considered in a future release, but no timeline is set.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Can I use this for safety-critical procedures?
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          SOP Builder is a documentation tool only. It does not validate the accuracy, safety, or regulatory compliance of any procedure you write. For safety-critical or legally regulated work, always have qualified personnel review and approve procedures independently before use. See the <a href="https://github.com/prasoon-pradeep/Simple-SOP/blob/master/LICENSE">licence</a> for the full disclaimer.
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer>
-    <div style="max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.5; color: var(--text-secondary); font-size: 0.75rem;">
-      <strong>Note:</strong> SOP Builder is currently in <em>Alpha</em>. While we strive for stability, the application is under active development. We recommend regular backups of your local data for any mission-critical documentation.
+    <div class="footer-alpha-note">
+      <strong>Alpha software.</strong> SOP Builder is under active development. We recommend regular backups of your local data for any mission-critical documentation.
+    </div>
+    <div class="footer-license-note">
+      Free for personal and internal business use. Source available on GitHub under MIT + Commons Clause — you may not sell or sublicence the software.
     </div>
     <p>
       <a href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a> &nbsp;·&nbsp;
@@ -562,14 +983,13 @@
       navLinks.classList.toggle('active');
     });
 
-    // Close menu when clicking a link
     navLinks.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         navLinks.classList.remove('active');
       });
     });
 
-    // Lightbox Logic
+    // Lightbox
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const images = document.querySelectorAll('.screenshot-wrap img, .gallery-item img');
@@ -578,50 +998,58 @@
       img.addEventListener('click', () => {
         lightboxImg.src = img.src;
         lightbox.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent scroll
+        document.body.style.overflow = 'hidden';
       });
     });
 
     lightbox.addEventListener('click', () => {
       lightbox.classList.remove('active');
-      document.body.style.overflow = 'auto'; // Re-enable scroll
+      document.body.style.overflow = 'auto';
     });
 
-    // Prevent image click from closing the lightbox (only background clicks)
-    lightboxImg.addEventListener('click', (e) => {
-      e.stopPropagation();
+    lightboxImg.addEventListener('click', (e) => e.stopPropagation());
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
     });
 
-    // Dynamic Version & Download Update
+    // Dynamic version & download links
     async function updateVersionInfo() {
       try {
         const response = await fetch('https://api.github.com/repos/prasoon-pradeep/Simple-SOP/releases/latest');
         if (!response.ok) return;
 
         const data = await response.json();
-        const rawVersion = data.tag_name; // e.g., "v0.1.7"
+        const rawVersion = data.tag_name;
         const cleanVersion = rawVersion.startsWith('v') ? rawVersion.slice(1) : rawVersion;
         const displayVersion = rawVersion.startsWith('v') ? rawVersion : `v${rawVersion}`;
 
-        // Update Alpha Badge
         document.getElementById('alpha-badge').textContent = `Alpha — ${displayVersion}`;
 
-        // Update Last Updated Date
         if (data.published_at) {
           const date = new Date(data.published_at);
-          const formattedDate = date.toLocaleDateString(undefined, { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          const formattedDate = date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           });
           const dateEl = document.getElementById('last-updated');
           dateEl.textContent = `Last updated: ${formattedDate}`;
           dateEl.style.display = 'block';
+
+          document.getElementById('changelog-date').textContent = date.toLocaleDateString(undefined, {
+            month: 'long',
+            year: 'numeric'
+          });
         }
 
-        // Update Download Links
         const baseUrl = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/';
-        
         document.getElementById('win-exe').href = `${baseUrl}sop-builder_${cleanVersion}_x64-setup.exe`;
         document.getElementById('win-msi').href = `${baseUrl}sop-builder_${cleanVersion}_x64_en-US.msi`;
         document.getElementById('linux-appimage').href = `${baseUrl}sop-builder_${cleanVersion}_amd64.AppImage`;
