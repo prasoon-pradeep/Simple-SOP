@@ -350,7 +350,7 @@
       gap: 1rem;
       justify-content: center;
       flex-wrap: wrap;
-      max-width: 640px;
+      max-width: 900px;
       margin: 0 auto 2.5rem;
     }
 
@@ -396,61 +396,41 @@
       font-weight: 400;
     }
 
-    /* ── System Requirements ── */
-    .sysreq {
-      max-width: 640px;
-      margin: 0 auto;
-      text-align: left;
-    }
-
-    .sysreq-title {
+    .download-card .reqs {
       font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
       color: var(--text-secondary);
-      text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.5;
     }
 
-    .sysreq-grid {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .sysreq-card {
-      flex: 1;
-      min-width: 180px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.25rem;
-    }
-
-    .sysreq-card .os-name {
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-    }
-
-    .sysreq-card ul {
-      list-style: none;
+    .download-card.coming-soon {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
+      align-items: flex-start;
+      justify-content: flex-start;
+      opacity: 0.7;
     }
 
-    .sysreq-card li {
-      font-size: 0.8rem;
+    .coming-soon-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--surface);
       color: var(--text-secondary);
+      border: 1px solid var(--border);
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-top: 0.25rem;
     }
 
-    .sysreq-card.unsupported .os-name {
+    .coming-soon-note {
+      font-size: 0.75rem;
       color: var(--text-secondary);
-    }
-
-    .sysreq-card.unsupported li {
+      margin-top: 2rem;
       font-style: italic;
     }
 
@@ -748,6 +728,7 @@
     <div class="download-cards">
       <div class="download-card">
         <div class="os">Windows</div>
+        <div class="reqs">Windows 10 or later &middot; 64-bit</div>
         <div class="formats">
           <a id="win-exe" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.7_x64-setup.exe">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
@@ -761,6 +742,7 @@
       </div>
       <div class="download-card">
         <div class="os">Linux</div>
+        <div class="reqs">64-bit &middot; AppImage: most modern distros &middot; .deb: Ubuntu 20.04+ / Debian 10+</div>
         <div class="formats">
           <a id="linux-appimage" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.1.7_amd64.AppImage">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
@@ -772,33 +754,10 @@
           </a>
         </div>
       </div>
-    </div>
-
-    <!-- System requirements -->
-    <div class="sysreq">
-      <div class="sysreq-title">System requirements</div>
-      <div class="sysreq-grid">
-        <div class="sysreq-card">
-          <div class="os-name">Windows</div>
-          <ul>
-            <li>Windows 10 or later</li>
-            <li>64-bit only</li>
-          </ul>
-        </div>
-        <div class="sysreq-card">
-          <div class="os-name">Linux</div>
-          <ul>
-            <li>64-bit only</li>
-            <li>AppImage: most modern distros</li>
-            <li>.deb: Ubuntu 20.04+ / Debian 10+</li>
-          </ul>
-        </div>
-        <div class="sysreq-card unsupported">
-          <div class="os-name">macOS</div>
-          <ul>
-            <li>Coming soon</li>
-          </ul>
-        </div>
+      <div class="download-card coming-soon">
+        <div class="os">macOS</div>
+        <span class="coming-soon-badge">Coming soon</span>
+        <p class="coming-soon-note">macOS support is in progress. Watch the <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases" style="color: var(--brand); text-decoration: underline; text-underline-offset: 3px;">releases page</a> for updates.</p>
       </div>
     </div>
   </section>
