@@ -8,7 +8,6 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { Button } from '@/components/ui/button';
 import { Definition, SOP, Revision, Tool, Item, StepFull } from '@/types';
 import { cn } from '@/lib/utils';
-import { ImageFrame } from '@/components/shared/ImageFrame';
 import './Viewer.css';
 
 export default function Viewer() {
