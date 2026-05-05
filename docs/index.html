@@ -322,70 +322,6 @@
       text-align: center;
     }
 
-    /* ── What's New ── */
-    .changelog {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .changelog-header {
-      background: var(--surface);
-      padding: 1rem 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .changelog-version {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      background: var(--brand);
-      color: #fff;
-      padding: 2px 10px;
-      border-radius: 999px;
-    }
-
-    .changelog-date {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
-
-    .changelog-body {
-      padding: 1.25rem 1.5rem;
-    }
-
-    .changelog-body ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-
-    .changelog-body li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.6rem;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-
-    .changelog-body li::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--brand);
-      flex-shrink: 0;
-      margin-top: 0.45rem;
-    }
-
-    .changelog-body li strong {
-      color: var(--text);
-      font-weight: 600;
-    }
 
     /* ── Download ── */
     .download-section {
@@ -803,25 +739,6 @@
     </div>
   </section>
 
-  <!-- What's new -->
-  <section class="section" id="changelog">
-    <div class="section-label">Changelog</div>
-    <h2>What's new</h2>
-    <div class="changelog">
-      <div class="changelog-header">
-        <span class="changelog-version">v0.1.7</span>
-        <span class="changelog-date" id="changelog-date">May 2026</span>
-      </div>
-      <div class="changelog-body">
-        <ul>
-          <li><strong>PDF footer simplified</strong> — shows SOP ID and page numbers only, removing visual clutter from printed output.</li>
-          <li><strong>Running header removed</strong> — PDF pages now have a cleaner top margin without a repeated header band.</li>
-          <li><strong>Viewer consistency</strong> — table borders, company name colour, and border thickness now match the PDF template exactly.</li>
-          <li><strong>Build reliability</strong> — fixed a stale import that caused the Windows and Linux builds to fail.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
 
   <!-- Download -->
   <section class="download-section" id="download">
@@ -879,7 +796,7 @@
         <div class="sysreq-card unsupported">
           <div class="os-name">macOS</div>
           <ul>
-            <li>Not supported yet</li>
+            <li>Coming soon</li>
           </ul>
         </div>
       </div>
@@ -938,7 +855,7 @@
           <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <div class="faq-answer">
-          Not in the current version. Only Windows (10+, 64-bit) and Linux (64-bit) are supported. macOS may be considered in a future release, but no timeline is set.
+          Not in the current version. Only Windows (10+, 64-bit) and Linux (64-bit) are supported. macOS support is coming soon.
         </div>
       </div>
 
@@ -1043,10 +960,6 @@
           dateEl.textContent = `Last updated: ${formattedDate}`;
           dateEl.style.display = 'block';
 
-          document.getElementById('changelog-date').textContent = date.toLocaleDateString(undefined, {
-            month: 'long',
-            year: 'numeric'
-          });
         }
 
         const baseUrl = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/';
