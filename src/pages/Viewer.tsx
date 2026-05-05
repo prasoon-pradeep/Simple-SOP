@@ -261,7 +261,7 @@ export default function Viewer() {
           <div className="title-block">
              <div className="title-block__top">
                 <div className="title-block__company">
-                   <div className="title-block__company-name" style={{ color: 'var(--brand)' }}>{companyName}</div>
+                   <div className="title-block__company-name">{companyName}</div>
                 </div>
                 <div className="title-block__doc-type">
                    <div className="title-block__doc-type-label">Document Type</div>
