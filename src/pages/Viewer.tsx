@@ -112,6 +112,15 @@ export default function Viewer() {
     } catch (_) { return s; }
   };
 
+  const statusClass = (s: string | null) => {
+    if (!s) return 'status--draft';
+    const l = s.toLowerCase();
+    if (l === 'approved') return 'status--approved';
+    if (l.includes('review')) return 'status--review';
+    if (l === 'rejected') return 'status--rejected';
+    return 'status--draft';
+  };
+
   if (isLoading || !currentSop) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background text-text-tertiary">
@@ -165,6 +174,8 @@ export default function Viewer() {
       default: return <AlertCircle className="w-4 h-4 mr-2 text-text-tertiary" />;
     }
   };
+
+  let sectionNum = 1;
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
@@ -245,40 +256,40 @@ export default function Viewer() {
 
       {/* PDF Content Area */}
       <main className="flex-1 overflow-y-auto bg-[#c8c8c8] p-10 flex justify-center items-start">
-        <div className="sop-pdf-card bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[15mm] text-[#1a1a1a]">
+        <div className="sop-pdf-card pdf-page">
           {/* Header Block */}
-          <div className="pdf-title-block">
-             <div className="pdf-title-block__top">
-                <div className="pdf-title-block__company">
-                   <div className="pdf-title-block__company-name">{companyName}</div>
+          <div className="title-block">
+             <div className="title-block__top">
+                <div className="title-block__company">
+                   <div className="title-block__company-name" style={{ color: 'var(--brand)' }}>{companyName}</div>
                 </div>
-                <div className="pdf-title-block__doc-type">
-                   <div className="pdf-title-block__doc-type-label">Document Type</div>
-                   <div className="pdf-title-block__doc-type-value">Standard Operating Procedure</div>
+                <div className="title-block__doc-type">
+                   <div className="title-block__doc-type-label">Document Type</div>
+                   <div className="title-block__doc-type-value">Standard Operating Procedure</div>
                 </div>
              </div>
-             <div className="pdf-title-block__title-row">
-                <div className="pdf-title-block__title-label">Document Title</div>
-                <div className="pdf-title-block__title-text">{currentSop.title}</div>
+             <div className="title-block__title-row">
+                <div className="title-block__title-label">Document Title</div>
+                <div className="title-block__title-text">{currentSop.title}</div>
              </div>
-             <div className="pdf-title-block__meta">
-                <div className="pdf-title-block__meta-col border-r border-[#c0c0c0]">
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">SOP ID:</span><span className="pdf-meta-value font-mono">{currentSop.sop_id}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Version:</span><span className="pdf-meta-value font-mono">V{currentSop.version}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Department:</span><span className="pdf-meta-value">{currentSop.department || '—'}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Document Owner:</span><span className="pdf-meta-value">{currentSop.document_owner || '—'}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Created By:</span><span className="pdf-meta-value">{currentSop.created_by || '—'}</span></div>
+             <div className="title-block__meta">
+                <div className="title-block__meta-col">
+                   <div className="meta-row"><span className="meta-label">SOP ID:</span><span className="meta-value meta-mono">{currentSop.sop_id}</span></div>
+                   <div className="meta-row"><span className="meta-label">Version:</span><span className="meta-value meta-mono">V{currentSop.version}</span></div>
+                   <div className="meta-row"><span className="meta-label">Department:</span><span className="meta-value">{currentSop.department || '—'}</span></div>
+                   <div className="meta-row"><span className="meta-label">Document Owner:</span><span className="meta-value">{currentSop.document_owner || '—'}</span></div>
+                   <div className="meta-row"><span className="meta-label">Created By:</span><span className="meta-value">{currentSop.created_by || '—'}</span></div>
                 </div>
-                <div className="pdf-title-block__meta-col">
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Approval Status:</span><span className="pdf-meta-value font-bold">{currentSop.approval_status || 'Draft'}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Created Date:</span><span className="pdf-meta-value">{fmtDate(currentSop.created_date)}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Active / Release:</span><span className="pdf-meta-value">{fmtDate(currentSop.active_date)}</span></div>
-                   <div className="pdf-meta-row"><span className="pdf-meta-label">Next Review:</span><span className="pdf-meta-value">{fmtDate(currentSop.next_review_date)}</span></div>
+                <div className="title-block__meta-col">
+                   <div className="meta-row"><span className="meta-label">Approval Status:</span><span className={cn("meta-value", statusClass(currentSop.approval_status))}>{currentSop.approval_status || 'Draft'}</span></div>
+                   <div className="meta-row"><span className="meta-label">Created Date:</span><span className="meta-value">{fmtDate(currentSop.created_date)}</span></div>
+                   <div className="meta-row"><span className="meta-label">Active / Release:</span><span className="meta-value">{fmtDate(currentSop.active_date)}</span></div>
+                   <div className="meta-row"><span className="meta-label">Next Review:</span><span className="meta-value">{fmtDate(currentSop.next_review_date)}</span></div>
                 </div>
              </div>
              {currentSop.distribution_list && (
-                <div className="pdf-title-block__dist border-t border-[#c0c0c0] bg-[#f8f8f8] p-2 text-[7.5pt] flex gap-2">
-                   <span className="font-bold text-[#555]">Distribution:</span>
+                <div className="title-block__dist">
+                   <span className="title-block__dist-label">Distribution:</span>
                    <span>{currentSop.distribution_list}</span>
                 </div>
              )}
@@ -286,20 +297,20 @@ export default function Viewer() {
 
           {/* 1. Purpose & Scope */}
           {(currentSop.purpose || currentSop.scope) && (
-            <div className="pdf-section">
-               <div className="pdf-section-header">1. Purpose & Scope</div>
-               <table className="pdf-ps-table w-full border-collapse border border-[#c0c0c0]">
+            <div className="section">
+               <div className="section__header">{sectionNum++}. Purpose & Scope</div>
+               <table className="ps-table">
                   <tbody>
                      {currentSop.purpose && (
                         <tr>
-                           <td className="w-[100px] font-bold bg-[#f0f0f0] border border-[#c0c0c0] p-2 text-[8pt]">Purpose</td>
-                           <td className="border border-[#c0c0c0] p-2 text-[8.5pt] whitespace-pre-wrap leading-relaxed">{currentSop.purpose}</td>
+                           <td className="ps-table__label">Purpose</td>
+                           <td className="ps-table__content">{currentSop.purpose}</td>
                         </tr>
                      )}
                      {currentSop.scope && (
                         <tr>
-                           <td className="w-[100px] font-bold bg-[#f0f0f0] border border-[#c0c0c0] p-2 text-[8pt]">Scope</td>
-                           <td className="border border-[#c0c0c0] p-2 text-[8.5pt] whitespace-pre-wrap leading-relaxed">{currentSop.scope}</td>
+                           <td className="ps-table__label">Scope</td>
+                           <td className="ps-table__content">{currentSop.scope}</td>
                         </tr>
                      )}
                   </tbody>
@@ -309,19 +320,19 @@ export default function Viewer() {
 
           {/* 2. Safety */}
           {(currentSop.safety_notes || currentSop.training_required) && (
-            <div className="pdf-section mt-4">
-               <div className="pdf-section-header">2. Safety, Hazards & Training Requirements</div>
-               <div className="pt-2">
+            <div className="section">
+               <div className="section__header">{sectionNum++}. Safety, Hazards & Training Requirements</div>
+               <div className="safety-wrap">
                   {currentSop.safety_notes && (
-                    <div className="border border-[#aaaaaa] border-l-4 border-l-[#555555] bg-[#f5f5f5] p-3 mb-2">
-                       <div className="text-[7.5pt] font-bold uppercase mb-1">Safety & Environmental Hazards</div>
-                       <div className="text-[8.5pt] whitespace-pre-wrap leading-relaxed">{currentSop.safety_notes}</div>
+                    <div className="safety-box">
+                       <div className="safety-box__header">Safety & Environmental Hazards</div>
+                       <div className="safety-box__content">{currentSop.safety_notes}</div>
                     </div>
                   )}
                   {currentSop.training_required && (
-                    <div className="border border-[#bbbbbb] border-l-4 border-l-[#444444] bg-[#f8f8f8] p-3">
-                       <div className="text-[7.5pt] font-bold uppercase mb-1">Training Required</div>
-                       <div className="text-[8.5pt] whitespace-pre-wrap leading-relaxed">{currentSop.training_details || 'Refer to department modules.'}</div>
+                    <div className="training-box">
+                       <div className="training-box__header">Training Required</div>
+                       <div className="training-box__content">{currentSop.training_details || 'Refer to department modules.'}</div>
                     </div>
                   )}
                </div>
@@ -330,37 +341,44 @@ export default function Viewer() {
 
           {/* 3. Tools */}
           {tools.length > 0 && (
-            <div className="pdf-section mt-4">
-               <div className="pdf-section-header">3. Equipment & Tools Required</div>
-               <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
+            <div className="section">
+               <div className="section__header">{sectionNum++}. Equipment & Tools Required</div>
+               <table className="tools-table">
                   <thead>
-                     <tr className="bg-[#ebebeb]">
-                        <th className="border border-[#c0c0c0] p-1 w-[24px] text-center italic">#</th>
-                        <th className="border border-[#c0c0c0] p-1 w-[48px] text-center">Image</th>
-                        <th className="border border-[#c0c0c0] p-1 text-left">Tool Name / Description</th>
-                        <th className="border border-[#c0c0c0] p-1 text-center w-[60px]">Type</th>
-                        <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Model #</th>
-                        <th className="border border-[#c0c0c0] p-1 text-left">Specification</th>
-                        <th className="border border-[#c0c0c0] p-1 text-center w-[50px]">Cal. Req</th>
-                        <th className="border border-[#c0c0c0] p-1 text-center w-[60px]">Cal. Due</th>
+                     <tr>
+                        <th className="col-num italic">#</th>
+                        <th className="col-img">Image</th>
+                        <th className="col-name">Tool Name / Description</th>
+                        <th className="col-type">Type</th>
+                        <th className="col-model">Model #</th>
+                        <th className="col-spec">Specification</th>
+                        <th className="col-cal">Cal. Req</th>
+                        <th className="col-due">Cal. Due</th>
                      </tr>
                   </thead>
                   <tbody>
                      {tools.map((t, idx) => (
-                        <tr key={t.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                           <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
-                           <td className="border border-[#c0c0c0] p-1 text-center align-middle">
-                              <ImageFrame 
-                                src={t.image_uuid ? imageUrls[t.image_uuid] : null} 
-                                className="w-10 h-6 border-none bg-transparent"
-                              />
+                        <tr key={t.id}>
+                           <td className="col-num">{idx + 1}</td>
+                           <td className="col-img">
+                              {t.image_uuid ? (
+                                <img src={imageUrls[t.image_uuid]} alt="" className="table-img" />
+                              ) : (
+                                <div className="table-img-placeholder">
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                  </svg>
+                                </div>
+                              )}
                            </td>
-                           <td className="border border-[#c0c0c0] p-1 font-bold">{t.name}</td>
-                           <td className="border border-[#c0c0c0] p-1 text-center">{t.type || '—'}</td>
-                           <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{t.model_part_no || '—'}</td>
-                           <td className="border border-[#c0c0c0] p-1 italic">{t.specification || '—'}</td>
-                           <td className="border border-[#c0c0c0] p-1 text-center">{t.calibration_required ? 'Yes' : 'No'}</td>
-                           <td className="border border-[#c0c0c0] p-1 text-center">{fmtDate(t.calibration_due_date)}</td>
+                           <td className="name-cell">{t.name}</td>
+                           <td className="col-type">{t.type || '—'}</td>
+                           <td className="mono" style={{ fontSize: '7pt' }}>{t.model_part_no || '—'}</td>
+                           <td className="italic">{t.specification || '—'}</td>
+                           <td className="center">{t.calibration_required ? 'Yes' : 'No'}</td>
+                           <td className="center">{fmtDate(t.calibration_due_date)}</td>
                         </tr>
                      ))}
                   </tbody>
@@ -370,33 +388,40 @@ export default function Viewer() {
 
           {/* 4. Items */}
           {items.length > 0 && (
-             <div className="pdf-section mt-4">
-                <div className="pdf-section-header">4. Materials & Parts Required</div>
-                <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
+             <div className="section">
+                <div className="section__header">{sectionNum++}. Materials & Parts Required</div>
+                <table className="items-table">
                    <thead>
-                      <tr className="bg-[#ebebeb]">
-                         <th className="border border-[#c0c0c0] p-1 w-[24px] text-center italic">#</th>
-                         <th className="border border-[#c0c0c0] p-1 w-[48px] text-center">Image</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left">Item Name</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left w-[100px]">Part No / SKU</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left">Description</th>
-                         <th className="border border-[#c0c0c0] p-1 text-center w-[40px]">Unit</th>
+                      <tr>
+                         <th className="col-num italic">#</th>
+                         <th className="col-img">Image</th>
+                         <th className="name-cell">Item Name</th>
+                         <th className="col-part">Part No / SKU</th>
+                         <th>Description</th>
+                         <th className="col-unit">Unit</th>
                       </tr>
                    </thead>
                    <tbody>
                       {items.map((i, idx) => (
-                         <tr key={i.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                            <td className="border border-[#c0c0c0] p-1 text-center text-[#888]">{idx + 1}</td>
-                            <td className="border border-[#c0c0c0] p-1 text-center align-middle">
-                               <ImageFrame 
-                                 src={i.image_uuid ? imageUrls[i.image_uuid] : null} 
-                                 className="w-10 h-6 border-none bg-transparent"
-                               />
+                         <tr key={i.id}>
+                            <td className="col-num">{idx + 1}</td>
+                            <td className="col-img">
+                               {i.image_uuid ? (
+                                 <img src={imageUrls[i.image_uuid]} alt="" className="table-img" />
+                               ) : (
+                                 <div className="table-img-placeholder">
+                                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                     <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                     <circle cx="8.5" cy="8.5" r="1.5"/>
+                                     <polyline points="21 15 16 10 5 21"/>
+                                   </svg>
+                                 </div>
+                               )}
                             </td>
-                            <td className="border border-[#c0c0c0] p-1 font-bold">{i.name}</td>
-                            <td className="border border-[#c0c0c0] p-1 font-mono text-[7pt]">{i.part_no || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1 italic">{i.description || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1 text-center font-bold">{i.unit || '—'}</td>
+                            <td className="name-cell">{i.name}</td>
+                            <td className="mono" style={{ fontSize: '7pt' }}>{i.part_no || '—'}</td>
+                            <td className="italic">{i.description || '—'}</td>
+                            <td className="col-unit">{i.unit || '—'}</td>
                          </tr>
                       ))}
                    </tbody>
@@ -405,66 +430,61 @@ export default function Viewer() {
           )}
 
           {/* 5. Procedure */}
-          <div className="pdf-section mt-4">
-             <div className="pdf-section-header">5. Procedure</div>
-             <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[8pt]">
+          <div className="section">
+             <div className="section__header">{sectionNum++}. Procedure</div>
+             <table className="steps-table">
                 <thead>
-                   <tr className="bg-[#ebebeb]">
-                      <th className="border border-[#c0c0c0] p-1 w-[32px] text-center">Step</th>
-                      <th className="border border-[#c0c0c0] p-1 text-left">Action / Instruction</th>
-                      <th className="border border-[#c0c0c0] p-1 text-left w-[120px]">Expected Output</th>
-                      <th className="border border-[#c0c0c0] p-1 text-left w-[100px]">Notes</th>
-                      <th className="border border-[#c0c0c0] p-1 text-left w-[120px]">Tools & Parts</th>
+                   <tr>
+                      <th className="col-step">Step</th>
+                      <th>Action / Instruction</th>
+                      <th className="col-output">Expected Output</th>
+                      <th className="col-notes">Notes</th>
+                      <th className="col-tools-mats">Tools & Materials</th>
                    </tr>
                 </thead>
-                <tbody className="pdf-steps-tbody">
+                <tbody>
                    {stepsFull.length === 0 ? (
-                      <tr><td colSpan={5} className="text-center p-4 italic text-[#888]">No procedure steps defined.</td></tr>
+                      <tr><td colSpan={5} className="no-data">No procedure steps defined.</td></tr>
                    ) : stepsFull.map((s) => (
                       <React.Fragment key={s.step.id}>
                         <tr>
-                           <td className="border border-[#c0c0c0] p-2 text-center font-bold text-[10pt]">{s.step.step_number}</td>
-                           <td className="border border-[#c0c0c0] p-2 text-[8.5pt] leading-relaxed">
-                              {s.step.action}
+                           <td className="col-step">{s.step.step_number}</td>
+                           <td className="step-action">
+                              <div className="step-action__text">{s.step.action}</div>
                            </td>
-                           <td className="border border-[#c0c0c0] p-2 text-[8pt] italic text-[#333]">{s.step.expected_output || '—'}</td>
-                           <td className="border border-[#c0c0c0] p-2 text-[8pt] text-[#555]">{s.step.notes || '—'}</td>
-                           <td className="border border-[#c0c0c0] p-0 align-stretch">
-                              <div className="flex flex-col h-full">
-                                 {s.tools.length > 0 && (
-                                    <div className="p-1 border-b border-[#d0d0d0]">
-                                       <div className="text-[6pt] font-bold text-[#888] uppercase mb-0.5 tracking-tighter">Tools</div>
-                                       {s.tools.map(st => (
-                                          <div key={st.id} className="text-[7pt] leading-tight mb-0.5">• {st.tool_id ? tools.find(t => t.id === st.tool_id)?.name : st.free_text}</div>
-                                       ))}
-                                    </div>
-                                 )}
-                                 {s.items.length > 0 && (
-                                    <div className="p-1">
-                                       <div className="text-[6pt] font-bold text-[#888] uppercase mb-0.5 tracking-tighter">Parts</div>
-                                       {s.items.map(si => (
-                                          <div key={si.id} className="text-[7pt] leading-tight mb-0.5">• {si.quantity && `${si.quantity}x `}{si.item_id ? items.find(i => i.id === si.item_id)?.name : si.free_text}</div>
-                                       ))}
-                                    </div>
-                                 )}
-                                 {s.tools.length === 0 && s.items.length === 0 && (
-                                    <div className="p-2 text-center text-[#ccc]">—</div>
-                                 )}
-                              </div>
+                           <td className="col-output italic" style={{ fontSize: '8pt', color: '#333' }}>{s.step.expected_output || '—'}</td>
+                           <td className="col-notes muted" style={{ fontSize: '8pt' }}>{s.step.notes || '—'}</td>
+                           <td className="col-tools-mats">
+                              {(s.tools.length > 0) && (
+                                <div className="tm-section">
+                                   <div className="tm-label">Tools</div>
+                                   {s.tools.map(st => (
+                                      <span key={st.id} className="tm-item">• {st.tool_id ? tools.find(t => t.id === st.tool_id)?.name : st.free_text}</span>
+                                   ))}
+                                </div>
+                              )}
+                              {(s.items.length > 0) && (
+                                <div className="tm-section">
+                                   <div className="tm-label">Materials</div>
+                                   {s.items.map(si => (
+                                      <span key={si.id} className="tm-item">• {si.quantity && `${si.quantity}x `}{si.item_id ? items.find(i => i.id === si.item_id)?.name : si.free_text}</span>
+                                   ))}
+                                </div>
+                              )}
+                              {s.tools.length === 0 && s.items.length === 0 && (
+                                <div className="center muted" style={{ padding: '8px' }}>—</div>
+                              )}
                            </td>
                         </tr>
                         {s.images.length > 0 && (
                           <tr className="step-images-row">
-                             <td className="border border-[#c0c0c0] p-1 text-center text-[#999] align-middle">&#x21b3;</td>
-                             <td colSpan={4} className="border border-[#c0c0c0] p-2 border-t-0 border-dashed">
-                                <div className="flex flex-wrap gap-3">
+                             <td className="center muted align-middle">&#x21b3;</td>
+                             <td colSpan={4}>
+                                <div className="step-images-wrap">
                                    {s.images.map(img => (
-                                      <div key={img.id} className="text-center">
-                                         <ImageFrame 
-                                           src={imageUrls[img.image_uuid] || null} 
-                                           className="w-[150px] border-[#c0c0c0]"
-                                         />
-                                         <div className="text-[6.5pt] text-[#888] mt-1 italic">Step {s.step.step_number} / Fig. {img.sort_order}</div>
+                                      <div key={img.id} className="step-image-block">
+                                         <img src={imageUrls[img.image_uuid]} alt="" />
+                                         <figcaption>Step {s.step.step_number} / Fig. {img.sort_order}</figcaption>
                                       </div>
                                    ))}
                                 </div>
@@ -479,20 +499,20 @@ export default function Viewer() {
 
           {/* 6. Definitions */}
           {definitions.length > 0 && (
-             <div className="pdf-section mt-4">
-                <div className="pdf-section-header">6. Definitions & Abbreviations</div>
-                <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[8pt]">
+             <div className="section">
+                <div className="section__header">{sectionNum++}. Definitions & Abbreviations</div>
+                <table className="def-table">
                    <thead>
-                      <tr className="bg-[#ebebeb]">
-                         <th className="border border-[#c0c0c0] p-1 w-[120px] text-left">Term / Abbreviation</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left">Definition / Meaning</th>
+                      <tr>
+                         <th className="col-term">Term / Abbreviation</th>
+                         <th>Definition / Meaning</th>
                       </tr>
                    </thead>
                    <tbody>
-                      {definitions.map((d, idx) => (
-                         <tr key={d.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                            <td className="border border-[#c0c0c0] p-1.5 font-mono font-bold text-[8.5pt]">{d.term}</td>
-                            <td className="border border-[#c0c0c0] p-1.5">{d.meaning}</td>
+                      {definitions.map((d) => (
+                         <tr key={d.id}>
+                            <td className="col-term">{d.term}</td>
+                            <td>{d.meaning}</td>
                          </tr>
                       ))}
                    </tbody>
@@ -502,30 +522,30 @@ export default function Viewer() {
 
           {/* 7. Revision History */}
           {revisions.length > 0 && (
-             <div className="pdf-section mt-4">
-                <div className="pdf-section-header">7. Document Revision History</div>
-                <table className="pdf-table w-full border-collapse border border-[#c0c0c0] text-[7.5pt]">
+             <div className="section">
+                <div className="section__header">{sectionNum++}. Document Revision History</div>
+                <table className="rev-table">
                    <thead>
-                      <tr className="bg-[#ebebeb]">
-                         <th className="border border-[#c0c0c0] p-1 w-[32px] text-center">Ver.</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left">Revision Notes</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Revised By</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left w-[72px]">Rev. Date</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Status</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left w-[80px]">Approved By</th>
-                         <th className="border border-[#c0c0c0] p-1 text-left w-[72px]">Appr. Date</th>
+                      <tr>
+                         <th className="col-ver center">Ver.</th>
+                         <th>Revision Notes</th>
+                         <th className="col-by">Revised By</th>
+                         <th className="col-date">Rev. Date</th>
+                         <th className="col-status">Status</th>
+                         <th className="col-apprby">Approved By</th>
+                         <th className="col-apprdt">Approval Date</th>
                       </tr>
                    </thead>
                    <tbody>
-                      {revisions.map((r, idx) => (
-                         <tr key={r.id} className={idx % 2 === 1 ? 'bg-[#f6f6f6]' : ''}>
-                            <td className="border border-[#c0c0c0] p-1 text-center font-bold font-mono">V{r.version}</td>
-                            <td className={cn("border border-[#c0c0c0] p-1", r.version === 1 && "italic text-[#888]")}>{r.revision_notes}</td>
-                            <td className="border border-[#c0c0c0] p-1">{r.revised_by || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1">{fmtDate(r.revision_date)}</td>
-                            <td className="border border-[#c0c0c0] p-1 font-medium">{r.approval_status || 'Draft'}</td>
-                            <td className="border border-[#c0c0c0] p-1">{r.approved_by || '—'}</td>
-                            <td className="border border-[#c0c0c0] p-1">{fmtDate(r.approval_date)}</td>
+                      {revisions.map((r) => (
+                         <tr key={r.id}>
+                            <td className="col-ver">V{r.version}</td>
+                            <td className={cn(r.version === 1 && "rev-v1-note")}>{r.revision_notes}</td>
+                            <td className="col-by">{r.revised_by || '—'}</td>
+                            <td className="col-date">{fmtDate(r.revision_date)}</td>
+                            <td className={cn("col-status", statusClass(r.approval_status))}>{r.approval_status || 'Draft'}</td>
+                            <td className="col-apprby">{r.approved_by || '—'}</td>
+                            <td className="col-apprdt">{fmtDate(r.approval_date)}</td>
                          </tr>
                       ))}
                    </tbody>

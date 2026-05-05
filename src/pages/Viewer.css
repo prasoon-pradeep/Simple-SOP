@@ -1,23 +1,58 @@
-/* Viewer-specific CSS for PDF-accurate rendering */
+/* 
+   Viewer-specific CSS for PDF-accurate rendering.
+   This file is kept in sync with public/pdf-template.html
+*/
+
+:root {
+  --brand:        #c84b2f;
+  --border:       #c0c0c0;
+  --border-light: #d8d8d8;
+  --row-alt:      #f6f6f6;
+  --text:         #1a1a1a;
+  --text-muted:   #555555;
+  --text-faint:   #888888;
+  --header-bg:    #2d2d2d;
+}
 
 .sop-pdf-card {
   font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
   line-height: 1.45;
+  color: var(--text);
+  background: #ffffff;
 }
 
-.pdf-title-block {
+/* ============================================================
+   SCREEN PREVIEW — centered A4 shadow card in browser
+   ============================================================ */
+.pdf-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 15mm;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  margin: 0 auto 2rem auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ============================================================
+   DOCUMENT TITLE BLOCK
+   ============================================================ */
+.title-block {
   border: 1.5px solid #333333;
   margin-bottom: 12pt;
 }
 
-.pdf-title-block__top {
+.title-block__top {
   display: flex;
   align-items: stretch;
   min-height: 38px;
-  background: #2d2d2d;
+  background: var(--header-bg);
 }
 
-.pdf-title-block__company {
+.title-block__company {
   flex: 1;
   display: flex;
   align-items: center;
@@ -26,22 +61,7 @@
   border-right: 1px solid rgba(255,255,255,0.15);
 }
 
-.pdf-title-block__logo-placeholder {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  background: rgba(255,255,255,0.1);
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 8px;
-}
-
-.pdf-title-block__company-name {
+.title-block__company-name {
   font-size: 11pt;
   font-weight: bold;
   color: #ffffff;
@@ -49,7 +69,7 @@
   line-height: 1.2;
 }
 
-.pdf-title-block__doc-type {
+.title-block__doc-type {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -60,7 +80,7 @@
   background: rgba(0,0,0,0.18);
 }
 
-.pdf-title-block__doc-type-label {
+.title-block__doc-type-label {
   font-size: 6.5pt;
   font-weight: bold;
   color: rgba(255,255,255,0.55);
@@ -70,7 +90,7 @@
   margin-bottom: 2px;
 }
 
-.pdf-title-block__doc-type-value {
+.title-block__doc-type-value {
   font-size: 9pt;
   font-weight: bold;
   color: #ffffff;
@@ -79,23 +99,23 @@
   line-height: 1;
 }
 
-.pdf-title-block__title-row {
+.title-block__title-row {
   padding: 6px 12px 5px;
   border-top: 1.5px solid #333333;
-  border-bottom: 1px solid #c0c0c0;
+  border-bottom: 1px solid var(--border);
   background: #f2f2f2;
 }
 
-.pdf-title-block__title-label {
+.title-block__title-label {
   font-size: 6.5pt;
   font-weight: bold;
-  color: #888888;
+  color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 2px;
 }
 
-.pdf-title-block__title-text {
+.title-block__title-text {
   font-size: 11pt;
   font-weight: bold;
   color: #111111;
@@ -103,49 +123,101 @@
   line-height: 1.3;
 }
 
-.pdf-title-block__meta {
+.title-block__meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-top: 1px solid #c0c0c0;
+  border-top: 1px solid var(--border);
 }
 
-.pdf-title-block__meta-col {
+.title-block__meta-col {
   padding: 6px 12px 7px;
 }
 
-.pdf-meta-row {
+.title-block__meta-col:first-child {
+  border-right: 1px solid var(--border);
+}
+
+.meta-row {
   display: flex;
   align-items: baseline;
   gap: 5px;
   margin-bottom: 2.5px;
 }
 
-.pdf-meta-label {
+.meta-row:last-child { margin-bottom: 0; }
+
+.meta-label {
   font-weight: bold;
-  color: #555555;
+  color: var(--text-muted);
   min-width: 92px;
   flex-shrink: 0;
   font-size: 7.5pt;
 }
 
-.pdf-meta-value {
-  color: #1a1a1a;
+.meta-value {
+  color: var(--text);
   font-size: 8pt;
   line-height: 1.3;
 }
 
-.pdf-section-header {
-  background: #2d2d2d;
+.meta-mono {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 7.5pt;
+  letter-spacing: 0.5px;
+}
+
+.title-block__dist {
+  border-top: 1px solid var(--border);
+  padding: 4px 12px 5px;
+  background: #f8f8f8;
+  font-size: 7.5pt;
+  display: flex;
+  gap: 6px;
+}
+
+.title-block__dist-label {
+  font-weight: bold;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+.status--approved  { font-weight: bold;   font-style: normal;  color: #1a1a1a; }
+.status--review    { font-weight: normal;  font-style: italic;  color: #333333; }
+.status--draft     { font-weight: normal;  font-style: italic;  color: #666666; }
+.status--rejected  { font-weight: bold;    font-style: italic;  color: #1a1a1a; }
+
+/* ============================================================
+   SECTION WRAPPER + HEADER BAR
+   ============================================================ */
+.section {
+  margin-bottom: 11pt;
+}
+
+.section__header {
+  background: var(--header-bg);
   color: #ffffff;
   padding: 3.5px 8px;
   font-size: 7.5pt;
   font-weight: bold;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  margin-bottom: 2px;
 }
 
-.pdf-table th {
+/* ============================================================
+   GENERAL TABLE
+   ============================================================ */
+.sop-pdf-card table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+}
+
+.sop-pdf-card th {
+  text-align: left;
   font-size: 7pt;
   font-weight: bold;
   text-transform: uppercase;
@@ -153,44 +225,314 @@
   color: #333333;
   background: #ebebeb;
   padding: 4px 7px;
-  border: 1px solid #c0c0c0;
+  border: 1px solid var(--border);
   white-space: nowrap;
 }
 
-.pdf-table td {
+.sop-pdf-card td {
   padding: 4.5px 7px;
-  border: 1px solid #c0c0c0;
+  border: 1px solid var(--border);
   vertical-align: top;
-  color: #1a1a1a;
+  color: var(--text);
   line-height: 1.4;
 }
 
-.pdf-steps-tbody tr:nth-child(even) td {
-  background: #f6f6f6 !important;
+/* ============================================================
+   PURPOSE & SCOPE
+   ============================================================ */
+.ps-table td { padding: 6px 8px; font-size: 8.5pt; }
+
+.ps-table__label {
+  width: 72px;
+  font-weight: bold;
+  color: var(--text-muted);
+  font-size: 7.5pt;
+  background: #f0f0f0;
+  border-right: 1px solid var(--border) !important;
+  vertical-align: top;
+  white-space: nowrap;
 }
 
-/* Override for image rows to maintain zebra striping visually */
-.pdf-steps-tbody tr.step-images-row td {
+.ps-table__content {
+  white-space: pre-wrap;
+  font-size: 8.5pt;
+  line-height: 1.55;
+}
+
+/* ============================================================
+   SAFETY BOX
+   ============================================================ */
+.safety-box {
+  border: 1px solid #aaaaaa;
+  border-left: 4px solid #555555;
+  background: #f5f5f5;
+  padding: 7px 10px;
+  margin-bottom: 7px;
+}
+
+.safety-box__header {
+  font-size: 7.5pt;
+  font-weight: bold;
+  color: #222222;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.safety-box__content {
+  font-size: 8.5pt;
+  line-height: 1.55;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+}
+
+.training-box {
+  border: 1px solid #bbbbbb;
+  border-left: 4px solid #444444;
+  background: #f8f8f8;
+  padding: 6px 10px;
+  margin-top: 6px;
+}
+
+.training-box__header {
+  font-size: 7pt;
+  font-weight: bold;
+  color: #222222;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.training-box__content {
+  font-size: 8.5pt;
+  line-height: 1.5;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+}
+
+.safety-wrap { padding: 7px 0 1px; }
+
+/* ============================================================
+   IMAGE THUMBNAILS
+   ============================================================ */
+.table-img {
+  height: 60px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  display: block;
+  margin: 0 auto;
+}
+
+.table-img-placeholder {
+  width: 80px;
+  height: 60px;
+  background: #ececec;
+  border: 1px dashed #c0c0c0;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.col-img {
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px 4px !important;
+}
+
+/* ============================================================
+   TOOLS TABLE
+   ============================================================ */
+.tools-table {
+  table-layout: fixed;
+  font-size: 7.5pt;
+}
+
+.tools-table th {
+  font-size: 6.5pt;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.tools-table td {
+  overflow-wrap: break-word;
+  font-size: 7.5pt;
+}
+
+.tools-table .col-num   { width: 3%;  text-align: center; }
+.tools-table .col-img   { width: 20%; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
+.tools-table .col-name  { width: 16%; }
+.tools-table .col-type  { width: 10%; text-align: center; }
+.tools-table .col-model { width: 13%; }
+.tools-table .col-spec  { width: 21%; }
+.tools-table .col-cal   { width: 8%;  text-align: center; }
+.tools-table .col-due   { width: 9%;  text-align: center; }
+
+.tools-table td.col-num  { color: var(--text-faint); text-align: center; }
+.tools-table .name-cell  { font-weight: 600; }
+
+/* ============================================================
+   ITEMS TABLE
+   ============================================================ */
+.items-table .col-num  { width: 26px;  text-align: center; }
+.items-table .col-img  { width: 110px; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
+.items-table .col-part { width: 98px; }
+.items-table .col-unit { width: 42px;  text-align: center; }
+
+.items-table td.col-num  { color: var(--text-faint); font-size: 7.5pt; text-align: center; }
+.items-table td.col-unit { text-align: center; font-weight: 600; }
+.items-table .name-cell  { font-weight: 600; }
+
+/* ============================================================
+   STEPS TABLE
+   ============================================================ */
+.steps-table .col-step       { width: 30px; text-align: center; }
+.steps-table .col-output     { width: 17%; }
+.steps-table .col-notes      { width: 15%; }
+.steps-table .col-tools-mats { width: 20%; }
+
+.steps-table td.col-step {
+  text-align: center;
+  vertical-align: top;
+  font-size: 9.5pt;
+  font-weight: bold;
+  color: #333333;
+  padding: 6px 4px;
+}
+
+.step-action { padding: 5px 8px; vertical-align: top; }
+
+.step-action__text {
+  font-size: 8.5pt;
+  line-height: 1.5;
+}
+
+td.col-tools-mats {
+  vertical-align: top;
+  padding: 0 !important;
+}
+
+.tm-section {
+  padding: 4px 6px;
+}
+
+.tm-section + .tm-section {
+  border-top: 1px solid #d0d0d0;
+}
+
+.tm-label {
+  font-size: 6pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-faint);
+  margin-bottom: 3px;
+}
+
+.tm-item {
+  display: block;
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.step-images-row td {
   border-top: 1px dashed #cccccc;
+  padding: 6px 8px;
 }
 
-.pdf-page {
-  width: 210mm;
-  height: 297mm;
-  padding: 15mm;
-  background: white;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
-  overflow: hidden;
+.step-images-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.step-image-block {
   display: flex;
   flex-direction: column;
-  position: relative;
-  page-break-after: always;
+  align-items: center;
+  gap: 3px;
 }
 
-@media print {
-  .pdf-page {
-    margin: 0;
-    box-shadow: none;
-  }
+.step-image-block img {
+  max-width: 150px;
+  max-height: 100px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  display: block;
+}
+
+.step-image-block figcaption {
+  font-size: 6.5pt;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* ============================================================
+   DEFINITIONS TABLE
+   ============================================================ */
+.def-table .col-term { width: 120px; }
+
+.def-table td.col-term {
+  font-weight: bold;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 8pt;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+/* ============================================================
+   REVISION HISTORY TABLE
+   ============================================================ */
+.rev-table .col-ver    { width: 32px; text-align: center; }
+.rev-table .col-by     { width: 90px; white-space: nowrap; }
+.rev-table .col-date   { width: 72px; white-space: nowrap; }
+.rev-table .col-status { width: 90px; }
+.rev-table .col-apprby { width: 90px; white-space: nowrap; }
+.rev-table .col-apprdt { width: 72px; white-space: nowrap; }
+
+.rev-table td.col-ver {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   ZEBRA STRIPES
+   ============================================================ */
+.steps-table tbody tr:nth-child(odd)  td { background: #ffffff !important; }
+.steps-table tbody tr:nth-child(even) td { background: #f0f0f0 !important; }
+
+.def-table tbody tr:nth-child(odd)  td { background: #ffffff !important; }
+.def-table tbody tr:nth-child(even) td { background: #f0f0f0 !important; }
+
+.rev-table tbody tr:nth-child(odd)  td { background: #ffffff !important; }
+.rev-table tbody tr:nth-child(even) td { background: #f0f0f0 !important; }
+
+.rev-v1-note { font-style: italic; color: var(--text-faint); }
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.mono   { font-family: 'Courier New', Courier, monospace; letter-spacing: 0.3px; }
+.bold   { font-weight: bold; }
+.center { text-align: center; }
+.muted  { color: var(--text-muted); }
+.faint  { color: var(--text-faint); font-style: italic; }
+
+.no-data {
+  text-align: center;
+  font-style: italic;
+  font-size: 8pt;
+  color: var(--text-faint);
+  padding: 10px;
+  border: 1px solid var(--border-light);
 }
