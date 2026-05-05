@@ -17,9 +17,19 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
 
   const [appVersion, setAppVersion] = useState('');
-  type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'installing' | 'error';
+  type UpdateStatus =
+    | 'idle'
+    | 'connecting'
+    | 'up-to-date'
+    | 'available'
+    | 'downloading'
+    | 'verifying'
+    | 'applying'
+    | 'error';
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
   const [updateVersion, setUpdateVersion] = useState('');
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [pendingUpdate, setPendingUpdate] = useState<Awaited<ReturnType<typeof check>>>(null);
 
   useEffect(() => {
     invoke<string | null>('get_config_value', { key: 'company_name' }).then(val => {
@@ -29,30 +39,47 @@ export default function Settings() {
   }, []);
 
   const handleCheckForUpdates = async () => {
-    setUpdateStatus('checking');
+    setUpdateStatus('connecting');
     setUpdateVersion('');
+    setDownloadProgress(0);
+    setPendingUpdate(null);
     try {
       const update = await check();
       if (update?.available) {
         setUpdateVersion(update.version);
+        setPendingUpdate(update);
         setUpdateStatus('available');
       } else {
         setUpdateStatus('up-to-date');
       }
-    } catch {
+    } catch (error) {
+      console.error('Update check failed:', error);
       setUpdateStatus('error');
     }
   };
 
   const handleInstallUpdate = async () => {
-    setUpdateStatus('installing');
+    const update = pendingUpdate;
+    if (!update) return;
+    setDownloadProgress(0);
     try {
-      const update = await check();
-      if (update) {
-        await update.downloadAndInstall();
-        await relaunch();
-      }
-    } catch {
+      let downloaded = 0;
+      let total = 0;
+      await update.downloadAndInstall((event) => {
+        if (event.event === 'Started') {
+          total = event.data.contentLength ?? 0;
+          setUpdateStatus('downloading');
+        } else if (event.event === 'Progress') {
+          downloaded += event.data.chunkLength;
+          if (total > 0) setDownloadProgress(Math.round((downloaded / total) * 100));
+        } else if (event.event === 'Finished') {
+          setUpdateStatus('verifying');
+          setTimeout(() => setUpdateStatus('applying'), 800);
+        }
+      });
+      await relaunch();
+    } catch (error) {
+      console.error('Update install failed:', error);
       setUpdateStatus('error');
     }
   };
@@ -121,25 +148,53 @@ export default function Settings() {
               Current version: <span className="font-mono font-bold text-text-secondary">v{appVersion || '…'}</span>
             </p>
 
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="border-border-strong font-semibold"
-                onClick={updateStatus === 'available' ? handleInstallUpdate : handleCheckForUpdates}
-                disabled={updateStatus === 'checking' || updateStatus === 'installing'}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${updateStatus === 'checking' || updateStatus === 'installing' ? 'animate-spin' : ''}`} />
-                {updateStatus === 'checking' && 'Checking…'}
-                {updateStatus === 'installing' && 'Installing…'}
-                {updateStatus === 'available' && `Install v${updateVersion} & Restart`}
-                {(updateStatus === 'idle' || updateStatus === 'up-to-date' || updateStatus === 'error') && 'Check for Updates'}
-              </Button>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  className="border-border-strong font-semibold"
+                  onClick={updateStatus === 'available' ? handleInstallUpdate : handleCheckForUpdates}
+                  disabled={['connecting', 'downloading', 'verifying', 'applying'].includes(updateStatus)}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${['connecting', 'downloading', 'verifying', 'applying'].includes(updateStatus) ? 'animate-spin' : ''}`} />
+                  {updateStatus === 'available' ? `Install v${updateVersion} & Restart` : 'Check for Updates'}
+                </Button>
+              </div>
 
+              {updateStatus === 'connecting' && (
+                <p className="text-xs text-text-tertiary">Connecting to update server…</p>
+              )}
               {updateStatus === 'up-to-date' && (
-                <span className="text-xs text-status-green font-semibold">You're on the latest version.</span>
+                <p className="text-xs text-status-green font-semibold">You're on the latest version.</p>
+              )}
+              {updateStatus === 'available' && (
+                <p className="text-xs text-text-secondary">
+                  v<span className="font-semibold font-mono">{updateVersion}</span> is available. Click the button above to download and install.
+                </p>
+              )}
+              {updateStatus === 'downloading' && (
+                <div className="space-y-1">
+                  <p className="text-xs text-text-tertiary">
+                    Downloading update{downloadProgress > 0 ? ` — ${downloadProgress}%` : '…'}
+                  </p>
+                  {downloadProgress > 0 && (
+                    <div className="w-48 h-1 bg-border-standard rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-brand rounded-full transition-all duration-200"
+                        style={{ width: `${downloadProgress}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              {updateStatus === 'verifying' && (
+                <p className="text-xs text-text-tertiary">Verifying download…</p>
+              )}
+              {updateStatus === 'applying' && (
+                <p className="text-xs text-text-tertiary">Applying update — restarting shortly…</p>
               )}
               {updateStatus === 'error' && (
-                <span className="text-xs text-status-red font-semibold">Could not reach update server.</span>
+                <p className="text-xs text-status-red font-semibold">Update failed. Check your connection and try again.</p>
               )}
             </div>
           </div>

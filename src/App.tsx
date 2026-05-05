@@ -65,8 +65,8 @@ function App() {
       if (update?.available) {
         setPendingUpdate({ version: update.version, body: update.body ?? null });
       }
-    }).catch(() => {
-      // silently ignore — no network or endpoint not yet live
+    }).catch((error) => {
+      console.error('Startup update check failed:', error);
     });
   }, []);
 
