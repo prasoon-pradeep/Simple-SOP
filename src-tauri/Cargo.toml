@@ -1,6 +1,6 @@
 [package]
 name = "sop-builder"
-version = "0.1.7"
+version = "0.1.8"
 description = "SOP Builder — Standard Operating Procedure management tool"
 authors = ["SOP Builder Software"]
 edition = "2021"
@@ -34,4 +34,3 @@ walkdir = "2.5.0"
 tauri-plugin-dialog = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
-
