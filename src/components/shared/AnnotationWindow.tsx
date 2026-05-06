@@ -37,6 +37,16 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
   const [pendingText, setPendingText] = useState('');
 
   useEffect(() => {
+    if (open) {
+      setAnnotations([]);
+      setNewAnnotation(null);
+      setTool('select');
+      setPendingTextPos(null);
+      setPendingText('');
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (image) {
       // Calculate scale to fit within max size (e.g. 600px width)
       const maxWidth = 600;
