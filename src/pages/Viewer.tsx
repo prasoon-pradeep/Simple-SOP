@@ -397,6 +397,7 @@ export default function Viewer() {
                          <th className="name-cell">Item Name</th>
                          <th className="col-part">Part No / SKU</th>
                          <th>Description</th>
+                         <th className="col-qty">Qty</th>
                          <th className="col-unit">Unit</th>
                       </tr>
                    </thead>
@@ -420,6 +421,7 @@ export default function Viewer() {
                             <td className="name-cell">{i.name}</td>
                             <td className="mono" style={{ fontSize: '7pt' }}>{i.part_no || '—'}</td>
                             <td className="italic">{i.description || '—'}</td>
+                            <td className="col-qty">{i.qty || '-'}</td>
                             <td className="col-unit">{i.unit || '—'}</td>
                          </tr>
                       ))}

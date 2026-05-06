@@ -64,6 +64,7 @@ export interface Item {
   description: string | null;
   image_uuid: string | null;
   unit: string | null;
+  qty: string | null;
   source_item_uuid: string | null;
 }
 

@@ -382,9 +382,11 @@
 .items-table .col-img  { width: 110px; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
 .items-table .col-part { width: 98px; }
 .items-table .col-unit { width: 42px;  text-align: center; }
+.items-table .col-qty  { width: 42px;  text-align: center; }
 
 .items-table td.col-num  { color: var(--pdf-text-faint); font-size: 7.5pt; text-align: center; }
 .items-table td.col-unit { text-align: center; font-weight: 600; }
+.items-table td.col-qty  { text-align: center; font-weight: 600; }
 .items-table .name-cell  { font-weight: 600; }
 
 /* ============================================================

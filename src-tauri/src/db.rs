@@ -124,6 +124,7 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
             description   TEXT,
             image_uuid    TEXT,
             unit          TEXT,
+            qty           TEXT,
             source_item_uuid TEXT,
             FOREIGN KEY (sop_id) REFERENCES sops(id)
         );"#,
@@ -185,6 +186,17 @@ async fn migrate_db(pool: &SqlitePool) -> Result<()> {
             .execute(pool)
             .await?;
         sqlx::query("ALTER TABLE sops ADD COLUMN deleted_at TEXT")
+            .execute(pool)
+            .await?;
+    }
+
+    let row: (i64,) =
+        sqlx::query_as("SELECT count(*) FROM pragma_table_info('items') WHERE name='qty'")
+            .fetch_one(pool)
+            .await?;
+
+    if row.0 == 0 {
+        sqlx::query("ALTER TABLE items ADD COLUMN qty TEXT")
             .execute(pool)
             .await?;
     }

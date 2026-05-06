@@ -472,7 +472,16 @@ pub struct Item {
     pub description: Option<String>,
     pub image_uuid: Option<String>,
     pub unit: Option<String>,
+    pub qty: Option<String>,
     pub source_item_uuid: Option<String>,
+}
+
+fn non_empty_optional(value: &Option<String>) -> Option<String> {
+    value
+        .as_ref()
+        .map(|v| v.trim())
+        .filter(|v| !v.is_empty())
+        .map(|v| v.to_string())
 }
 
 // --------------------------------------------------------
@@ -555,7 +564,7 @@ pub async fn get_items(
 ) -> Result<Vec<Item>, String> {
     let items = sqlx::query_as::<sqlx::Sqlite, Item>(
         r#"
-        SELECT id, sop_id, name, part_no, description, image_uuid, unit, source_item_uuid
+        SELECT id, sop_id, name, part_no, description, image_uuid, unit, qty, source_item_uuid
         FROM items
         WHERE sop_id = ?
         "#,
@@ -570,17 +579,20 @@ pub async fn get_items(
 
 #[tauri::command]
 pub async fn save_item(payload: Item, state: tauri::State<'_, SqlitePool>) -> Result<(), String> {
+    let qty = non_empty_optional(&payload.qty);
+
     sqlx::query(
         r#"
         INSERT INTO items (
-            id, sop_id, name, part_no, description, image_uuid, unit, source_item_uuid
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            id, sop_id, name, part_no, description, image_uuid, unit, qty, source_item_uuid
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             part_no = excluded.part_no,
             description = excluded.description,
             image_uuid = excluded.image_uuid,
-            unit = excluded.unit
+            unit = excluded.unit,
+            qty = excluded.qty
         "#,
     )
     .bind(&payload.id)
@@ -590,6 +602,7 @@ pub async fn save_item(payload: Item, state: tauri::State<'_, SqlitePool>) -> Re
     .bind(&payload.description)
     .bind(&payload.image_uuid)
     .bind(&payload.unit)
+    .bind(qty)
     .bind(&payload.source_item_uuid)
     .execute(state.inner())
     .await
@@ -774,8 +787,8 @@ pub async fn clone_item(
     sqlx::query(
         r#"
         INSERT INTO items (
-            id, sop_id, name, part_no, description, image_uuid, unit, source_item_uuid
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            id, sop_id, name, part_no, description, image_uuid, unit, qty, source_item_uuid
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
     )
     .bind(new_id)
@@ -785,6 +798,7 @@ pub async fn clone_item(
     .bind(original.description)
     .bind(new_image_uuid)
     .bind(original.unit)
+    .bind(original.qty)
     .bind(source_uuid)
     .execute(pool)
     .await
@@ -1624,9 +1638,15 @@ pub async fn finalize_import(
     }
 
     for item in bundle.items {
-        sqlx::query("INSERT INTO items VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        sqlx::query(
+            r#"
+            INSERT INTO items (
+                id, sop_id, name, part_no, description, image_uuid, unit, qty, source_item_uuid
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "#,
+        )
             .bind(item.id).bind(item.sop_id).bind(item.name).bind(item.part_no)
-            .bind(item.description).bind(item.image_uuid).bind(item.unit).bind(item.source_item_uuid)
+            .bind(item.description).bind(item.image_uuid).bind(item.unit).bind(item.qty).bind(item.source_item_uuid)
             .execute(&mut *tx).await.map_err(|e| e.to_string())?;
     }
 
@@ -1870,6 +1890,7 @@ pub async fn export_pdf(
             "part_no": i.part_no,
             "description": i.description,
             "unit": i.unit,
+            "qty": i.qty,
             "image_url": i.image_uuid.as_ref().map(|u| image_url(u))
         })
     }).collect();

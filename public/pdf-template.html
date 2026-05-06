@@ -485,15 +485,17 @@
 
     /* ============================================================
        ITEMS TABLE
-       Columns: # | Image | Name | Part No. | Description | Unit
+       Columns: # | Image | Name | Part No. | Description | Qty | Unit
        ============================================================ */
     .items-table .col-num  { width: 26px;  text-align: center; }
     .items-table .col-img  { width: 110px; text-align: center; padding: 3px 4px !important; vertical-align: middle; }
     .items-table .col-part { width: 98px; }
     .items-table .col-unit { width: 42px;  text-align: center; }
+    .items-table .col-qty  { width: 42px;  text-align: center; }
 
     .items-table td.col-num  { color: var(--text-faint); font-size: 7.5pt; text-align: center; }
     .items-table td.col-unit { text-align: center; font-weight: 600; }
+    .items-table td.col-qty  { text-align: center; font-weight: 600; }
     .items-table .name-cell  { font-weight: 600; }
 
     /* ============================================================
@@ -1220,6 +1222,7 @@ function renderItems(items, n) {
       + '<td class="name-cell">' + esc(it.name) + '</td>'
       + '<td class="col-part mono">' + esc(it.part_no || '—') + '</td>'
       + '<td>' + esc(it.description || '—') + '</td>'
+      + '<td class="col-qty">' + esc(it.qty || '-') + '</td>'
       + '<td class="col-unit">' + esc(it.unit || '—') + '</td>'
       + '</tr>';
   }).join('');
@@ -1233,6 +1236,7 @@ function renderItems(items, n) {
     +     '<th>Name</th>'
     +     '<th class="col-part">Part No. / SKU</th>'
     +     '<th>Description / Remarks</th>'
+    +     '<th class="col-qty center">Qty</th>'
     +     '<th class="col-unit center">Unit</th>'
     +   '</tr></thead>'
     +   '<tbody>' + rows + '</tbody>'

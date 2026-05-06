@@ -14,6 +14,8 @@ import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
 import { ImageFrame } from '@/components/shared/ImageFrame';
 
+const EMPTY = '-';
+
 export function ItemsSection() {
   const { currentSop, items, setItems, setDirty, setSaving, setLastSavedAt } = useSopStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,7 +53,7 @@ export function ItemsSection() {
   const loadImages = async () => {
     const urls: Record<string, string> = {};
     const baseDir = await appDataDir();
-    
+
     for (const item of items) {
       if (item.image_uuid) {
         const filePath = await join(baseDir, 'images', item.image_uuid, 'annotated.png');
@@ -68,8 +70,9 @@ export function ItemsSection() {
       name: '',
       part_no: '',
       description: '',
+      qty: '',
       unit: '',
-      image_uuid: null
+      image_uuid: null,
     });
     setIsDialogOpen(true);
   };
@@ -99,7 +102,11 @@ export function ItemsSection() {
     if (!editingItem || !editingItem.name) return;
     setSaving(true);
     try {
-      await invoke('save_item', { payload: editingItem });
+      const payload = {
+        ...editingItem,
+        qty: editingItem.qty?.trim() || null,
+      };
+      await invoke('save_item', { payload });
       setDirty(false);
       setSaving(false);
       setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -114,8 +121,7 @@ export function ItemsSection() {
   const handleImageSaved = async (uuid: string, base64: string) => {
     setEditingItem(prev => prev ? { ...prev, image_uuid: uuid } : null);
     setPreviewDataUrl(base64);
-    
-    // Background resolve for imageUrls (so it's ready for the main table later)
+
     try {
       const baseDir = await appDataDir();
       const filePath = await join(baseDir, 'images', uuid, 'annotated.png');
@@ -151,8 +157,8 @@ export function ItemsSection() {
         </div>
         <div className="flex space-x-3">
           <Button variant="outline" size="sm" className="flex items-center" onClick={() => setIsSearchOpen(true)}>
-             <Search className="w-4 h-4 mr-2" />
-             Search other SOPs
+            <Search className="w-4 h-4 mr-2" />
+            Search other SOPs
           </Button>
           <Button onClick={handleAdd} size="sm" className="flex items-center">
             <Plus className="w-4 h-4 mr-2" />
@@ -169,6 +175,7 @@ export function ItemsSection() {
               <TableHead>Item Name</TableHead>
               <TableHead>Part #</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead>Qty</TableHead>
               <TableHead>Unit</TableHead>
               <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
@@ -176,7 +183,7 @@ export function ItemsSection() {
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-text-tertiary italic">
+                <TableCell colSpan={7} className="h-24 text-center text-text-tertiary italic">
                   No items added yet.
                 </TableCell>
               </TableRow>
@@ -184,16 +191,19 @@ export function ItemsSection() {
               items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
-                    <ImageFrame 
-                      src={item.image_uuid ? imageUrls[item.image_uuid] : null} 
-                      alt={item.name} 
+                    <ImageFrame
+                      src={item.image_uuid ? imageUrls[item.image_uuid] : null}
+                      alt={item.name}
                       className="w-[108px]"
                     />
                   </TableCell>
                   <TableCell className="font-medium text-text-primary">{item.name}</TableCell>
-                  <TableCell className="text-text-secondary font-mono text-[12px]">{item.part_no || '—'}</TableCell>
-                  <TableCell className="text-text-secondary italic truncate max-w-[200px]" title={item.description || ''}>{item.description || '—'}</TableCell>
-                  <TableCell className="text-text-secondary">{item.unit || '—'}</TableCell>
+                  <TableCell className="text-text-secondary font-mono text-[12px]">{item.part_no || EMPTY}</TableCell>
+                  <TableCell className="text-text-secondary italic truncate max-w-[200px]" title={item.description || ''}>
+                    {item.description || EMPTY}
+                  </TableCell>
+                  <TableCell className="text-text-secondary font-medium">{item.qty || EMPTY}</TableCell>
+                  <TableCell className="text-text-secondary">{item.unit || EMPTY}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
@@ -220,54 +230,64 @@ export function ItemsSection() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">Name</Label>
-              <Input 
-                id="name" 
-                value={editingItem?.name || ''} 
+              <Input
+                id="name"
+                value={editingItem?.name || ''}
                 onChange={e => setEditingItem(prev => prev ? { ...prev, name: e.target.value } : null)}
-                className="col-span-3" 
+                className="col-span-3"
                 placeholder="e.g. M8 Bolt"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="part_no" className="text-right">Part #</Label>
-              <Input 
-                id="part_no" 
-                value={editingItem?.part_no || ''} 
+              <Input
+                id="part_no"
+                value={editingItem?.part_no || ''}
                 onChange={e => setEditingItem(prev => prev ? { ...prev, part_no: e.target.value } : null)}
-                className="col-span-3" 
+                className="col-span-3"
                 placeholder="e.g. PN-12345"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="desc" className="text-right">Description</Label>
-              <Input 
-                id="desc" 
-                value={editingItem?.description || ''} 
+              <Input
+                id="desc"
+                value={editingItem?.description || ''}
                 onChange={e => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)}
-                className="col-span-3" 
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="qty" className="text-right">Qty</Label>
+              <Input
+                id="qty"
+                value={editingItem?.qty || ''}
+                onChange={e => setEditingItem(prev => prev ? { ...prev, qty: e.target.value } : null)}
+                className="col-span-3"
+                placeholder="e.g. 4, 500, as required"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="unit" className="text-right">Unit</Label>
-              <Input 
-                id="unit" 
-                value={editingItem?.unit || ''} 
+              <Input
+                id="unit"
+                value={editingItem?.unit || ''}
                 onChange={e => setEditingItem(prev => prev ? { ...prev, unit: e.target.value } : null)}
-                className="col-span-3" 
+                className="col-span-3"
                 placeholder="e.g. pcs, meters"
               />
             </div>
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Image</Label>
               <div className="col-span-3 flex flex-col space-y-2">
-                 <ImageUploadArea onImageSaved={handleImageSaved}>
-                   <ImageFrame 
-                     src={previewDataUrl || (editingItem?.image_uuid ? imageUrls[editingItem.image_uuid] : null)} 
-                     alt="Preview" 
-                     className="w-full"
-                   />
-                 </ImageUploadArea>
-                 <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-tight">Click or Paste to change image</p>
+                <ImageUploadArea onImageSaved={handleImageSaved}>
+                  <ImageFrame
+                    src={previewDataUrl || (editingItem?.image_uuid ? imageUrls[editingItem.image_uuid] : null)}
+                    alt="Preview"
+                    className="w-full"
+                  />
+                </ImageUploadArea>
+                <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-tight">Click or Paste to change image</p>
               </div>
             </div>
           </div>
@@ -279,10 +299,10 @@ export function ItemsSection() {
         </DialogContent>
       </Dialog>
 
-      <CrossSopSearch 
-        open={isSearchOpen} 
-        onOpenChange={setIsSearchOpen} 
-        type="item" 
+      <CrossSopSearch
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        type="item"
         onClone={handleCloneItem}
       />
     </div>
