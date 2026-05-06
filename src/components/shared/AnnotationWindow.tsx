@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text, Label as KonvaLabel, Tag, Group } from 'react-konva';
 import useImage from 'use-image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { MousePointer2, MoveUpRight, Circle as CircleIcon, Type, Undo2, SkipForward, Check } from 'lucide-react';
+import { MousePointer2, MoveUpRight, Circle as CircleIcon, Type, Undo2, SkipForward, Check, RotateCcw, RotateCw } from 'lucide-react';
 
 interface AnnotationWindowProps {
   open: boolean;
@@ -27,7 +27,8 @@ interface Annotation {
 }
 
 export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: AnnotationWindowProps) {
-  const [image] = useImage(imgSrc);
+  const [workingImgSrc, setWorkingImgSrc] = useState(imgSrc);
+  const [image] = useImage(workingImgSrc);
   const stageRef = useRef<any>(null);
   const [tool, setTool] = useState<ToolType>('select');
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -38,6 +39,7 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
 
   useEffect(() => {
     if (open) {
+      setWorkingImgSrc(imgSrc);
       setAnnotations([]);
       setNewAnnotation(null);
       setTool('select');
@@ -48,7 +50,6 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
 
   useEffect(() => {
     if (image) {
-      // Calculate scale to fit within max size (e.g. 600px width)
       const maxWidth = 600;
       let width = image.width;
       let height = image.height;
@@ -61,12 +62,36 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
     }
   }, [image]);
 
+  const rotateImage = useCallback((direction: 'cw' | 'ccw') => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      // Swap dimensions for 90° rotation
+      canvas.width = img.height;
+      canvas.height = img.width;
+      const ctx = canvas.getContext('2d')!;
+      if (direction === 'cw') {
+        ctx.translate(canvas.width, 0);
+        ctx.rotate(Math.PI / 2);
+      } else {
+        ctx.translate(0, canvas.height);
+        ctx.rotate(-Math.PI / 2);
+      }
+      ctx.drawImage(img, 0, 0);
+      setWorkingImgSrc(canvas.toDataURL('image/png'));
+      // Annotations are tied to old coordinate space — clear them
+      setAnnotations([]);
+      setNewAnnotation(null);
+    };
+    img.src = workingImgSrc;
+  }, [workingImgSrc]);
+
   const handleMouseDown = (e: any) => {
     if (tool === 'select') return;
-    
+
     const pos = e.target.getStage().getPointerPosition();
     const id = Date.now().toString();
-    const color = '#ff0000'; // Default red
+    const color = '#ff0000';
 
     if (tool === 'arrow') {
       setNewAnnotation({ id, type: 'arrow', points: [pos.x, pos.y, pos.x, pos.y], color });
@@ -82,13 +107,13 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
     if (pendingText.trim() && pendingTextPos) {
       const id = Date.now().toString();
       const color = '#ff0000';
-      setAnnotations([...annotations, { 
-        id, 
-        type: 'text', 
-        x: pendingTextPos.x, 
-        y: pendingTextPos.y, 
-        text: pendingText.trim(), 
-        color 
+      setAnnotations([...annotations, {
+        id,
+        type: 'text',
+        x: pendingTextPos.x,
+        y: pendingTextPos.y,
+        text: pendingText.trim(),
+        color
       }]);
     }
     setPendingTextPos(null);
@@ -123,10 +148,10 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
   const handleDragEnd = (e: any, id: string) => {
     const dx = e.target.x();
     const dy = e.target.y();
-    
+
     setAnnotations(prev => prev.map(ann => {
       if (ann.id !== id) return ann;
-      
+
       if (ann.type === 'arrow' && ann.points) {
         const newPoints = ann.points.map((p, i) => i % 2 === 0 ? p + dx : p + dy);
         return { ...ann, points: newPoints };
@@ -136,7 +161,6 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
       return ann;
     }));
 
-    // Reset node position to avoid cumulative offsets in state
     e.target.x(0);
     e.target.y(0);
   };
@@ -171,44 +195,54 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
         </DialogHeader>
 
         <div className="flex items-center justify-between p-2 border border-border-standard rounded bg-background">
-          <div className="flex space-x-2">
-            <Button 
-              variant={tool === 'select' ? 'default' : 'ghost'} 
-              size="icon" 
-              onClick={() => setTool('select')} 
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={tool === 'select' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setTool('select')}
               title="Select/Move"
               className={tool === 'select' ? 'ring-2 ring-brand ring-offset-1' : ''}
             >
               <MousePointer2 className="w-4 h-4" />
             </Button>
-            <Button 
-              variant={tool === 'arrow' ? 'default' : 'ghost'} 
-              size="icon" 
-              onClick={() => setTool('arrow')} 
+            <Button
+              variant={tool === 'arrow' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setTool('arrow')}
               title="Arrow"
               className={tool === 'arrow' ? 'ring-2 ring-brand ring-offset-1' : ''}
             >
               <MoveUpRight className="w-4 h-4" />
             </Button>
-            <Button 
-              variant={tool === 'circle' ? 'default' : 'ghost'} 
-              size="icon" 
-              onClick={() => setTool('circle')} 
+            <Button
+              variant={tool === 'circle' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setTool('circle')}
               title="Circle"
               className={tool === 'circle' ? 'ring-2 ring-brand ring-offset-1' : ''}
             >
               <CircleIcon className="w-4 h-4" />
             </Button>
-            <Button 
-              variant={tool === 'text' ? 'default' : 'ghost'} 
-              size="icon" 
-              onClick={() => setTool('text')} 
+            <Button
+              variant={tool === 'text' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setTool('text')}
               title="Text Label"
               className={tool === 'text' ? 'ring-2 ring-brand ring-offset-1' : ''}
             >
               <Type className="w-4 h-4" />
             </Button>
+
+            <div className="w-px h-5 bg-border-standard mx-1" />
+
+            <Button variant="ghost" size="icon" onClick={() => rotateImage('ccw')} title="Rotate Left">
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => rotateImage('cw')} title="Rotate Right">
+              <RotateCw className="w-4 h-4" />
+            </Button>
           </div>
+
           <Button variant="ghost" size="icon" onClick={handleUndo} disabled={annotations.length === 0} title="Undo">
             <Undo2 className="w-4 h-4" />
           </Button>
@@ -232,29 +266,29 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
                   {annotations.map((ann) => (
                     <React.Fragment key={ann.id}>
                       {ann.type === 'arrow' && (
-                        <Group 
-                          draggable={tool === 'select'} 
+                        <Group
+                          draggable={tool === 'select'}
                           onDragEnd={(e) => handleDragEnd(e, ann.id)}
                           onMouseEnter={handleMouseEnter}
                           onMouseLeave={handleMouseLeave}
                         >
-                          <Arrow 
-                            points={ann.points || []} 
-                            stroke={ann.color} 
-                            fill={ann.color} 
-                            strokeWidth={4} 
-                            pointerLength={10} 
-                            pointerWidth={10} 
+                          <Arrow
+                            points={ann.points || []}
+                            stroke={ann.color}
+                            fill={ann.color}
+                            strokeWidth={4}
+                            pointerLength={10}
+                            pointerWidth={10}
                           />
                         </Group>
                       )}
                       {ann.type === 'circle' && (
-                        <Circle 
-                          x={ann.x} 
-                          y={ann.y} 
-                          radius={ann.radius} 
-                          stroke={ann.color} 
-                          strokeWidth={6} 
+                        <Circle
+                          x={ann.x}
+                          y={ann.y}
+                          radius={ann.radius}
+                          stroke={ann.color}
+                          strokeWidth={6}
                           draggable={tool === 'select'}
                           onDragEnd={(e) => handleDragEnd(e, ann.id)}
                           onMouseEnter={handleMouseEnter}
@@ -262,8 +296,8 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
                         />
                       )}
                       {ann.type === 'text' && (
-                        <KonvaLabel 
-                          x={ann.x} 
+                        <KonvaLabel
+                          x={ann.x}
                           y={ann.y}
                           draggable={tool === 'select'}
                           onDragEnd={(e) => handleDragEnd(e, ann.id)}
@@ -283,15 +317,15 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
             )}
 
             {pendingTextPos && (
-              <div 
+              <div
                 className="absolute z-50 flex items-center bg-surface border-2 border-brand rounded shadow-xl p-1"
-                style={{ 
-                  left: pendingTextPos.x, 
+                style={{
+                  left: pendingTextPos.x,
                   top: pendingTextPos.y,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
-                <input 
+                <input
                   autoFocus
                   className="bg-transparent border-none outline-none text-sm font-bold text-brand px-2 w-32"
                   value={pendingText}
