@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage, Arrow, Circle, Text, Label as KonvaLabel, Tag, Group } from 'react-konva';
 import useImage from 'use-image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { MousePointer2, MoveUpRight, Circle as CircleIcon, Type, Undo2, SkipForward, Check, RotateCcw, RotateCw } from 'lucide-react';
+import { MousePointer2, MoveUpRight, Circle as CircleIcon, Type, Undo2, SkipForward, Check } from 'lucide-react';
 
 interface AnnotationWindowProps {
   open: boolean;
@@ -27,8 +27,7 @@ interface Annotation {
 }
 
 export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: AnnotationWindowProps) {
-  const [workingImgSrc, setWorkingImgSrc] = useState(imgSrc);
-  const [image] = useImage(workingImgSrc);
+  const [image] = useImage(imgSrc);
   const stageRef = useRef<any>(null);
   const [tool, setTool] = useState<ToolType>('select');
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -39,7 +38,6 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
 
   useEffect(() => {
     if (open) {
-      setWorkingImgSrc(imgSrc);
       setAnnotations([]);
       setNewAnnotation(null);
       setTool('select');
@@ -61,30 +59,6 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
       setCanvasSize({ width, height });
     }
   }, [image]);
-
-  const rotateImage = useCallback((direction: 'cw' | 'ccw') => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      // Swap dimensions for 90° rotation
-      canvas.width = img.height;
-      canvas.height = img.width;
-      const ctx = canvas.getContext('2d')!;
-      if (direction === 'cw') {
-        ctx.translate(canvas.width, 0);
-        ctx.rotate(Math.PI / 2);
-      } else {
-        ctx.translate(0, canvas.height);
-        ctx.rotate(-Math.PI / 2);
-      }
-      ctx.drawImage(img, 0, 0);
-      setWorkingImgSrc(canvas.toDataURL('image/png'));
-      // Annotations are tied to old coordinate space — clear them
-      setAnnotations([]);
-      setNewAnnotation(null);
-    };
-    img.src = workingImgSrc;
-  }, [workingImgSrc]);
 
   const handleMouseDown = (e: any) => {
     if (tool === 'select') return;
@@ -231,15 +205,6 @@ export function AnnotationWindow({ open, imgSrc, onConfirm, onSkip, onCancel }: 
               className={tool === 'text' ? 'ring-2 ring-brand ring-offset-1' : ''}
             >
               <Type className="w-4 h-4" />
-            </Button>
-
-            <div className="w-px h-5 bg-border-standard mx-1" />
-
-            <Button variant="ghost" size="icon" onClick={() => rotateImage('ccw')} title="Rotate Left">
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => rotateImage('cw')} title="Rotate Right">
-              <RotateCw className="w-4 h-4" />
             </Button>
           </div>
 
