@@ -24,6 +24,7 @@ import {
 export function ProcedureSection() {
   const { currentSop, stepsFull, setStepsFull, setSaving } = useSopStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingScrollStepId, setPendingScrollStepId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -38,9 +39,19 @@ export function ProcedureSection() {
     }
   }, [currentSop]);
 
-  const loadSteps = async () => {
+  useEffect(() => {
+    if (!pendingScrollStepId) return;
+
+    const stepElement = document.querySelector(`[data-step-id="${pendingScrollStepId}"]`);
+    if (stepElement) {
+      stepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setPendingScrollStepId(null);
+    }
+  }, [stepsFull, pendingScrollStepId]);
+
+  const loadSteps = async (showLoading = stepsFull.length === 0) => {
     if (!currentSop) return;
-    setIsLoading(true);
+    if (showLoading) setIsLoading(true);
     try {
       const data = await invoke<StepFull[]>('get_steps_full', { sopId: currentSop.id });
       setStepsFull(data);
@@ -66,10 +77,14 @@ export function ProcedureSection() {
     };
 
     try {
+      setSaving(true);
       await invoke('save_step', { payload: newStep });
-      await loadSteps();
+      setPendingScrollStepId(newStepId);
+      await loadSteps(false);
     } catch (error) {
       console.error("Failed to add step", error);
+    } finally {
+      setSaving(false);
     }
   };
 

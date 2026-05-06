@@ -140,6 +140,7 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
   return (
     <div 
       ref={setNodeRef} 
+      data-step-id={step.id}
       style={style} 
       className={cn(
         "bg-surface border border-border-standard rounded-lg shadow-sm flex flex-col overflow-hidden transition-shadow",
