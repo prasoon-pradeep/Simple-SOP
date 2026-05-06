@@ -235,7 +235,7 @@ export default function Home() {
                 <TableHeader className="bg-secondary/50 border-b border-border-standard">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-[140px] font-bold text-[11px] uppercase tracking-wider text-text-tertiary">SOP ID</TableHead>
-                    <TableHead className="w-[140px] font-bold text-[11px] uppercase tracking-wider text-text-tertiary">Project</TableHead>
+                    <TableHead className="w-[200px] font-bold text-[11px] uppercase tracking-wider text-text-tertiary">Project</TableHead>
                     <TableHead className="font-bold text-[11px] uppercase tracking-wider text-text-tertiary">Document Title</TableHead>
                     <TableHead className="w-[120px] font-bold text-[11px] uppercase tracking-wider text-text-tertiary">Released</TableHead>
                     <TableHead className="w-[100px] font-bold text-[11px] uppercase tracking-wider text-text-tertiary">Status</TableHead>
@@ -280,7 +280,7 @@ export default function Home() {
                           {sop.sop_id}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="font-bold text-[10px] py-0 px-2 h-5 border-border-standard bg-panel text-text-secondary">
+                          <Badge variant="outline" className="inline-flex h-auto min-h-5 max-w-full whitespace-normal break-words leading-tight font-bold text-[10px] py-1 px-2 border-border-standard bg-panel text-text-secondary">
                             {sop.project_tag || 'Unassigned'}
                           </Badge>
                         </TableCell>
