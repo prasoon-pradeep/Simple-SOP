@@ -91,7 +91,7 @@ export function DatePicker({ value, onChange, className, placeholder }: DatePick
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[320px] p-4">
           <DialogHeader className="pb-2 border-b border-border-subtle">
-            <DialogTitle className="text-sm font-bold flex items-center justify-between">
+            <DialogTitle className="text-sm font-bold flex items-center justify-between pr-8">
               <button onClick={handlePrevMonth} className="p-1 hover:bg-hover rounded">
                 <ChevronLeft className="w-4 h-4" />
               </button>
