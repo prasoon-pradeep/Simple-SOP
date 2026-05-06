@@ -29,7 +29,7 @@ labels: bug
 
 ## Environment
 - **OS**: <!-- e.g. Windows 11 22H2, Ubuntu 22.04 -->
-- **Version**: <!-- e.g. v0.1.7 — check the title bar or the About screen -->
+- **Version**: <!-- e.g. v0.1.8 - check Settings or the installer/release version -->
 - **Install format**: <!-- .exe / .msi / AppImage / .deb -->
 
 ## Reproducibility

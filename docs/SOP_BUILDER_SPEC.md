@@ -7,7 +7,7 @@
 
 A cross-platform **offline desktop application** for authoring Standard Operating Procedures (SOPs). Built with Tauri v2 (Rust backend) + React + TypeScript frontend.
 
-**Primary output:** A pixel-accurate, text-selectable PDF exported from an HTML template rendered in a Tauri webview.  
+**Primary output:** A pixel-accurate, text-selectable PDF exported from an HTML template rendered by headless Chromium/Edge.
 **Secondary output:** A portable `.sop` file (self-contained bundle) that can be transferred between machines and fully reconstructed.  
 **Target platforms:** Linux and Windows (day one). macOS later.  
 **Auth:** None. No user accounts.  
@@ -21,13 +21,13 @@ A cross-platform **offline desktop application** for authoring Standard Operatin
 |---|---|
 | Desktop shell | Tauri v2 |
 | Frontend language | TypeScript |
-| Frontend framework | React 18 |
+| Frontend framework | React 19 |
 | Styling | Tailwind CSS v3 |
 | UI Components | shadcn/ui |
-| Local database | SQLite via `rusqlite` (Rust) |
+| Local database | SQLite |
 | Rust DB layer | `sqlx` (async, type-safe) |
 | Image annotation | Konva.js + react-konva |
-| PDF export | Tauri webview → print-to-PDF (Rust orchestrated) |
+| PDF export | Headless Chromium/Edge print-to-PDF (Rust orchestrated) |
 | Drag to reorder | dnd-kit |
 | State management | Zustand |
 | `.sop` export/import | Rust (zip bundle, custom extension) |
@@ -37,7 +37,7 @@ A cross-platform **offline desktop application** for authoring Standard Operatin
 ## 3. DATA STORAGE ARCHITECTURE
 
 ### 3.1 App-Managed Directory
-Tauri manages a single app data directory (platform-appropriate: `~/.local/share/sop-builder` on Linux, `%APPDATA%\sop-builder` on Windows).
+Tauri manages a single app data directory under the app identifier `com.pp.sop-builder` (for example `%APPDATA%\com.pp.sop-builder` on Windows). All paths below are relative to that app data directory.
 
 Structure:
 ```
@@ -162,10 +162,15 @@ CREATE TABLE items (
   description   TEXT,
   image_uuid    TEXT,
   unit          TEXT,               -- pcs, kg, ml, etc.
+  qty           TEXT,               -- SOP-level quantity, free text (e.g. 4, 500 ml, as required)
   source_item_uuid TEXT,            -- UUID of original if cloned
   FOREIGN KEY (sop_id) REFERENCES sops(id)
 );
 ```
+
+For existing databases, add a migration that:
+- Adds `qty TEXT` to `items`
+- Leaves existing item rows with `qty = NULL`
 
 ### 4.7 `steps` table
 ```sql
@@ -279,7 +284,7 @@ The sidebar has three modes. Only one is visible at a time. Mode switches instan
 - No dashboard, no stats, no kanban
 
 ### 6.4 Viewer (`/sop/:id/view`)
-- Renders the SOP as the HTML/CSS PDF template inside the app — exactly as it will appear in the exported PDF
+- Renders the SOP in a read-only HTML/CSS document view kept aligned with the PDF template
 - Read-only. No editable fields.
 - Sidebar Mode C contents:
   - Back link (← All SOPs) → navigates to Home
@@ -288,7 +293,7 @@ The sidebar has three modes. Only one is visible at a time. Mode switches instan
   - Current status badge
   - **Edit SOP** button (primary) → switches to Editor for this SOP
   - Divider
-  - **Export PDF** button (ghost, full width) → triggers Tauri print-to-PDF
+  - **Export PDF** button (ghost, full width) calls the Rust `export_pdf` command after a native save dialog
   - DB health indicator
 
 ### 6.5 Editor (`/sop/:id/edit`)
@@ -347,7 +352,7 @@ Viewer (/sop/:id/view)
 ```
 Viewer (/sop/:id/view)
   → click "Export PDF" in sidebar
-  → Tauri renders HTML template in hidden webview with SOP data injected
+  → Rust injects SOP data into `public/pdf-template.html` and renders it through headless Chromium/Edge
   → print-to-PDF
   → native file save dialog → user picks location
   → filename: {SOP-ID}-V{N}.pdf  e.g. SOP-2025-8F3AB2-V3.pdf
@@ -398,8 +403,10 @@ Home (Mode A sidebar)
 
 ---
 
-### 6.6 No Other Pages.
-Dashboard, analytics, settings page — not in scope for initial build.
+### 6.6 Settings (`/settings`)
+- Settings page is in scope and implemented.
+- Current settings: organisation/company name for PDF headers, app version display, manual update check/install flow, and license text.
+- No dashboard, analytics page, user account page, or mobile-specific pages are in scope.
 
 ---
 
@@ -465,6 +472,7 @@ All fields are free text unless noted.
 | Part No. / SKU | Text |
 | Description / Remarks | Text |
 | Image | Upload (crop → annotation flow) |
+| Qty | Text; SOP-level bill-of-materials quantity, stored as NULL when empty |
 | Unit | Text (pcs, kg, ml, etc.) |
 
 ### 7.6 Steps Section
@@ -735,10 +743,10 @@ Key characteristics of the template:
 ### Pipeline
 ```
 1. User clicks "Export PDF" in View mode
-2. Tauri renders sop-pdf-template.html in a hidden webview
-3. Inject SOP data as JSON into webview at render time (window.SOP_DATA)
-4. Webview renders complete SOP (all sections, all steps, all images using annotated.png paths)
-5. Tauri calls print-to-PDF on the webview
+2. Rust writes an injected temporary HTML file from `public/pdf-template.html`
+3. Inject SOP data as `window.SOP_DATA`; images are embedded as base64 data URIs
+4. Headless Chromium/Edge renders complete SOP content from the temporary file URL
+5. Rust launches Chromium/Edge with `--headless=new --print-to-pdf`
 6. Save PDF to user-chosen location
 7. Filename: {SOP-ID}-V{N}.pdf  e.g. SOP-2025-8F3AB2-V3.pdf
 ```
@@ -865,12 +873,13 @@ All filters applied client-side from SQLite query. No full-text search on step c
 - [x] After import: navigate to Viewer for imported SOP
 - [x] Export .sop accessible from Viewer sidebar
 
-### PHASE 10 — PDF Export
+### PHASE 10 - PDF Export
 - [x] Build HTML/CSS SOP template (iterated separately with stakeholder)
-- [x] Tauri hidden webview render with injected SOP JSON via initialization_script
-- [x] System print dialog triggered via window.print() — user selects "Print to File / Save as PDF"
-- [x] PDF export accessible from Viewer sidebar ("Export PDF" button)
-- [x] Template bundled as public/pdf-template.html, served via Vite dev server and dist
+- [x] Runtime export command gathers SOP data in Rust, embeds images as base64 data URIs, injects JSON into `public/pdf-template.html`, and renders through headless Chromium/Edge using `--print-to-pdf`
+- [x] Windows file URLs are percent-encoded before passing to Chromium/Edge so temp paths containing spaces do not print an `ERR_FILE_NOT_FOUND` page
+- [x] Existing output files are removed before export so stale PDFs cannot be mistaken for a successful render
+- [x] PDF export accessible from Viewer sidebar (`Export PDF`) through a native save dialog
+- [x] Template bundled as `public/pdf-template.html`
 
 ### PHASE 11 — Back Navigation & Origin Tracking
 - [x] Track navigation origin in Zustand: `editorOrigin: 'home' | 'viewer'`
@@ -883,19 +892,18 @@ All filters applied client-side from SQLite query. No full-text search on step c
 When a new version is released, users who already have the app installed are automatically notified on next launch and can update with one click. No manual download or reinstall needed.
 
 #### Prerequisites
-- [ ] Make the GitHub repo **public** — GitHub Release assets on private repos require auth tokens which Tauri's updater cannot pass. Public repos serve assets as plain CDN URLs with no rate limits, no bandwidth caps, and no expiry. This must be done before end-to-end testing of the update flow.
+- [x] GitHub Release assets are publicly reachable by the updater through the stable `releases/latest/download/latest.json` URL.
 
-#### Versioning — single source of truth
-- [ ] `Cargo.toml` is the single source of version truth (e.g. `version = "0.2.0"`)
-- [ ] Remove `version` field from `tauri.conf.json` — Tauri v2 automatically reads it from `Cargo.toml` when omitted
-- [ ] CI syncs `package.json` version via `npm version` before building so all three files stay consistent
-- [ ] To ship a new version: bump `Cargo.toml` only → push → trigger build workflow → done
+#### Versioning
+- [x] `Cargo.toml`, `Cargo.lock`, `package.json`, and `package-lock.json` are kept in sync for releases.
+- [x] Current release version in source: `0.1.8`.
+- [x] To ship a new version: bump versions, push to `master`, then manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.1.8`.
+- [ ] Automate version synchronization so only one file needs to be edited before release.
 
 #### Signing keypair
-- [ ] Generate once: `npm run tauri signer generate` — use comment/name `sop-builder-updater` (internal only, never shown to users)
-- [ ] Store private key as GitHub Secret named `TAURI_SIGNING_PRIVATE_KEY` — never commit to repo
-- [ ] Embed public key in `tauri.conf.json` under `plugins.updater.pubkey`
-- [ ] Signature is the trust anchor — even if a fake `latest.json` pointed to a malicious download, the app would reject it because the file wouldn't be signed with the private key
+- [x] Updater public key is embedded in `tauri.conf.json` under `plugins.updater.pubkey`.
+- [x] Release workflow signs update artifacts using `TAURI_SIGNING_PRIVATE_KEY`.
+- [x] Signature is the trust anchor — even if a fake `latest.json` pointed to a malicious download, the app would reject it because the file wouldn't be signed with the private key
 
 #### `latest.json` — the update manifest
 This file is the bridge between CI and the installed app. It is generated automatically by CI on every release and uploaded as a GitHub Release asset.
@@ -932,11 +940,11 @@ The word `latest` is a first-class GitHub feature — it always redirects to the
 - [x] If update available: `pendingUpdate` state set in `App.tsx`, triggers `UpdateDialog`
 
 #### Frontend — update UX (two touch points)
-- [x] **On launch:** `UpdateDialog` component (`src/App.tsx`) — shows new version number, optional release notes body, "Install & Restart" and "Later" buttons. "Later" dismisses until next launch.
+- [x] **On launch:** `UpdateDialog` component (`src/App.tsx`) shows new version number, optional release notes, download progress, verifying/applying stages, actual error details, manual releases fallback link, and disables dismissal during active install stages.
 - [x] **Settings page** (`src/pages/Settings.tsx`): "Check for Updates" button with full status flow (connecting → downloading with progress bar → verifying → applying). Shows actual error message on failure with a fallback link to the releases page.
 
 #### Known limitation
-- Linux `.deb` installs: the Tauri updater can download but cannot replace a system-installed binary. Auto-update silently fails for `.deb` users. AppImage is required for auto-update on Linux. Tracked in GitHub issue #4.
+- Linux `.deb` installs: the Tauri updater can download but cannot replace a system-installed binary. AppImage is required for auto-update on Linux; `.deb` users get error details and a manual releases fallback link.
 
 #### Windows note
 Without a paid code signing certificate, Windows SmartScreen shows an *"unrecognised app"* warning on the **initial** `.exe`/`.msi` install only. Once installed, all subsequent updates via the updater are silent and bypasses SmartScreen entirely. Acceptable for v1.
@@ -975,9 +983,14 @@ Without a paid code signing certificate, Windows SmartScreen shows an *"unrecogn
 - [x] **Feature:** Implemented draggability for annotations in 'select' mode
 - [x] **Feature:** Added inline qty/unit entry + confirmation modal in StepResourcePicker
 - [x] **Phase 9 complete:** .sop export/import fully wired including Viewer sidebar button
-- [x] **Phase 10 complete:** PDF export via system print dialog — Export PDF button in Viewer sidebar opens PDF template in a new window with real SOP data injected, triggers print dialog
+- [x] **Phase 10 complete:** PDF export via headless Chromium/Edge print-to-PDF with injected SOP data and base64 image embedding
 - [x] **PDF images:** Embedded as base64 data URIs in Rust — bypasses asset:// protocol issues in the dynamically created pdf-export webview
-- [x] **PDF export UX:** Export PDF button disables for 10 s after click with "Generating PDF…" label to prevent duplicate triggers
+- [x] **PDF export UX:** Export PDF button shows save/render/error states and disables during active export
+- [x] **Windows PDF fix:** Percent-encoded temp file URLs prevent Headless Edge from printing `ERR_FILE_NOT_FOUND` into the exported PDF
+- [x] **Updater UX:** Launch dialog and Settings update flow show download progress, verifying/applying states, actual errors, and releases fallback link
+- [x] **Item Qty:** Added SOP-level Qty field to Items/Parts table, editor dialog, PDF output, clone flow, and `.sop` import/export
+- [x] **Procedure add-step UX:** Adding a new step keeps the list mounted and scrolls the new step into view instead of jumping to the top
+- [x] **Home project pill:** Project column widened to 200px and project badges wrap/grow for multi-line names
 
 ### FUTURE REQUIREMENTS
 
@@ -1001,17 +1014,18 @@ Recovery instructions shown to user:
 
 The OS is detected at runtime in Rust (`std::env::consts::OS`) so the correct path is shown. No in-app restore button — user does the file operation manually.
 
-**App identifier fix:** Current identifier `com.pp.temp_app` in `tauri.conf.json` should be changed to `com.pp.sop-builder` before first production release. Note: changing the identifier changes the `$APPDATA` path, so existing user data will not migrate automatically — plan a one-time migration or do this before any users have production data.
+**App identifier:** Current identifier is `com.pp.sop-builder` in `tauri.conf.json`. The old temporary identifier issue is resolved.
 
 ### KNOWN ISSUES
-- **PDF filename (Linux):** GTK print dialog hardcodes `output.pdf` — `document.title` is ignored by WebKitGTK. On Windows, WebView2 respects `document.title` so the correct `{SOP-ID}-V{N}.pdf` filename appears. No fix available without a different PDF engine.
-- **PDF bottom margin (Linux):** WebKitGTK does not apply `@page` bottom margin at intermediate page breaks — the last row of content on a non-final page butts against the cut line with no trailing whitespace. Top, left, and right margins are correct. On Windows this renders correctly. Proper fix requires headless Chromium (heavy dependency) or a pure-Rust PDF library (`printpdf`). Deferred to a future release.
+- **Linux `.deb` auto-update:** `.deb` installs cannot self-replace through Tauri updater. Use AppImage for in-app auto-update or manually download `.deb` releases.
+- **Windows SmartScreen:** Without a paid code-signing certificate, the initial installer can show an unrecognised-app warning. Updater artifacts are still Tauri-signed.
+- **PDF export dependency:** Runtime PDF export currently depends on a Chromium-family browser being installed and discoverable (Edge, Chrome, Chromium, or compatible browser path).
 
 ---
 
 ## 18. UI GUIDE — LAYOUT, DESIGN & COMPONENT BEHAVIOUR
 
-A reference HTML mockup exists alongside this spec (`sop-builder-mockup.html`). Build the UI to match it. The following rules define the layout precisely.
+The current app UI is implemented in React/Tailwind components. Keep the Viewer and `public/pdf-template.html` visually aligned. The following rules define the target layout.
 
 ### 18.1 Overall Layout
 
@@ -1057,7 +1071,7 @@ Sidebar switches mode based on context. Transition is instant (no animation need
 [footer — pinned bottom]
   □ Settings
   ● DB healthy
-  v0.1.0-alpha
+  v0.1.8-alpha
 ```
 
 **Mode B — Editor Nav (shown when SOP is open in editor)**
