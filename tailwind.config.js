@@ -9,10 +9,25 @@ export default {
     extend: {
       colors: {
         background: "var(--bg-app)",
+        foreground: "hsl(var(--foreground))",
         panel: "var(--bg-panel)",
         surface: "var(--bg-surface)",
         secondary: "var(--bg-secondary)",
         hover: "var(--bg-hover)",
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
         brand: {
           DEFAULT: "var(--brand)",
           light: "var(--brand-light)",
