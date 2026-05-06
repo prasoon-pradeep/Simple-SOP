@@ -10,6 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import licenseText from '../../LICENSE?raw';
 
+const RELEASES_URL = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest';
+
+function formatUpdateError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default function Settings() {
   const navigate = useNavigate();
   const [companyName, setCompanyName] = useState('');
@@ -29,6 +35,7 @@ export default function Settings() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
   const [updateVersion, setUpdateVersion] = useState('');
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [updateError, setUpdateError] = useState('');
   const [pendingUpdate, setPendingUpdate] = useState<Awaited<ReturnType<typeof check>>>(null);
 
   useEffect(() => {
@@ -42,6 +49,7 @@ export default function Settings() {
     setUpdateStatus('connecting');
     setUpdateVersion('');
     setDownloadProgress(0);
+    setUpdateError('');
     setPendingUpdate(null);
     try {
       const update = await check();
@@ -54,6 +62,7 @@ export default function Settings() {
       }
     } catch (error) {
       console.error('Update check failed:', error);
+      setUpdateError(formatUpdateError(error));
       setUpdateStatus('error');
     }
   };
@@ -62,6 +71,7 @@ export default function Settings() {
     const update = pendingUpdate;
     if (!update) return;
     setDownloadProgress(0);
+    setUpdateError('');
     try {
       let downloaded = 0;
       let total = 0;
@@ -80,6 +90,7 @@ export default function Settings() {
       await relaunch();
     } catch (error) {
       console.error('Update install failed:', error);
+      setUpdateError(formatUpdateError(error));
       setUpdateStatus('error');
     }
   };
@@ -194,7 +205,25 @@ export default function Settings() {
                 <p className="text-xs text-text-tertiary">Applying update — restarting shortly…</p>
               )}
               {updateStatus === 'error' && (
-                <p className="text-xs text-status-red font-semibold">Update failed. Check your connection and try again.</p>
+                <div className="space-y-2 rounded-md border border-status-red-bg bg-status-red-bg/40 p-3">
+                  <p className="text-xs font-semibold text-status-red">Update failed.</p>
+                  {updateError && (
+                    <pre className="text-[11px] leading-relaxed text-status-red whitespace-pre-wrap font-mono">
+                      {updateError}
+                    </pre>
+                  )}
+                  <p className="text-xs text-text-secondary">
+                    You can also download the latest version manually from{' '}
+                    <a
+                      href={RELEASES_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-brand hover:underline"
+                    >
+                      the releases page
+                    </a>.
+                  </p>
+                </div>
               )}
             </div>
           </div>
