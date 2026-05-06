@@ -1762,6 +1762,29 @@ fn find_chromium() -> Option<std::path::PathBuf> {
     }
 }
 
+fn file_url_from_path(path: &std::path::Path) -> String {
+    let path = path.to_string_lossy().replace('\\', "/");
+    let mut encoded = String::with_capacity(path.len());
+    for ch in path.chars() {
+        match ch {
+            '%' => encoded.push_str("%25"),
+            ' ' => encoded.push_str("%20"),
+            '#' => encoded.push_str("%23"),
+            '?' => encoded.push_str("%3F"),
+            _ => encoded.push(ch),
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        format!("file:///{}", encoded)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        format!("file://{}", encoded)
+    }
+}
+
 #[tauri::command]
 pub async fn export_pdf(
     sop_id_uuid: String,
@@ -1967,21 +1990,34 @@ pub async fn export_pdf(
     let html_path = temp_dir.path().join("sop-export.html");
     std::fs::write(&html_path, &html).map_err(|e| e.to_string())?;
 
-    // Build a file:// URL Chromium can load
-    #[cfg(target_os = "windows")]
-    let file_url = format!("file:///{}", html_path.to_string_lossy().replace('\\', "/"));
-    #[cfg(not(target_os = "windows"))]
-    let file_url = format!("file://{}", html_path.display());
+    let browser_profile_dir = tempfile::tempdir().map_err(|e| e.to_string())?;
 
+    // Build a file:// URL Chromium can load. Headless Edge fails with
+    // ERR_FILE_NOT_FOUND when spaces in Windows profile paths are unescaped.
+    let file_url = file_url_from_path(&html_path);
+
+    let output_path_buf = std::path::PathBuf::from(&output_path);
+    if output_path_buf.exists() {
+        std::fs::remove_file(&output_path_buf)
+            .map_err(|e| format!("Failed to replace existing PDF: {}", e))?;
+    }
+
+    let user_data_dir_arg = format!(
+        "--user-data-dir={}",
+        browser_profile_dir.path().to_string_lossy()
+    );
     let print_to_pdf_arg = format!("--print-to-pdf={}", output_path);
 
     let result = tokio::process::Command::new(&chrome)
         .args([
-            "--headless",
+            "--headless=new",
             "--disable-gpu",
             "--no-sandbox",
+            "--disable-extensions",
+            "--disable-background-networking",
             "--no-pdf-header-footer",
             "--run-all-compositor-stages-before-draw",
+            &user_data_dir_arg,
             &print_to_pdf_arg,
             &file_url,
         ])
@@ -1989,10 +2025,32 @@ pub async fn export_pdf(
         .await
         .map_err(|e| format!("Failed to launch browser: {}", e))?;
 
-    // temp_dir drops here, deleting the HTML file
+    // temp dirs drop here, deleting the HTML file and isolated browser profile
+    drop(browser_profile_dir);
     drop(temp_dir);
 
-    if !std::path::Path::new(&output_path).exists() {
+    if !result.status.success() {
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        let stdout = String::from_utf8_lossy(&result.stdout);
+        let detail = stderr
+            .lines()
+            .chain(stdout.lines())
+            .filter(|line| !line.trim().is_empty())
+            .last()
+            .unwrap_or("unknown error")
+            .trim()
+            .to_string();
+        return Err(format!("PDF export failed. {}", detail));
+    }
+
+    for _ in 0..20 {
+        if output_path_buf.exists() {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+    }
+
+    if !output_path_buf.exists() {
         let stderr = String::from_utf8_lossy(&result.stderr);
         let detail = stderr.lines().last().unwrap_or("unknown error").trim().to_string();
         return Err(format!("PDF was not created. {}", detail));
