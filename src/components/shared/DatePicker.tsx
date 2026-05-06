@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface DatePickerProps {
@@ -89,16 +89,21 @@ export function DatePicker({ value, onChange, className, placeholder }: DatePick
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[320px] p-4">
+        <DialogContent className="sm:max-w-[320px] p-4" hideClose>
           <DialogHeader className="pb-2 border-b border-border-subtle">
-            <DialogTitle className="text-sm font-bold flex items-center justify-between pr-8">
+            <DialogTitle className="text-sm font-bold flex items-center justify-between">
               <button onClick={handlePrevMonth} className="p-1 hover:bg-hover rounded">
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <span>{monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}</span>
-              <button onClick={handleNextMonth} className="p-1 hover:bg-hover rounded">
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={handleNextMonth} className="p-1 hover:bg-hover rounded">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <DialogClose className="p-1 hover:bg-hover rounded">
+                  <X className="w-4 h-4 text-status-red" />
+                </DialogClose>
+              </div>
             </DialogTitle>
           </DialogHeader>
 
