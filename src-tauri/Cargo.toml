@@ -1,6 +1,6 @@
 [package]
 name = "sop-builder"
-version = "0.1.11"
+version = "0.1.12"
 description = "SOP Builder — Standard Operating Procedure management tool"
 authors = ["SOP Builder Software"]
 edition = "2021"
