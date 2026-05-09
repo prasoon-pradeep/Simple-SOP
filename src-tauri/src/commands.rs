@@ -1871,7 +1871,17 @@ fn find_chromium() -> Option<std::path::PathBuf> {
         }
         return candidates.into_iter().find(|p| p.exists());
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        let candidates = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        ];
+        return candidates.iter().map(std::path::PathBuf::from).find(|p| p.exists());
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
         let candidates = [
             "/usr/bin/google-chrome",
