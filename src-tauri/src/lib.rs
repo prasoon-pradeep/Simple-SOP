@@ -68,6 +68,7 @@ pub fn run() {
             commands::get_ai_key,
             commands::delete_ai_key,
             commands::test_ai_connection,
+            commands::list_ai_models,
             commands::enhance_text,
             commands::save_ai_enhancement,
             commands::get_ai_enhancements,

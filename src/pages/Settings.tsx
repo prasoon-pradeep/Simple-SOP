@@ -8,6 +8,7 @@ import { ArrowLeft, Save, ScrollText, RefreshCw, Sparkles, AlertTriangle, Check,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import licenseText from '../../LICENSE?raw';
 
 const AI_PROVIDERS = [
@@ -53,6 +54,10 @@ export default function Settings() {
   const [aiKeyStatus, setAiKeyStatus] = useState<'idle' | 'saving' | 'saved' | 'clearing' | 'testing' | 'ok' | 'error'>('idle');
   const [aiKeyError, setAiKeyError] = useState('');
   const [keyringAvailable, setKeyringAvailable] = useState(true);
+  const [aiModels, setAiModels] = useState<string[]>([]);
+  const [aiModel, setAiModel] = useState('');
+  const [aiModelsLoading, setAiModelsLoading] = useState(false);
+  const [aiModelsError, setAiModelsError] = useState('');
 
   useEffect(() => {
     invoke<string | null>('get_config_value', { key: 'company_name' }).then(val => {
@@ -66,14 +71,42 @@ export default function Settings() {
   }, []);
 
   useEffect(() => {
+    let active = true;
     setAiKey('');
     setAiKeyMasked(false);
     setAiKeyStatus('idle');
     setAiKeyError('');
-    invoke<string | null>('get_ai_key', { provider: aiProvider }).then(key => {
-      setAiKeyMasked(!!key);
+    setAiModels([]);
+    setAiModelsError('');
+    setAiModel('');
+    const provider = aiProvider;
+    invoke<string | null>('get_ai_key', { provider }).then(key => {
+      if (!active) return;
+      const hasKey = !!key;
+      setAiKeyMasked(hasKey);
+      if (hasKey) {
+        loadModels(provider);
+        invoke<string | null>('get_config_value', { key: `ai_model_${provider}` })
+          .then(m => { if (active && m) setAiModel(m); })
+          .catch(() => {});
+      }
     }).catch(() => {});
+    return () => { active = false; };
   }, [aiProvider]);
+
+  const loadModels = async (provider: string) => {
+    setAiModelsLoading(true);
+    setAiModelsError('');
+    setAiModels([]);
+    try {
+      const models = await invoke<string[]>('list_ai_models', { provider });
+      setAiModels(models);
+    } catch (err) {
+      setAiModelsError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAiModelsLoading(false);
+    }
+  };
 
   const handleProviderChange = async (p: ProviderId) => {
     setAiProvider(p);
@@ -89,6 +122,7 @@ export default function Settings() {
       setAiKey('');
       setAiKeyStatus('saved');
       setTimeout(() => setAiKeyStatus('idle'), 2000);
+      loadModels(aiProvider);
     } catch (err) {
       setAiKeyError(err instanceof Error ? err.message : String(err));
       setAiKeyStatus('error');
@@ -102,6 +136,8 @@ export default function Settings() {
       setAiKeyMasked(false);
       setAiKey('');
       setAiKeyStatus('idle');
+      setAiModels([]);
+      setAiModel('');
     } catch (err) {
       setAiKeyError(err instanceof Error ? err.message : String(err));
       setAiKeyStatus('error');
@@ -321,7 +357,7 @@ export default function Settings() {
             </div>
 
             {/* Test connection */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -336,6 +372,50 @@ export default function Settings() {
               {aiKeyStatus === 'ok' && <span className="text-xs text-status-green font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Connected successfully.</span>}
               {aiKeyStatus === 'testing' && <span className="text-xs text-text-tertiary">Connecting…</span>}
               {aiKeyStatus === 'error' && <span className="text-xs text-status-red">{aiKeyError}</span>}
+            </div>
+
+            {/* Model selector */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm text-text-secondary">Model</Label>
+                {aiKeyMasked && (
+                  <button
+                    type="button"
+                    onClick={() => loadModels(aiProvider)}
+                    disabled={aiModelsLoading}
+                    className="text-xs text-brand hover:underline disabled:opacity-50"
+                  >
+                    {aiModelsLoading ? 'Loading…' : 'Refresh'}
+                  </button>
+                )}
+              </div>
+              {aiModelsError && <p className="text-xs text-status-red">{aiModelsError}</p>}
+              {aiModelsLoading ? (
+                <div className="h-9 max-w-sm rounded-md border border-border-standard bg-secondary animate-pulse" />
+              ) : (
+                <Select
+                  value={aiModel || '__default__'}
+                  disabled={!aiKeyMasked || aiModels.length === 0}
+                  onValueChange={async m => {
+                    const val = m === '__default__' ? '' : m;
+                    setAiModel(val);
+                    await invoke('set_config_value', { key: `ai_model_${aiProvider}`, value: val });
+                  }}
+                >
+                  <SelectTrigger className="max-w-sm">
+                    <SelectValue placeholder={aiKeyMasked ? 'Loading models…' : 'Save an API key to load models'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__default__">— default —</SelectItem>
+                    {aiModels.map(m => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {aiModel && (
+                <p className="text-[11px] text-text-tertiary">Active: <span className="font-mono font-semibold text-text-secondary">{aiModel}</span></p>
+              )}
             </div>
           </div>
 

@@ -2342,8 +2342,121 @@ pub async fn test_ai_connection(
 }
 
 // --------------------------------------------------------
+// AI Model Listing
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn list_ai_models(
+    provider: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Vec<String>, String> {
+    let api_key = get_key_for_provider(&provider, state.inner()).await?;
+    let client = reqwest::Client::new();
+
+    let models: Vec<String> = match provider.as_str() {
+        "anthropic" => {
+            let resp = client
+                .get("https://api.anthropic.com/v1/models")
+                .header("x-api-key", &api_key)
+                .header("anthropic-version", "2023-06-01")
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                return Err(format!("Anthropic error {}", resp.status()));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            let empty = vec![];
+            let mut ids: Vec<String> = json["data"]
+                .as_array()
+                .unwrap_or(&empty)
+                .iter()
+                .filter_map(|m| m["id"].as_str().map(|s| s.to_string()))
+                .collect();
+            ids.sort();
+            ids.reverse();
+            ids
+        }
+        "openai" => {
+            let resp = client
+                .get("https://api.openai.com/v1/models")
+                .header("Authorization", format!("Bearer {}", api_key))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                return Err(format!("OpenAI error {}", resp.status()));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            let empty = vec![];
+            let mut ids: Vec<String> = json["data"]
+                .as_array()
+                .unwrap_or(&empty)
+                .iter()
+                .filter_map(|m| m["id"].as_str().map(|s| s.to_string()))
+                .filter(|id| {
+                    id.starts_with("gpt-4")
+                        || id.starts_with("gpt-3.5")
+                        || id.starts_with("o1")
+                        || id.starts_with("o3")
+                        || id.starts_with("o4")
+                        || id.starts_with("chatgpt-4")
+                })
+                .collect();
+            ids.sort();
+            ids.reverse();
+            ids
+        }
+        "gemini" => {
+            let url = format!(
+                "https://generativelanguage.googleapis.com/v1beta/models?key={}",
+                api_key
+            );
+            let resp = client.get(&url).send().await.map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                return Err(format!("Gemini error {}", resp.status()));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            let empty = vec![];
+            let mut ids: Vec<String> = json["models"]
+                .as_array()
+                .unwrap_or(&empty)
+                .iter()
+                .filter(|m| {
+                    m["supportedGenerationMethods"]
+                        .as_array()
+                        .map(|methods| {
+                            methods.iter().any(|v| v.as_str() == Some("generateContent"))
+                        })
+                        .unwrap_or(false)
+                })
+                .filter_map(|m| {
+                    m["name"]
+                        .as_str()
+                        .map(|s| s.trim_start_matches("models/").to_string())
+                })
+                .collect();
+            ids.sort();
+            ids
+        }
+        _ => return Err(format!("Unknown provider: {}", provider)),
+    };
+
+    Ok(models)
+}
+
+// --------------------------------------------------------
 // AI Text Enhancement
 // --------------------------------------------------------
+
+fn default_model(provider: &str) -> &'static str {
+    match provider {
+        "anthropic" => "claude-haiku-4-5-20251001",
+        "openai" => "gpt-4o-mini",
+        "gemini" => "gemini-1.5-flash",
+        _ => "",
+    }
+}
 
 #[tauri::command]
 pub async fn enhance_text(
@@ -2358,6 +2471,15 @@ pub async fn enhance_text(
     state: tauri::State<'_, SqlitePool>,
 ) -> Result<String, String> {
     let api_key = get_key_for_provider(&provider, state.inner()).await?;
+
+    let model_key = format!("ai_model_{}", provider);
+    let model: String = sqlx::query_scalar("SELECT value FROM app_config WHERE key = ?")
+        .bind(&model_key)
+        .fetch_optional(state.inner())
+        .await
+        .map_err(|e| e.to_string())?
+        .unwrap_or_else(|| default_model(&provider).to_string());
+
     let instruction = field_instruction(&field_name);
 
     let mut context = String::new();
@@ -2390,7 +2512,7 @@ pub async fn enhance_text(
     let enhanced = match provider.as_str() {
         "anthropic" => {
             let body = serde_json::json!({
-                "model": "claude-haiku-4-5-20251001",
+                "model": model,
                 "max_tokens": 1024,
                 "system": AI_SYSTEM_PROMPT,
                 "messages": [{"role": "user", "content": user_message}]
@@ -2413,7 +2535,7 @@ pub async fn enhance_text(
         }
         "openai" => {
             let body = serde_json::json!({
-                "model": "gpt-4o-mini",
+                "model": model,
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "system", "content": AI_SYSTEM_PROMPT},
@@ -2437,8 +2559,8 @@ pub async fn enhance_text(
         }
         "gemini" => {
             let url = format!(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
-                api_key
+                "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+                model, api_key
             );
             let body = serde_json::json!({
                 "system_instruction": {"parts": [{"text": AI_SYSTEM_PROMPT}]},
