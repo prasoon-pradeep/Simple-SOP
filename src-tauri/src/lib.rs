@@ -63,6 +63,7 @@ pub fn run() {
             commands::get_config_value,
             commands::set_config_value,
             commands::export_pdf,
+            commands::check_chromium_available,
             commands::check_keyring_available,
             commands::set_ai_key,
             commands::get_ai_key,

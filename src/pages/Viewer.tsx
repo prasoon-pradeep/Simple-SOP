@@ -27,8 +27,13 @@ export default function Viewer() {
   const [isLoading, setIsLoading] = useState(true);
   type PdfStatus = 'idle' | 'saving' | 'rendering' | 'error';
   const [pdfStatus, setPdfStatus] = useState<PdfStatus>('idle');
+  const [chromiumAvailable, setChromiumAvailable] = useState(true);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [companyName, setCompanyName] = useState('My Company');
+
+  useEffect(() => {
+    invoke<boolean>('check_chromium_available').then(setChromiumAvailable).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -238,6 +243,12 @@ export default function Viewer() {
               )}
               {pdfStatus === 'error' && (
                 <p className="text-xs text-center text-status-red font-semibold">Check console for details.</p>
+              )}
+              {!chromiumAvailable && pdfStatus === 'idle' && (
+                <p className="text-xs text-center text-text-tertiary flex items-center justify-center gap-1">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  Needs a Chromium browser
+                </p>
               )}
            </div>
         </div>

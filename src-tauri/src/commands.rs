@@ -2198,6 +2198,11 @@ pub async fn export_pdf(
 // --------------------------------------------------------
 
 #[tauri::command]
+pub fn check_chromium_available() -> bool {
+    find_chromium().is_some()
+}
+
+#[tauri::command]
 pub fn check_keyring_available() -> bool {
     match keyring::Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT_ANTHROPIC) {
         Ok(entry) => match entry.get_password() {
