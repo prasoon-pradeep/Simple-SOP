@@ -31,6 +31,7 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
 
   const [appVersion, setAppVersion] = useState('');
+  const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   type UpdateStatus =
     | 'idle'
     | 'connecting'
@@ -65,6 +66,7 @@ export default function Settings() {
       setCompanyName(val ?? '');
     });
     getVersion().then(setAppVersion);
+    invoke<string | null>('get_config_value', { key: 'whats_new_notes' }).then(setReleaseNotes).catch(() => {});
     invoke<boolean>('check_keyring_available').then(setKeyringAvailable).catch(() => setKeyringAvailable(false));
     invoke<string | null>('get_config_value', { key: 'ai_active_provider' }).then(p => {
       if (p && AI_PROVIDERS.some(pr => pr.id === p)) setAiProvider(p as ProviderId);
@@ -435,6 +437,14 @@ export default function Settings() {
             <p className="text-xs text-text-tertiary mb-4">
               Current version: <span className="font-mono font-bold text-text-secondary">v{appVersion || '…'}</span>
             </p>
+            {releaseNotes && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1.5">Release notes</p>
+                <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 whitespace-pre-wrap font-mono max-h-36 overflow-y-auto">
+                  {releaseNotes}
+                </pre>
+              </div>
+            )}
 
             <div className="space-y-3">
               <div className="flex items-center gap-3">
