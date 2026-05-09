@@ -593,7 +593,7 @@
 
   <!-- Hero -->
   <section class="hero">
-    <div class="alpha-badge" id="alpha-badge">Alpha — v0.1.7</div>
+    <div class="alpha-badge" id="alpha-badge">Alpha — v0.2.0</div>
     <div id="last-updated" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: -0.75rem; margin-bottom: 1.5rem; display: none;"></div>
     <h1>SOP documentation that stays<br><em>on your machine</em></h1>
     <p>A professional-grade, offline-first desktop app for creating, editing, and exporting Standard Operating Procedures. No cloud. No login. No subscriptions.</p>
@@ -609,7 +609,7 @@
   <!-- Privacy strip -->
   <div class="privacy-strip">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-    <span>Zero data leaves your machine. No accounts, no telemetry, no network required — ever.</span>
+    <span>Zero telemetry, no accounts. Core features are fully offline. AI enhancement is optional and only contacts the AI provider you configure with your own API key.</span>
   </div>
 
   <!-- Hero screenshot -->
@@ -699,6 +699,15 @@
         </div>
         <p>Log every revision with notes, approver, and date. Full audit trail built in, no plugins needed.</p>
       </div>
+      <div class="feature">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand)"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path></svg>
+          </div>
+          <h3>AI Text Enhancement</h3>
+        </div>
+        <p>Rewrite any prose field with one click using your own Anthropic, OpenAI, or Gemini API key. Improves clarity without changing your content.</p>
+      </div>
     </div>
   </section>
 
@@ -731,7 +740,7 @@
   <section class="download-section" id="download">
     <div class="section-label" style="color: var(--brand); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem;">Free Download</div>
     <h2>Get SOP Builder</h2>
-    <p>Available for Windows and Linux. Free to use, forever.</p>
+    <p>Available for Windows, Linux, and macOS. Free to use, forever.</p>
     <div class="download-cards">
       <div class="download-card">
         <div class="os">Windows</div>
@@ -761,10 +770,15 @@
           </a>
         </div>
       </div>
-      <div class="download-card coming-soon">
+      <div class="download-card">
         <div class="os">macOS</div>
-        <span class="coming-soon-badge">Coming soon</span>
-        <p class="coming-soon-note">macOS support is in progress. Watch the <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases" style="color: var(--brand); text-decoration: underline; text-underline-offset: 3px;">releases page</a> for updates.</p>
+        <div class="reqs">Apple Silicon (M1 or later) &middot; macOS 12+ &middot; On first launch: right-click the app → Open to bypass Gatekeeper</div>
+        <div class="formats">
+          <a id="mac-dmg" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.2.0_aarch64.dmg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            Disk Image (.dmg)
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -791,7 +805,7 @@
           <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <div class="faq-answer">
-          Yes, fully. SOP Builder never requires a network connection — not at install time, not at runtime, and not for any feature. Everything runs locally.
+          Yes, fully for core features. Creating, editing, exporting PDFs, and sharing <code>.sop</code> bundles all work with no internet. The only exception is the optional AI text enhancement feature, which contacts the AI provider you configure — but that feature requires you to add your own API key and is never used unless you trigger it explicitly.
         </div>
       </div>
 
@@ -801,7 +815,7 @@
           <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <div class="faq-answer">
-          All SOPs — including attached images — are stored in a single SQLite database in your operating system's app data directory. On Windows this is typically <code>%APPDATA%\sop-builder</code>; on Linux, <code>~/.local/share/sop-builder</code>. Nothing is transmitted or synced anywhere.
+          All SOPs — including attached images — are stored in a single SQLite database in your operating system's app data directory. On Windows: <code>%APPDATA%\sop-builder</code>. On Linux: <code>~/.local/share/sop-builder</code>. On macOS: <code>~/Library/Application Support/sop-builder</code>. Nothing is transmitted or synced anywhere.
         </div>
       </div>
 
@@ -832,7 +846,7 @@
           <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <div class="faq-answer">
-          Not in the current version. Only Windows (10+, 64-bit) and Linux (64-bit) are supported. macOS support is coming soon.
+          Yes — macOS (Apple Silicon, M1 or later) is supported as of v0.2.0. Download the <code>.dmg</code> from the releases page. On first launch, right-click the app → <strong>Open</strong> → <strong>Open</strong> to bypass the Gatekeeper warning (the app is unsigned). Intel Mac support is not available yet.
         </div>
       </div>
 
@@ -944,6 +958,7 @@
         document.getElementById('win-msi').href = `${baseUrl}sop-builder_${cleanVersion}_x64_en-US.msi`;
         document.getElementById('linux-appimage').href = `${baseUrl}sop-builder_${cleanVersion}_amd64.AppImage`;
         document.getElementById('linux-deb').href = `${baseUrl}sop-builder_${cleanVersion}_amd64.deb`;
+        document.getElementById('mac-dmg').href = `${baseUrl}sop-builder_${cleanVersion}_aarch64.dmg`;
       } catch (err) {
         console.warn('Failed to fetch latest version info, using static defaults.');
       }
