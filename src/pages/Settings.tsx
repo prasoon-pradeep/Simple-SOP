@@ -54,6 +54,7 @@ export default function Settings() {
   const [aiKeyStatus, setAiKeyStatus] = useState<'idle' | 'saving' | 'saved' | 'clearing' | 'testing' | 'ok' | 'error'>('idle');
   const [aiKeyError, setAiKeyError] = useState('');
   const [keyringAvailable, setKeyringAvailable] = useState(true);
+  const [keyUsingSqlite, setKeyUsingSqlite] = useState(false);
   const [aiModels, setAiModels] = useState<string[]>([]);
   const [aiModel, setAiModel] = useState('');
   const [aiModelsLoading, setAiModelsLoading] = useState(false);
@@ -79,6 +80,7 @@ export default function Settings() {
     setAiModels([]);
     setAiModelsError('');
     setAiModel('');
+    setKeyUsingSqlite(false);
     const provider = aiProvider;
     invoke<string | null>('get_ai_key', { provider }).then(key => {
       if (!active) return;
@@ -117,10 +119,11 @@ export default function Settings() {
     if (!aiKey.trim()) return;
     setAiKeyStatus('saving');
     try {
-      await invoke('set_ai_key', { provider: aiProvider, apiKey: aiKey.trim() });
+      const usedKeyring = await invoke<boolean>('set_ai_key', { provider: aiProvider, apiKey: aiKey.trim() });
       setAiKeyMasked(true);
       setAiKey('');
       setAiKeyStatus('saved');
+      setKeyUsingSqlite(!usedKeyring);
       setTimeout(() => setAiKeyStatus('idle'), 2000);
       loadModels(aiProvider);
     } catch (err) {
@@ -282,11 +285,13 @@ export default function Settings() {
               Adds a sparkle icon to prose fields. Rewrites text using your own API key — your SOP data is never stored by the provider.
             </p>
 
-            {!keyringAvailable && (
+            {(!keyringAvailable || keyUsingSqlite) && (
               <div className="flex items-start gap-2 rounded-md border border-status-amber-bg bg-status-amber-bg/40 p-3 mb-4">
                 <AlertTriangle className="w-4 h-4 text-status-amber shrink-0 mt-0.5" />
                 <p className="text-xs text-text-secondary">
-                  Secure keyring not available on this system. API keys will be stored in plaintext in the local database.
+                  {keyUsingSqlite
+                    ? 'The system keyring could not be verified. Your API key is stored in plaintext in the local database.'
+                    : 'Secure keyring not available on this system. API keys will be stored in plaintext in the local database.'}
                 </p>
               </div>
             )}

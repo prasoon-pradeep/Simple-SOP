@@ -2195,22 +2195,34 @@ pub async fn set_ai_key(
     provider: String,
     api_key: String,
     state: tauri::State<'_, SqlitePool>,
-) -> Result<(), String> {
+) -> Result<bool, String> {
+    // Attempt keyring write and immediately verify with a read-back.
+    // Only skip SQLite if the keyring round-trip succeeds — this avoids the
+    // Linux secret-service failure mode where set_password succeeds but
+    // get_password silently fails later (session lock / unlock race).
+    // Returns true if stored in keyring, false if stored in SQLite plaintext.
     let account = keyring_account(&provider);
-    if let Ok(entry) = keyring::Entry::new(KEYRING_SERVICE, account) {
-        if entry.set_password(&api_key).is_ok() {
-            return Ok(());
-        }
+    let keyring_verified = keyring::Entry::new(KEYRING_SERVICE, account)
+        .ok()
+        .and_then(|entry| {
+            entry.set_password(&api_key).ok()?;
+            let read_back = entry.get_password().ok()?;
+            (read_back == api_key).then_some(())
+        })
+        .is_some();
+
+    if !keyring_verified {
+        // Keyring unavailable or unreadable — persist in SQLite as fallback.
+        let config_key = format!("ai_key_{}", provider);
+        sqlx::query("INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+            .bind(&config_key)
+            .bind(&api_key)
+            .execute(state.inner())
+            .await
+            .map_err(|e| e.to_string())?;
     }
-    // Fallback: store in app_config
-    let config_key = format!("ai_key_{}", provider);
-    sqlx::query("INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-        .bind(&config_key)
-        .bind(&api_key)
-        .execute(state.inner())
-        .await
-        .map_err(|e| e.to_string())?;
-    Ok(())
+
+    Ok(keyring_verified)
 }
 
 #[tauri::command]
