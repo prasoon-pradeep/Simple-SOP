@@ -6,6 +6,8 @@ import Viewer from "./pages/Viewer";
 import Settings from "./pages/Settings";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { getVersion } from '@tauri-apps/api/app';
+import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
@@ -61,6 +63,12 @@ function UpdateDialog({ update, onDismiss }: { update: UpdateInfo; onDismiss: ()
           setTimeout(() => setStage('applying'), 800);
         }
       });
+
+      // Store notes before relaunch so the What's New popup can show them on next launch
+      if (update.body) {
+        await invoke('set_config_value', { key: 'whats_new_notes', value: update.body });
+        await invoke('set_config_value', { key: 'whats_new_version', value: update.version });
+      }
       await relaunch();
     } catch (error) {
       console.error('Update install failed:', error);
@@ -135,10 +143,35 @@ function UpdateDialog({ update, onDismiss }: { update: UpdateInfo; onDismiss: ()
   );
 }
 
+function WhatsNewDialog({ version, notes, onDismiss }: { version: string; notes: string; onDismiss: () => void }) {
+  return (
+    <Dialog open onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>What's new in v{version}</DialogTitle>
+          <DialogDescription className="pt-1 text-text-secondary">
+            Here's what changed in this update.
+          </DialogDescription>
+        </DialogHeader>
+        <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 whitespace-pre-wrap font-mono max-h-52 overflow-y-auto">
+          {notes}
+        </pre>
+        <DialogFooter>
+          <Button onClick={onDismiss} className="bg-brand hover:bg-brand-hover text-white font-semibold">
+            Got it
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function App() {
   const [pendingUpdate, setPendingUpdate] = useState<UpdateInfo | null>(null);
+  const [pendingWhatsNew, setPendingWhatsNew] = useState<{ version: string; notes: string } | null>(null);
 
   useEffect(() => {
+    // Update availability check
     check().then((update) => {
       if (update?.available) {
         setPendingUpdate({ version: update.version, body: update.body ?? null });
@@ -146,11 +179,42 @@ function App() {
     }).catch((error) => {
       console.error('Startup update check failed:', error);
     });
+
+    // What's new check — show once on first launch after an update
+    getVersion().then(async (currentVersion) => {
+      const lastSeen = await invoke<string | null>('get_config_value', { key: 'last_seen_version' });
+
+      if (lastSeen === null) {
+        // Fresh install — record version silently, no popup
+        await invoke('set_config_value', { key: 'last_seen_version', value: currentVersion });
+      } else if (lastSeen !== currentVersion) {
+        // First launch after update — check for stored notes
+        const notes = await invoke<string | null>('get_config_value', { key: 'whats_new_notes' });
+        const version = await invoke<string | null>('get_config_value', { key: 'whats_new_version' });
+        if (notes && version) {
+          setPendingWhatsNew({ version, notes });
+        } else {
+          // No notes available (e.g. updated from a build before this feature) — update silently
+          await invoke('set_config_value', { key: 'last_seen_version', value: currentVersion });
+        }
+      }
+    }).catch((error) => {
+      console.error('What\'s new check failed:', error);
+    });
   }, []);
+
+  const handleWhatsNewDismiss = async () => {
+    const currentVersion = await getVersion();
+    await invoke('set_config_value', { key: 'last_seen_version', value: currentVersion });
+    setPendingWhatsNew(null);
+  };
 
   return (
     <>
-      {pendingUpdate && (
+      {pendingWhatsNew && (
+        <WhatsNewDialog version={pendingWhatsNew.version} notes={pendingWhatsNew.notes} onDismiss={handleWhatsNewDismiss} />
+      )}
+      {pendingUpdate && !pendingWhatsNew && (
         <UpdateDialog update={pendingUpdate} onDismiss={() => setPendingUpdate(null)} />
       )}
       <Router>
