@@ -6,6 +6,9 @@ on:
       tag:
         description: 'Version tag (e.g. v0.2.0)'
         required: true
+      notes:
+        description: "What's new — bullet points shown in the in-app update dialog and on the releases page. Required."
+        required: true
 
 permissions:
   contents: write
@@ -160,10 +163,12 @@ jobs:
 
           REPO_URL="https://github.com/prasoon-pradeep/Simple-SOP/releases/download/${TAG}"
 
+          NOTES="${{ github.event.inputs.notes }}"
+
           cat > latest.json << EOF
           {
             "version": "${VERSION}",
-            "notes": "See release notes on GitHub.",
+            "notes": "${NOTES}",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "linux-x86_64": {
@@ -187,7 +192,9 @@ jobs:
           tag_name: ${{ github.event.inputs.tag }}
           name: SOP Builder ${{ github.event.inputs.tag }}
           body: |
-            ## SOP Builder ${{ github.event.inputs.tag }}
+            ## What's new in ${{ github.event.inputs.tag }}
+
+            ${{ github.event.inputs.notes }}
 
             ### Installation
             - **Windows**: Download and run the `.exe` (NSIS installer) or `.msi`
