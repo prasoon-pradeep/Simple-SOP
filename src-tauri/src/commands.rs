@@ -13,7 +13,15 @@ const KEYRING_ACCOUNT_ANTHROPIC: &str = "534F502D4255494C4445522D3031";
 const KEYRING_ACCOUNT_OPENAI: &str = "534F502D4255494C4445522D3032";
 const KEYRING_ACCOUNT_GEMINI: &str = "534F502D4255494C4445522D3033";
 
-const AI_SYSTEM_PROMPT: &str = "You are a technical writing assistant for Standard Operating Procedures. Rewrite the provided text to be clear, concise, and professionally structured. Preserve all technical terms, part numbers, tool names, and domain-specific language exactly as written. Return ONLY the rewritten text. No explanation, no preamble, no surrounding quotes.";
+const AI_SYSTEM_PROMPT: &str = "You are a technical writing assistant for Standard Operating Procedures. \
+Rewrite the provided text to be clear, concise, and professionally worded. \
+Preserve all technical terms, part numbers, tool names, and domain-specific language exactly as written. \
+\n\nFormatting rules:\
+\n- Return ONLY the rewritten text. No explanation, no preamble, no surrounding quotes.\
+\n- Never add headers, titles, or step labels (e.g. \"Step 4:\", \"Installation:\").\
+\n- Never use sub-numbering (4.1, 4.2). If the content has multiple distinct sequential actions, use a plain numbered list (1. 2. 3.) on separate lines.\
+\n- If the input is a single sentence or paragraph, return a single sentence or paragraph — do not break it into a list.\
+\n- Match the structure of the original. Only improve the wording.";
 
 fn keyring_account(provider: &str) -> &'static str {
     match provider {
@@ -25,7 +33,7 @@ fn keyring_account(provider: &str) -> &'static str {
 
 fn field_instruction(field_name: &str) -> &'static str {
     match field_name {
-        "action" => "Start with a strong imperative verb. One clear action per sentence.",
+        "action" => "Start with a strong imperative verb. If the input contains multiple distinct sequential actions, use a plain numbered list (1. 2. 3.). Otherwise keep as prose. Do not add CAUTION or NOTE callouts.",
         "notes" => "Clear and direct. Prefix with NOTE: or CAUTION: where appropriate.",
         "expected_output" => "Write as a specific, observable, measurable result.",
         "purpose" => "State what this procedure achieves. Concise, one paragraph.",
@@ -2512,12 +2520,14 @@ pub async fn enhance_text(
         }
     }
 
-    let user_message = format!(
-        "{}{}\n\nText to improve:\n{}",
-        context,
-        instruction,
-        original_text
-    );
+    let user_message = if context.is_empty() {
+        format!("Instruction: {}\n\nText to improve:\n{}", instruction, original_text)
+    } else {
+        format!(
+            "Additional context for the text to improve (do not include in output):\n{}\nInstruction: {}\n\nText to improve:\n{}",
+            context, instruction, original_text
+        )
+    };
 
     let client = reqwest::Client::new();
 
