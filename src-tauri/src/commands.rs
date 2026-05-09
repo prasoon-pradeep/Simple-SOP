@@ -13,15 +13,31 @@ const KEYRING_ACCOUNT_ANTHROPIC: &str = "534F502D4255494C4445522D3031";
 const KEYRING_ACCOUNT_OPENAI: &str = "534F502D4255494C4445522D3032";
 const KEYRING_ACCOUNT_GEMINI: &str = "534F502D4255494C4445522D3033";
 
-const AI_SYSTEM_PROMPT: &str = "You are a technical writing assistant for Standard Operating Procedures. \
-Rewrite the provided text to be clear, concise, and professionally worded. \
-Preserve all technical terms, part numbers, tool names, and domain-specific language exactly as written. \
-\n\nFormatting rules:\
-\n- Return ONLY the rewritten text. No explanation, no preamble, no surrounding quotes.\
-\n- Never add headers, titles, or step labels (e.g. \"Step 4:\", \"Installation:\").\
-\n- Never use sub-numbering (4.1, 4.2). If the content has multiple distinct sequential actions, use a plain numbered list (1. 2. 3.) on separate lines.\
-\n- If the input is a single sentence or paragraph, return a single sentence or paragraph — do not break it into a list.\
-\n- Match the structure of the original. Only improve the wording.";
+const AI_SYSTEM_PROMPT: &str = "You are a technical writing assistant for Standard Operating Procedures.\n\
+Rewrite the provided text to be clear, concise, and professionally worded.\n\
+Preserve all technical terms, part numbers, tool names, and domain-specific language exactly as written.\n\
+\n\
+Output rules:\n\
+- Return ONLY the rewritten text. No explanation, no preamble, no surrounding quotes.\n\
+- Never add headers, titles, or step labels (e.g. \"Step 4:\", \"Installation:\").\n\
+- Never use sub-numbering (4.1, 4.2).\n\
+- If the input is a single sentence or paragraph, return a single sentence or paragraph — do not break it into a list.\n\
+- If the input contains multiple distinct sequential actions, a plain numbered list (1. 2. 3.) on separate lines is acceptable.\n\
+- Match the structure of the original. Only improve the wording.\n\
+- Never add content, safety points, steps, or warnings that are not present in the original text.\n\
+\n\
+Field type contracts — each field has a specific output form. The field type will be declared before the text to improve:\n\
+- action: imperative prose. What to do. Start with a strong verb. Do not add CAUTION or NOTE callouts.\n\
+- notes: advisory prose. What to watch out for. Use NOTE: or CAUTION: prefix where appropriate.\n\
+- expected_output: state description. What is true when the step is complete. Not an action or instruction — a factual statement of the end state.\n\
+- safety_notes: warning statements. What not to do or what could go wrong. Do not add warnings not present in the original.\n\
+- purpose: declarative prose. What this procedure achieves. One concise paragraph.\n\
+- scope: boundary statement. What is and is not covered by this procedure.\n\
+- meaning: plain definition. What a term means. Technically precise.\n\
+- specification: technical statement. Precise and measurable. No watered-down language.\n\
+- description: factual prose. What an item is. Clear and neutral.\n\
+- training_details: prerequisite statement. What is required before performing this procedure.\n\
+- revision_notes: past tense factual. What changed and why.";
 
 fn keyring_account(provider: &str) -> &'static str {
     match provider {
@@ -31,22 +47,6 @@ fn keyring_account(provider: &str) -> &'static str {
     }
 }
 
-fn field_instruction(field_name: &str) -> &'static str {
-    match field_name {
-        "action" => "Start with a strong imperative verb. If the input contains multiple distinct sequential actions, use a plain numbered list (1. 2. 3.). Otherwise keep as prose. Do not add CAUTION or NOTE callouts.",
-        "notes" => "Clear and direct. Prefix with NOTE: or CAUTION: where appropriate.",
-        "expected_output" => "Write as a specific, observable, measurable result.",
-        "purpose" => "State what this procedure achieves. Concise, one paragraph.",
-        "scope" => "Clearly define what is and is not covered.",
-        "safety_notes" => "Clear, actionable, appropriately urgent.",
-        "training_details" => "Clear prerequisites and requirements.",
-        "specification" => "Technically precise, concise specification.",
-        "description" => "Clear, factual description of the item.",
-        "meaning" => "Technically precise, plain language definition.",
-        "revision_notes" => "Describe what changed and why. Past tense, factual.",
-        _ => "Clear, concise, and professional.",
-    }
-}
 
 async fn get_key_for_provider(provider: &str, pool: &SqlitePool) -> Result<String, String> {
     let account = keyring_account(provider);
@@ -2500,8 +2500,6 @@ pub async fn enhance_text(
         .map_err(|e| e.to_string())?
         .unwrap_or_else(|| default_model(&provider).to_string());
 
-    let instruction = field_instruction(&field_name);
-
     let mut context = String::new();
     if let Some(title) = &sop_title {
         context.push_str(&format!("SOP Title: {}\n", title));
@@ -2521,11 +2519,11 @@ pub async fn enhance_text(
     }
 
     let user_message = if context.is_empty() {
-        format!("Instruction: {}\n\nText to improve:\n{}", instruction, original_text)
+        format!("Field type: {}\n\nText to improve:\n{}", field_name, original_text)
     } else {
         format!(
-            "Additional context for the text to improve (do not include in output):\n{}\nInstruction: {}\n\nText to improve:\n{}",
-            context, instruction, original_text
+            "Field type: {}\n\nAdditional context for the text to improve (do not include in output):\n{}\nText to improve:\n{}",
+            field_name, context, original_text
         )
     };
 
