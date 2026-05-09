@@ -37,6 +37,15 @@ Every GitHub release MUST include meaningful release notes describing what chang
 - Never trigger a release without filling in the notes input.
 - Notes should be written from the user's perspective (what they can now do, what was broken and is now fixed) — not internal implementation details.
 
+### How releases are triggered
+- Releases are ONLY created by manually triggering the `release.yml` workflow on GitHub Actions. Never create or publish a GitHub release any other way unless the user explicitly instructs otherwise.
+- Do not auto-trigger releases from commits, merges, or tags.
+
+### Version bumping
+- Always bump the patch version only (the third number: `0.0.X`) unless the user explicitly asks for a minor (`0.X.0`) or major (`X.0.0`) bump.
+- Version must be updated in both `src-tauri/Cargo.toml` and `package.json` before triggering a release.
+- Never skip a version or reuse a tag.
+
 ---
 
 ## Commit Style
