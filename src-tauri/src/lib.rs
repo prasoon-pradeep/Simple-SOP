@@ -63,6 +63,14 @@ pub fn run() {
             commands::get_config_value,
             commands::set_config_value,
             commands::export_pdf,
+            commands::check_keyring_available,
+            commands::set_ai_key,
+            commands::get_ai_key,
+            commands::delete_ai_key,
+            commands::test_ai_connection,
+            commands::enhance_text,
+            commands::save_ai_enhancement,
+            commands::get_ai_enhancements,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

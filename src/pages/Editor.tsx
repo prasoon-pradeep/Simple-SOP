@@ -283,13 +283,16 @@ export default function Editor() {
         </DialogContent>
       </Dialog>
 
-      <RevisionModal 
-        open={showRevisionModal} 
+      <RevisionModal
+        open={showRevisionModal}
         onOpenChange={setShowRevisionModal}
         onConfirm={handleRevisionConfirm}
         onDiscard={handleRevisionDiscard}
         onCancel={handleRevisionCancel}
         mode={modalMode}
+        sopId={currentSop?.id}
+        sopTitle={currentSop?.title}
+        department={currentSop?.department ?? undefined}
       />
     </div>
   );

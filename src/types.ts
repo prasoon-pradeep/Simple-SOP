@@ -107,3 +107,16 @@ export interface StepFull {
   tools: StepTool[];
   items: StepItem[];
 }
+
+export interface AiEnhancement {
+  id: string;
+  sop_id: string;
+  entity_type: string;
+  entity_id: string;
+  field_name: string;
+  original_text: string;
+  enhanced_text: string;
+  provider: string;
+  model: string;
+  enhanced_at: string;
+}

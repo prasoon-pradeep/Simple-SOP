@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { SparkleButton } from '@/components/shared/SparkleButton';
+import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
@@ -23,6 +25,14 @@ export function ItemsSection() {
   const [editingItem, setEditingItem] = useState<Partial<Item> | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+  const [aiPreview, setAiPreview] = useState<{ original: string; enhanced: string } | null>(null);
+  const [aiProvider, setAiProvider] = useState('anthropic');
+
+  useEffect(() => {
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
+      .then(p => { if (p) setAiProvider(p); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (currentSop) {
@@ -250,12 +260,26 @@ export function ItemsSection() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="desc" className="text-right">Description</Label>
-              <Input
-                id="desc"
-                value={editingItem?.description || ''}
-                onChange={e => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)}
-                className="col-span-3"
-              />
+              <div className="col-span-3 flex items-center gap-1">
+                <Input
+                  id="desc"
+                  value={editingItem?.description || ''}
+                  onChange={e => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  className="flex-1"
+                />
+                {editingItem?.id && currentSop && (
+                  <SparkleButton
+                    value={editingItem.description || ''}
+                    fieldName="description"
+                    entityType="item"
+                    entityId={editingItem.id}
+                    sopId={currentSop.id}
+                    sopTitle={currentSop.title}
+                    department={currentSop.department ?? undefined}
+                    onPreview={enhanced => setAiPreview({ original: editingItem.description || '', enhanced })}
+                  />
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="qty" className="text-right">Qty</Label>
@@ -305,6 +329,24 @@ export function ItemsSection() {
         type="item"
         onClone={handleCloneItem}
       />
+
+      {aiPreview && editingItem?.id && currentSop && (
+        <AIPreviewPanel
+          open
+          originalText={aiPreview.original}
+          enhancedText={aiPreview.enhanced}
+          fieldName="description"
+          entityType="item"
+          entityId={editingItem.id}
+          sopId={currentSop.id}
+          provider={aiProvider}
+          onAccept={(text) => {
+            setEditingItem(prev => prev ? { ...prev, description: text } : null);
+            setAiPreview(null);
+          }}
+          onReject={() => setAiPreview(null)}
+        />
+      )}
     </div>
   );
 }

@@ -165,6 +165,19 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
             key   TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );"#,
+        r#"CREATE TABLE IF NOT EXISTS ai_enhancements (
+            id            TEXT PRIMARY KEY,
+            sop_id        TEXT NOT NULL,
+            entity_type   TEXT NOT NULL,
+            entity_id     TEXT NOT NULL,
+            field_name    TEXT NOT NULL,
+            original_text TEXT NOT NULL,
+            enhanced_text TEXT NOT NULL,
+            provider      TEXT NOT NULL,
+            model         TEXT NOT NULL,
+            enhanced_at   TEXT NOT NULL,
+            FOREIGN KEY (sop_id) REFERENCES sops(id)
+        );"#,
     ];
 
     for query in queries {

@@ -4,11 +4,18 @@ import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { ArrowLeft, Save, ScrollText, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, ScrollText, RefreshCw, Sparkles, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import licenseText from '../../LICENSE?raw';
+
+const AI_PROVIDERS = [
+  { id: 'anthropic', label: 'Anthropic' },
+  { id: 'openai', label: 'OpenAI' },
+  { id: 'gemini', label: 'Gemini' },
+] as const;
+type ProviderId = typeof AI_PROVIDERS[number]['id'];
 
 const RELEASES_URL = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest';
 
@@ -38,12 +45,92 @@ export default function Settings() {
   const [updateError, setUpdateError] = useState('');
   const [pendingUpdate, setPendingUpdate] = useState<Awaited<ReturnType<typeof check>>>(null);
 
+  // AI Enhancement state
+  const [aiProvider, setAiProvider] = useState<ProviderId>('anthropic');
+  const [aiKey, setAiKey] = useState('');
+  const [aiKeyMasked, setAiKeyMasked] = useState(false); // true = key exists in store
+  const [showAiKey, setShowAiKey] = useState(false);
+  const [aiKeyStatus, setAiKeyStatus] = useState<'idle' | 'saving' | 'saved' | 'clearing' | 'testing' | 'ok' | 'error'>('idle');
+  const [aiKeyError, setAiKeyError] = useState('');
+  const [keyringAvailable, setKeyringAvailable] = useState(true);
+
   useEffect(() => {
     invoke<string | null>('get_config_value', { key: 'company_name' }).then(val => {
       setCompanyName(val ?? '');
     });
     getVersion().then(setAppVersion);
+    invoke<boolean>('check_keyring_available').then(setKeyringAvailable).catch(() => setKeyringAvailable(false));
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' }).then(p => {
+      if (p && AI_PROVIDERS.some(pr => pr.id === p)) setAiProvider(p as ProviderId);
+    });
   }, []);
+
+  useEffect(() => {
+    setAiKey('');
+    setAiKeyMasked(false);
+    setAiKeyStatus('idle');
+    setAiKeyError('');
+    invoke<string | null>('get_ai_key', { provider: aiProvider }).then(key => {
+      setAiKeyMasked(!!key);
+    }).catch(() => {});
+  }, [aiProvider]);
+
+  const handleProviderChange = async (p: ProviderId) => {
+    setAiProvider(p);
+    await invoke('set_config_value', { key: 'ai_active_provider', value: p });
+  };
+
+  const handleSetKey = async () => {
+    if (!aiKey.trim()) return;
+    setAiKeyStatus('saving');
+    try {
+      await invoke('set_ai_key', { provider: aiProvider, apiKey: aiKey.trim() });
+      setAiKeyMasked(true);
+      setAiKey('');
+      setAiKeyStatus('saved');
+      setTimeout(() => setAiKeyStatus('idle'), 2000);
+    } catch (err) {
+      setAiKeyError(err instanceof Error ? err.message : String(err));
+      setAiKeyStatus('error');
+    }
+  };
+
+  const handleClearKey = async () => {
+    setAiKeyStatus('clearing');
+    try {
+      await invoke('delete_ai_key', { provider: aiProvider });
+      setAiKeyMasked(false);
+      setAiKey('');
+      setAiKeyStatus('idle');
+    } catch (err) {
+      setAiKeyError(err instanceof Error ? err.message : String(err));
+      setAiKeyStatus('error');
+    }
+  };
+
+  const handleTestConnection = async () => {
+    const keyToTest = aiKey.trim() || null;
+    if (!keyToTest && !aiKeyMasked) return;
+    setAiKeyStatus('testing');
+    setAiKeyError('');
+    try {
+      let testKey = keyToTest;
+      if (!testKey) {
+        testKey = await invoke<string | null>('get_ai_key', { provider: aiProvider });
+      }
+      if (!testKey) {
+        setAiKeyError('No key found. Save a key first.');
+        setAiKeyStatus('error');
+        return;
+      }
+      await invoke('test_ai_connection', { provider: aiProvider, apiKey: testKey });
+      setAiKeyStatus('ok');
+      setTimeout(() => setAiKeyStatus('idle'), 3000);
+    } catch (err) {
+      setAiKeyError(err instanceof Error ? err.message : String(err));
+      setAiKeyStatus('error');
+    }
+  };
 
   const handleCheckForUpdates = async () => {
     setUpdateStatus('connecting');
@@ -145,6 +232,111 @@ export default function Settings() {
               <Save className="w-4 h-4 mr-2" />
               {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save Settings'}
             </Button>
+          </div>
+
+          <div className="border-t border-border-standard" />
+
+          {/* AI Enhancement */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-text-tertiary" />
+              <h2 className="text-base font-semibold text-text-primary">AI Enhancement</h2>
+            </div>
+            <p className="text-xs text-text-tertiary mb-4">
+              Adds a sparkle icon to prose fields. Rewrites text using your own API key — your SOP data is never stored by the provider.
+            </p>
+
+            {!keyringAvailable && (
+              <div className="flex items-start gap-2 rounded-md border border-status-amber-bg bg-status-amber-bg/40 p-3 mb-4">
+                <AlertTriangle className="w-4 h-4 text-status-amber shrink-0 mt-0.5" />
+                <p className="text-xs text-text-secondary">
+                  Secure keyring not available on this system. API keys will be stored in plaintext in the local database.
+                </p>
+              </div>
+            )}
+
+            {/* Provider selector */}
+            <div className="space-y-2 mb-4">
+              <Label className="text-sm text-text-secondary">Provider</Label>
+              <div className="flex gap-4">
+                {AI_PROVIDERS.map(p => (
+                  <label key={p.id} className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ai-provider"
+                      value={p.id}
+                      checked={aiProvider === p.id}
+                      onChange={() => handleProviderChange(p.id)}
+                      className="accent-brand"
+                    />
+                    <span className="text-sm text-text-secondary">{p.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Key input */}
+            <div className="space-y-2 mb-3">
+              <Label className="text-sm text-text-secondary">API Key</Label>
+              {aiKeyMasked && !aiKey ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 max-w-sm h-9 rounded-md border border-border-standard bg-secondary px-3 flex items-center">
+                    <span className="text-sm text-text-quaternary tracking-widest">••••••••••••••••••••</span>
+                  </div>
+                  <Button variant="outline" size="sm" className="border-border-strong text-xs" onClick={() => setAiKeyMasked(false)}>
+                    Replace
+                  </Button>
+                  <Button variant="outline" size="sm" className="border-border-strong text-xs text-status-red hover:text-status-red" onClick={handleClearKey} disabled={aiKeyStatus === 'clearing'}>
+                    {aiKeyStatus === 'clearing' ? 'Clearing…' : 'Clear'}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="relative max-w-sm flex-1">
+                    <Input
+                      type={showAiKey ? 'text' : 'password'}
+                      value={aiKey}
+                      onChange={e => { setAiKey(e.target.value); setAiKeyStatus('idle'); setAiKeyError(''); }}
+                      placeholder="Paste your API key"
+                      className="pr-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAiKey(v => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-text-quaternary hover:text-text-secondary"
+                    >
+                      {showAiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSetKey}
+                    disabled={!aiKey.trim() || aiKeyStatus === 'saving'}
+                    className="bg-brand hover:bg-brand-hover text-white font-semibold text-xs"
+                  >
+                    {aiKeyStatus === 'saving' ? 'Saving…' : 'Save Key'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Test connection */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border-strong text-xs font-semibold"
+                onClick={handleTestConnection}
+                disabled={(!aiKey.trim() && !aiKeyMasked) || aiKeyStatus === 'testing'}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${aiKeyStatus === 'testing' ? 'animate-spin' : ''}`} />
+                Test Connection
+              </Button>
+              {aiKeyStatus === 'saved' && <span className="text-xs text-status-green font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Key saved.</span>}
+              {aiKeyStatus === 'ok' && <span className="text-xs text-status-green font-semibold flex items-center gap-1"><Check className="w-3 h-3" /> Connected successfully.</span>}
+              {aiKeyStatus === 'testing' && <span className="text-xs text-text-tertiary">Connecting…</span>}
+              {aiKeyStatus === 'error' && <span className="text-xs text-status-red">{aiKeyError}</span>}
+            </div>
           </div>
 
           <div className="border-t border-border-standard" />

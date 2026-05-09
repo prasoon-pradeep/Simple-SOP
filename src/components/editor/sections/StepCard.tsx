@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSopStore } from '@/store';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+import { SparkleButton } from '@/components/shared/SparkleButton';
+import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { StepFull, StepImage } from '@/types';
 import { useSortable } from '@dnd-kit/sortable';
@@ -114,10 +116,19 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
   } = useSopStore();
 
   const { step, images, tools, items } = stepFull;
+  const { currentSop, stepsFull } = useSopStore();
 
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [pickerType, setPickerType] = useState<'tool' | 'item' | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [aiPreview, setAiPreview] = useState<{ field: string; original: string; enhanced: string } | null>(null);
+  const [aiProvider, setAiProvider] = useState('anthropic');
+
+  useEffect(() => {
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
+      .then(p => { if (p) setAiProvider(p); })
+      .catch(() => {});
+  }, []);
 
   // Step-level sortable (outer DndContext in ProcedureSection)
   const {
@@ -321,9 +332,24 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
         {/* Left Column: Text Content */}
         <div className="flex-1 p-4 space-y-4 border-r border-border-subtle">
           <div className="space-y-1.5">
-            <div className="flex items-center text-text-secondary mb-1">
-              <Target className="w-3.5 h-3.5 mr-1.5" />
-              <Label htmlFor={`action-${step.id}`} className="text-xs font-bold uppercase tracking-tight">Action / Instruction</Label>
+            <div className="flex items-center justify-between text-text-secondary mb-1">
+              <div className="flex items-center">
+                <Target className="w-3.5 h-3.5 mr-1.5" />
+                <Label htmlFor={`action-${step.id}`} className="text-xs font-bold uppercase tracking-tight">Action / Instruction</Label>
+              </div>
+              <SparkleButton
+                value={step.action || ''}
+                fieldName="action"
+                entityType="step"
+                entityId={step.id}
+                sopId={step.sop_id}
+                sopTitle={currentSop?.title}
+                department={currentSop?.department ?? undefined}
+                stepNumber={step.step_number}
+                totalSteps={stepsFull.length}
+                prevStepAction={stepsFull.find(s => s.step.step_number === step.step_number - 1)?.step.action ?? undefined}
+                onPreview={enhanced => setAiPreview({ field: 'action', original: step.action || '', enhanced })}
+              />
             </div>
             <Textarea
               id={`action-${step.id}`}
@@ -336,9 +362,23 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border-subtle">
             <div className="space-y-1.5">
-              <div className="flex items-center text-text-secondary mb-1">
-                <Info className="w-3.5 h-3.5 mr-1.5" />
-                <Label htmlFor={`notes-${step.id}`} className="text-[10px] font-bold uppercase text-text-tertiary">Notes & Warnings</Label>
+              <div className="flex items-center justify-between text-text-secondary mb-1">
+                <div className="flex items-center">
+                  <Info className="w-3.5 h-3.5 mr-1.5" />
+                  <Label htmlFor={`notes-${step.id}`} className="text-[10px] font-bold uppercase text-text-tertiary">Notes & Warnings</Label>
+                </div>
+                <SparkleButton
+                  value={step.notes || ''}
+                  fieldName="notes"
+                  entityType="step"
+                  entityId={step.id}
+                  sopId={step.sop_id}
+                  sopTitle={currentSop?.title}
+                  department={currentSop?.department ?? undefined}
+                  stepNumber={step.step_number}
+                  totalSteps={stepsFull.length}
+                  onPreview={enhanced => setAiPreview({ field: 'notes', original: step.notes || '', enhanced })}
+                />
               </div>
               <Textarea
                 id={`notes-${step.id}`}
@@ -349,9 +389,23 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center text-text-secondary mb-1">
-                <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
-                <Label htmlFor={`output-${step.id}`} className="text-[10px] font-bold uppercase text-text-tertiary">Expected Output</Label>
+              <div className="flex items-center justify-between text-text-secondary mb-1">
+                <div className="flex items-center">
+                  <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+                  <Label htmlFor={`output-${step.id}`} className="text-[10px] font-bold uppercase text-text-tertiary">Expected Output</Label>
+                </div>
+                <SparkleButton
+                  value={step.expected_output || ''}
+                  fieldName="expected_output"
+                  entityType="step"
+                  entityId={step.id}
+                  sopId={step.sop_id}
+                  sopTitle={currentSop?.title}
+                  department={currentSop?.department ?? undefined}
+                  stepNumber={step.step_number}
+                  totalSteps={stepsFull.length}
+                  onPreview={enhanced => setAiPreview({ field: 'expected_output', original: step.expected_output || '', enhanced })}
+                />
               </div>
               <Textarea
                 id={`output-${step.id}`}
@@ -467,6 +521,24 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
           <img src={lightboxSrc || ''} alt="Visual Aid" className="w-full h-auto object-contain max-h-[85vh]" />
         </DialogContent>
       </Dialog>
+
+      {aiPreview && (
+        <AIPreviewPanel
+          open
+          originalText={aiPreview.original}
+          enhancedText={aiPreview.enhanced}
+          fieldName={aiPreview.field}
+          entityType="step"
+          entityId={step.id}
+          sopId={step.sop_id}
+          provider={aiProvider}
+          onAccept={(text) => {
+            updateStepField(step.id, aiPreview.field as 'action' | 'notes' | 'expected_output', text);
+            setAiPreview(null);
+          }}
+          onReject={() => setAiPreview(null)}
+        />
+      )}
     </div>
   );
 }

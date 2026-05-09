@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { SparkleButton } from '@/components/shared/SparkleButton';
+import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ImageUploadArea } from '@/components/shared/ImageUploadArea';
 import { CrossSopSearch } from '@/components/editor/CrossSopSearch';
@@ -24,6 +26,14 @@ export function ToolsSection() {
   const [editingTool, setEditingTool] = useState<Partial<Tool> | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+  const [aiPreview, setAiPreview] = useState<{ original: string; enhanced: string } | null>(null);
+  const [aiProvider, setAiProvider] = useState('anthropic');
+
+  useEffect(() => {
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
+      .then(p => { if (p) setAiProvider(p); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (currentSop) {
@@ -261,13 +271,27 @@ export function ToolsSection() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="spec" className="text-right">Spec</Label>
-              <Input 
-                id="spec" 
-                value={editingTool?.specification || ''} 
-                onChange={e => setEditingTool(prev => prev ? { ...prev, specification: e.target.value } : null)}
-                className="col-span-3" 
-                placeholder="e.g. 10-50 Nm"
-              />
+              <div className="col-span-3 flex items-center gap-1">
+                <Input
+                  id="spec"
+                  value={editingTool?.specification || ''}
+                  onChange={e => setEditingTool(prev => prev ? { ...prev, specification: e.target.value } : null)}
+                  className="flex-1"
+                  placeholder="e.g. 10-50 Nm"
+                />
+                {editingTool?.id && currentSop && (
+                  <SparkleButton
+                    value={editingTool.specification || ''}
+                    fieldName="specification"
+                    entityType="tool"
+                    entityId={editingTool.id}
+                    sopId={currentSop.id}
+                    sopTitle={currentSop.title}
+                    department={currentSop.department ?? undefined}
+                    onPreview={enhanced => setAiPreview({ original: editingTool.specification || '', enhanced })}
+                  />
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
@@ -316,12 +340,30 @@ export function ToolsSection() {
         </DialogContent>
       </Dialog>
 
-      <CrossSopSearch 
-        open={isSearchOpen} 
-        onOpenChange={setIsSearchOpen} 
-        type="tool" 
+      <CrossSopSearch
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        type="tool"
         onClone={handleCloneTool}
       />
+
+      {aiPreview && editingTool?.id && currentSop && (
+        <AIPreviewPanel
+          open
+          originalText={aiPreview.original}
+          enhancedText={aiPreview.enhanced}
+          fieldName="specification"
+          entityType="tool"
+          entityId={editingTool.id}
+          sopId={currentSop.id}
+          provider={aiProvider}
+          onAccept={(text) => {
+            setEditingTool(prev => prev ? { ...prev, specification: text } : null);
+            setAiPreview(null);
+          }}
+          onReject={() => setAiPreview(null)}
+        />
+      )}
     </div>
   );
 }

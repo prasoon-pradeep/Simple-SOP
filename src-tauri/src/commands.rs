@@ -7,6 +7,60 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::Manager;
 use uuid::Uuid;
 
+// ── Keyring constants ─────────────────────────────────────────────────────────
+const KEYRING_SERVICE: &str = "534F502D4255494C444552";
+const KEYRING_ACCOUNT_ANTHROPIC: &str = "534F502D4255494C4445522D3031";
+const KEYRING_ACCOUNT_OPENAI: &str = "534F502D4255494C4445522D3032";
+const KEYRING_ACCOUNT_GEMINI: &str = "534F502D4255494C4445522D3033";
+
+const AI_SYSTEM_PROMPT: &str = "You are a technical writing assistant for Standard Operating Procedures. Rewrite the provided text to be clear, concise, and professionally structured. Preserve all technical terms, part numbers, tool names, and domain-specific language exactly as written. Return ONLY the rewritten text. No explanation, no preamble, no surrounding quotes.";
+
+fn keyring_account(provider: &str) -> &'static str {
+    match provider {
+        "openai" => KEYRING_ACCOUNT_OPENAI,
+        "gemini" => KEYRING_ACCOUNT_GEMINI,
+        _ => KEYRING_ACCOUNT_ANTHROPIC,
+    }
+}
+
+fn field_instruction(field_name: &str) -> &'static str {
+    match field_name {
+        "action" => "Start with a strong imperative verb. One clear action per sentence.",
+        "notes" => "Clear and direct. Prefix with NOTE: or CAUTION: where appropriate.",
+        "expected_output" => "Write as a specific, observable, measurable result.",
+        "purpose" => "State what this procedure achieves. Concise, one paragraph.",
+        "scope" => "Clearly define what is and is not covered.",
+        "safety_notes" => "Clear, actionable, appropriately urgent.",
+        "training_details" => "Clear prerequisites and requirements.",
+        "specification" => "Technically precise, concise specification.",
+        "description" => "Clear, factual description of the item.",
+        "meaning" => "Technically precise, plain language definition.",
+        "revision_notes" => "Describe what changed and why. Past tense, factual.",
+        _ => "Clear, concise, and professional.",
+    }
+}
+
+async fn get_key_for_provider(provider: &str, pool: &SqlitePool) -> Result<String, String> {
+    let account = keyring_account(provider);
+    if let Ok(entry) = keyring::Entry::new(KEYRING_SERVICE, account) {
+        if let Ok(key) = entry.get_password() {
+            if !key.is_empty() {
+                return Ok(key);
+            }
+        }
+    }
+    let config_key = format!("ai_key_{}", provider);
+    let row: Option<(String,)> = sqlx::query_as("SELECT value FROM app_config WHERE key = ?")
+        .bind(&config_key)
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    match row {
+        Some((key,)) if !key.is_empty() => Ok(key),
+        _ => Err(format!("No API key configured for {}. Please add one in Settings.", provider)),
+    }
+}
+
 #[tauri::command]
 pub fn generate_sop_id() -> String {
     let year = Utc::now().year();
@@ -141,6 +195,20 @@ pub struct Definition {
     pub term: String,
     pub meaning: String,
     pub sort_order: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct AiEnhancement {
+    pub id: String,
+    pub sop_id: String,
+    pub entity_type: String,
+    pub entity_id: String,
+    pub field_name: String,
+    pub original_text: String,
+    pub enhanced_text: String,
+    pub provider: String,
+    pub model: String,
+    pub enhanced_at: String,
 }
 
 // --------------------------------------------------------
@@ -1298,6 +1366,8 @@ pub struct SopBundle {
     pub step_images: Vec<StepImage>,
     pub step_tools: Vec<StepTool>,
     pub step_items: Vec<StepItem>,
+    #[serde(default)]
+    pub ai_enhancements: Vec<AiEnhancement>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1386,6 +1456,14 @@ pub async fn export_sop(
         step_items = q.fetch_all(pool).await.map_err(|e| e.to_string())?;
     }
 
+    let ai_enhancements = sqlx::query_as::<sqlx::Sqlite, AiEnhancement>(
+        "SELECT * FROM ai_enhancements WHERE sop_id = ?",
+    )
+    .bind(&sop_id_uuid)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
     let bundle = SopBundle {
         sop: sop.clone(),
         revisions,
@@ -1396,6 +1474,7 @@ pub async fn export_sop(
         step_images,
         step_tools,
         step_items,
+        ai_enhancements,
     };
 
     // 2. Prepare Temp Directory
@@ -1576,6 +1655,11 @@ pub async fn finalize_import(
             if let Some(iid) = &si.item_id { si.item_id = item_id_map.get(iid).cloned().or(Some(iid.clone())); }
         }
 
+        for enh in &mut bundle.ai_enhancements {
+            enh.id = Uuid::new_v4().to_string();
+            enh.sop_id = new_sop_uuid.clone();
+        }
+
         new_sop_uuid
     } else {
         // Replace mode: Delete existing first
@@ -1588,8 +1672,9 @@ pub async fn finalize_import(
         sqlx::query("DELETE FROM tools WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
         sqlx::query("DELETE FROM definitions WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
         sqlx::query("DELETE FROM revisions WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
+        sqlx::query("DELETE FROM ai_enhancements WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
         sqlx::query("DELETE FROM sops WHERE id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
-        
+
         id
     };
 
@@ -1673,6 +1758,16 @@ pub async fn finalize_import(
         sqlx::query("INSERT INTO step_items VALUES (?, ?, ?, ?, ?, ?)")
             .bind(si.id).bind(si.step_id).bind(si.item_id).bind(si.free_text).bind(si.quantity).bind(si.unit)
             .execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    }
+
+    for enh in bundle.ai_enhancements {
+        sqlx::query(
+            "INSERT INTO ai_enhancements (id, sop_id, entity_type, entity_id, field_name, original_text, enhanced_text, provider, model, enhanced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(enh.id).bind(enh.sop_id).bind(enh.entity_type).bind(enh.entity_id)
+        .bind(enh.field_name).bind(enh.original_text).bind(enh.enhanced_text)
+        .bind(enh.provider).bind(enh.model).bind(enh.enhanced_at)
+        .execute(&mut *tx).await.map_err(|e| e.to_string())?;
     }
 
     // Copy Images
@@ -2078,4 +2173,340 @@ pub async fn export_pdf(
     }
 
     Ok(())
+}
+
+// --------------------------------------------------------
+// AI Key Management (Keyring + app_config fallback)
+// --------------------------------------------------------
+
+#[tauri::command]
+pub fn check_keyring_available() -> bool {
+    match keyring::Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT_ANTHROPIC) {
+        Ok(entry) => match entry.get_password() {
+            Ok(_) | Err(keyring::Error::NoEntry) => true,
+            Err(_) => false,
+        },
+        Err(_) => false,
+    }
+}
+
+#[tauri::command]
+pub async fn set_ai_key(
+    provider: String,
+    api_key: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<(), String> {
+    let account = keyring_account(&provider);
+    if let Ok(entry) = keyring::Entry::new(KEYRING_SERVICE, account) {
+        if entry.set_password(&api_key).is_ok() {
+            return Ok(());
+        }
+    }
+    // Fallback: store in app_config
+    let config_key = format!("ai_key_{}", provider);
+    sqlx::query("INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+        .bind(&config_key)
+        .bind(&api_key)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_ai_key(
+    provider: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Option<String>, String> {
+    let account = keyring_account(&provider);
+    if let Ok(entry) = keyring::Entry::new(KEYRING_SERVICE, account) {
+        match entry.get_password() {
+            Ok(key) if !key.is_empty() => return Ok(Some(key)),
+            _ => {}
+        }
+    }
+    let config_key = format!("ai_key_{}", provider);
+    let row: Option<(String,)> = sqlx::query_as("SELECT value FROM app_config WHERE key = ?")
+        .bind(&config_key)
+        .fetch_optional(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(row.map(|(v,)| v).filter(|v| !v.is_empty()))
+}
+
+#[tauri::command]
+pub async fn delete_ai_key(
+    provider: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<(), String> {
+    let account = keyring_account(&provider);
+    if let Ok(entry) = keyring::Entry::new(KEYRING_SERVICE, account) {
+        let _ = entry.delete_credential();
+    }
+    let config_key = format!("ai_key_{}", provider);
+    sqlx::query("DELETE FROM app_config WHERE key = ?")
+        .bind(&config_key)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn test_ai_connection(
+    provider: String,
+    api_key: String,
+) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let test_text = "Tighten bolts to specified torque.";
+
+    match provider.as_str() {
+        "anthropic" => {
+            let body = serde_json::json!({
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 32,
+                "system": AI_SYSTEM_PROMPT,
+                "messages": [{"role": "user", "content": test_text}]
+            });
+            let resp = client
+                .post("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", &api_key)
+                .header("anthropic-version", "2023-06-01")
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if resp.status().as_u16() == 401 {
+                return Err("Invalid API key.".to_string());
+            }
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Anthropic API error {}: {}", status, body));
+            }
+        }
+        "openai" => {
+            let body = serde_json::json!({
+                "model": "gpt-4o-mini",
+                "max_tokens": 32,
+                "messages": [
+                    {"role": "system", "content": AI_SYSTEM_PROMPT},
+                    {"role": "user", "content": test_text}
+                ]
+            });
+            let resp = client
+                .post("https://api.openai.com/v1/chat/completions")
+                .header("Authorization", format!("Bearer {}", api_key))
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if resp.status().as_u16() == 401 {
+                return Err("Invalid API key.".to_string());
+            }
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("OpenAI API error {}: {}", status, body));
+            }
+        }
+        "gemini" => {
+            let url = format!(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
+                api_key
+            );
+            let body = serde_json::json!({
+                "system_instruction": {"parts": [{"text": AI_SYSTEM_PROMPT}]},
+                "contents": [{"parts": [{"text": test_text}]}],
+                "generationConfig": {"maxOutputTokens": 32}
+            });
+            let resp = client
+                .post(&url)
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if resp.status().as_u16() == 400 || resp.status().as_u16() == 403 {
+                return Err("Invalid API key.".to_string());
+            }
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Gemini API error {}: {}", status, body));
+            }
+        }
+        _ => return Err(format!("Unknown provider: {}", provider)),
+    }
+
+    Ok(())
+}
+
+// --------------------------------------------------------
+// AI Text Enhancement
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn enhance_text(
+    provider: String,
+    field_name: String,
+    original_text: String,
+    sop_title: Option<String>,
+    department: Option<String>,
+    step_number: Option<i64>,
+    total_steps: Option<i64>,
+    prev_step_action: Option<String>,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<String, String> {
+    let api_key = get_key_for_provider(&provider, state.inner()).await?;
+    let instruction = field_instruction(&field_name);
+
+    let mut context = String::new();
+    if let Some(title) = &sop_title {
+        context.push_str(&format!("SOP Title: {}\n", title));
+    }
+    if let Some(dept) = &department {
+        if !dept.is_empty() {
+            context.push_str(&format!("Department: {}\n", dept));
+        }
+    }
+    if let (Some(n), Some(total)) = (step_number, total_steps) {
+        context.push_str(&format!("Step {} of {}\n", n, total));
+    }
+    if let Some(prev) = &prev_step_action {
+        if !prev.is_empty() {
+            context.push_str(&format!("Previous step: {}\n", prev));
+        }
+    }
+
+    let user_message = format!(
+        "{}{}\n\nText to improve:\n{}",
+        context,
+        instruction,
+        original_text
+    );
+
+    let client = reqwest::Client::new();
+
+    let enhanced = match provider.as_str() {
+        "anthropic" => {
+            let body = serde_json::json!({
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 1024,
+                "system": AI_SYSTEM_PROMPT,
+                "messages": [{"role": "user", "content": user_message}]
+            });
+            let resp = client
+                .post("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", &api_key)
+                .header("anthropic-version", "2023-06-01")
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Anthropic error {}: {}", status, body));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            json["content"][0]["text"].as_str().unwrap_or("").trim().to_string()
+        }
+        "openai" => {
+            let body = serde_json::json!({
+                "model": "gpt-4o-mini",
+                "max_tokens": 1024,
+                "messages": [
+                    {"role": "system", "content": AI_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message}
+                ]
+            });
+            let resp = client
+                .post("https://api.openai.com/v1/chat/completions")
+                .header("Authorization", format!("Bearer {}", api_key))
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("OpenAI error {}: {}", status, body));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            json["choices"][0]["message"]["content"].as_str().unwrap_or("").trim().to_string()
+        }
+        "gemini" => {
+            let url = format!(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
+                api_key
+            );
+            let body = serde_json::json!({
+                "system_instruction": {"parts": [{"text": AI_SYSTEM_PROMPT}]},
+                "contents": [{"parts": [{"text": user_message}]}],
+                "generationConfig": {"maxOutputTokens": 1024}
+            });
+            let resp = client
+                .post(&url)
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Gemini error {}: {}", status, body));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            json["candidates"][0]["content"]["parts"][0]["text"]
+                .as_str()
+                .unwrap_or("")
+                .trim()
+                .to_string()
+        }
+        _ => return Err(format!("Unknown provider: {}", provider)),
+    };
+
+    if enhanced.is_empty() {
+        return Err("AI returned an empty response.".to_string());
+    }
+
+    Ok(enhanced)
+}
+
+#[tauri::command]
+pub async fn save_ai_enhancement(
+    payload: AiEnhancement,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO ai_enhancements (id, sop_id, entity_type, entity_id, field_name, original_text, enhanced_text, provider, model, enhanced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(&payload.id)
+    .bind(&payload.sop_id)
+    .bind(&payload.entity_type)
+    .bind(&payload.entity_id)
+    .bind(&payload.field_name)
+    .bind(&payload.original_text)
+    .bind(&payload.enhanced_text)
+    .bind(&payload.provider)
+    .bind(&payload.model)
+    .bind(&payload.enhanced_at)
+    .execute(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_ai_enhancements(
+    sop_id: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Vec<AiEnhancement>, String> {
+    sqlx::query_as::<sqlx::Sqlite, AiEnhancement>(
+        "SELECT * FROM ai_enhancements WHERE sop_id = ? ORDER BY enhanced_at ASC",
+    )
+    .bind(sop_id)
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())
 }

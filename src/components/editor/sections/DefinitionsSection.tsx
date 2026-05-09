@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSopStore } from '@/store';
 import { invoke } from '@tauri-apps/api/core';
 import { Definition } from '@/types';
@@ -7,9 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
+import { SparkleButton } from '@/components/shared/SparkleButton';
+import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
 
 export function DefinitionsSection() {
   const { currentSop, definitions, setDefinitions, updateDefinitionField, setSaving, setDirty, setLastSavedAt } = useSopStore();
+  const [aiPreview, setAiPreview] = useState<{ defId: string; original: string; enhanced: string } | null>(null);
+  const [aiProvider, setAiProvider] = useState('anthropic');
+
+  useEffect(() => {
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
+      .then(p => { if (p) setAiProvider(p); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (currentSop) {
@@ -109,13 +119,26 @@ export function DefinitionsSection() {
                       className="font-bold border-none focus-visible:ring-0 px-0 h-auto bg-transparent shadow-none"
                     />
                   </TableCell>
-                  <TableCell className="align-top pt-4">
-                    <Textarea 
-                      value={def.meaning}
-                      onChange={(e) => updateDefinitionField(def.id, 'meaning', e.target.value)}
-                      placeholder="Personal Protective Equipment..."
-                      className="min-h-[40px] border-none focus-visible:ring-0 px-0 h-auto bg-transparent shadow-none resize-none overflow-hidden"
-                    />
+                  <TableCell className="align-top pt-3">
+                    <div className="flex items-start gap-1">
+                      <Textarea
+                        value={def.meaning}
+                        onChange={(e) => updateDefinitionField(def.id, 'meaning', e.target.value)}
+                        placeholder="Personal Protective Equipment..."
+                        className="min-h-[40px] border-none focus-visible:ring-0 px-0 h-auto bg-transparent shadow-none resize-none overflow-hidden flex-1"
+                      />
+                      <SparkleButton
+                        value={def.meaning}
+                        fieldName="meaning"
+                        entityType="definition"
+                        entityId={def.id}
+                        sopId={currentSop!.id}
+                        sopTitle={currentSop?.title}
+                        department={currentSop?.department ?? undefined}
+                        onPreview={enhanced => setAiPreview({ defId: def.id, original: def.meaning, enhanced })}
+                        className="mt-1 shrink-0"
+                      />
+                    </div>
                   </TableCell>
                   <TableCell className="text-right align-top pt-3">
                     <Button 
@@ -141,6 +164,24 @@ export function DefinitionsSection() {
               Add Another Term
            </Button>
         </div>
+      )}
+
+      {aiPreview && currentSop && (
+        <AIPreviewPanel
+          open
+          originalText={aiPreview.original}
+          enhancedText={aiPreview.enhanced}
+          fieldName="meaning"
+          entityType="definition"
+          entityId={aiPreview.defId}
+          sopId={currentSop.id}
+          provider={aiProvider}
+          onAccept={(text) => {
+            updateDefinitionField(aiPreview.defId, 'meaning', text);
+            setAiPreview(null);
+          }}
+          onReject={() => setAiPreview(null)}
+        />
       )}
     </div>
   );

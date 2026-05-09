@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/shared/DatePicker';
+import { SparkleButton } from '@/components/shared/SparkleButton';
+import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
 
 interface RevisionModalProps {
   open: boolean;
@@ -20,24 +23,36 @@ interface RevisionModalProps {
   onDiscard: () => void;
   onCancel: () => void;
   mode?: 'exit' | 'log';
+  sopId?: string;
+  sopTitle?: string;
+  department?: string;
 }
 
-export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCancel, mode = 'exit' }: RevisionModalProps) {
+export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCancel, mode = 'exit', sopId, sopTitle, department }: RevisionModalProps) {
   const [notes, setNotes] = useState('');
   const [revisedBy, setRevisedBy] = useState('');
   const [status, setStatus] = useState('Draft');
   const [approvedBy, setApprovedBy] = useState('');
   const [approvalDate, setApprovalDate] = useState('');
+  const [aiPreview, setAiPreview] = useState<{ original: string; enhanced: string } | null>(null);
+  const [aiProvider, setAiProvider] = useState('anthropic');
+  const entityId = useRef(crypto.randomUUID());
+
+  useEffect(() => {
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
+      .then(p => { if (p) setAiProvider(p); })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onConfirm({ notes, revisedBy, status, approvedBy, approvalDate });
-    // Reset
     setNotes('');
     setRevisedBy('');
     setStatus('Draft');
     setApprovedBy('');
     setApprovalDate('');
+    entityId.current = crypto.randomUUID();
   };
 
   return (
@@ -49,7 +64,7 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
               {mode === 'exit' ? 'Unsaved Changes Detected' : 'Log New Revision'}
             </DialogTitle>
             <DialogDescription>
-              {mode === 'exit' 
+              {mode === 'exit'
                 ? 'You have unsaved changes. Would you like to log a revision for document control?'
                 : 'Log a new revision record to document major changes or approvals.'}
             </DialogDescription>
@@ -57,11 +72,25 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
 
           <div className="grid gap-4 py-6">
             <div className="space-y-2">
-              <Label htmlFor="rev-notes">Revision Notes (Required)</Label>
-              <Textarea 
-                id="rev-notes" 
-                value={notes} 
-                onChange={(e) => setNotes(e.target.value)} 
+              <div className="flex items-center justify-between">
+                <Label htmlFor="rev-notes">Revision Notes (Required)</Label>
+                {sopId && (
+                  <SparkleButton
+                    value={notes}
+                    fieldName="revision_notes"
+                    entityType="revision"
+                    entityId={entityId.current}
+                    sopId={sopId}
+                    sopTitle={sopTitle}
+                    department={department}
+                    onPreview={enhanced => setAiPreview({ original: notes, enhanced })}
+                  />
+                )}
+              </div>
+              <Textarea
+                id="rev-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
                 placeholder="Briefly describe what was changed..."
                 required
               />
@@ -69,16 +98,16 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rev-by">Revised By</Label>
-                <Input 
-                  id="rev-by" 
-                  value={revisedBy} 
-                  onChange={(e) => setRevisedBy(e.target.value)} 
+                <Input
+                  id="rev-by"
+                  value={revisedBy}
+                  onChange={(e) => setRevisedBy(e.target.value)}
                   placeholder="Your Name"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rev-status">Status</Label>
-                <select 
+                <select
                   id="rev-status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
@@ -95,19 +124,16 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="appr-by">Approved By</Label>
-                  <Input 
-                    id="appr-by" 
-                    value={approvedBy} 
-                    onChange={(e) => setApprovedBy(e.target.value)} 
+                  <Input
+                    id="appr-by"
+                    value={approvedBy}
+                    onChange={(e) => setApprovedBy(e.target.value)}
                     placeholder="Approver Name"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="appr-date">Approval Date</Label>
-                  <DatePicker 
-                    value={approvalDate} 
-                    onChange={setApprovalDate} 
-                  />
+                  <DatePicker value={approvalDate} onChange={setApprovalDate} />
                 </div>
               </div>
             )}
@@ -130,6 +156,24 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {aiPreview && sopId && (
+        <AIPreviewPanel
+          open
+          originalText={aiPreview.original}
+          enhancedText={aiPreview.enhanced}
+          fieldName="revision_notes"
+          entityType="revision"
+          entityId={entityId.current}
+          sopId={sopId}
+          provider={aiProvider}
+          onAccept={(text) => {
+            setNotes(text);
+            setAiPreview(null);
+          }}
+          onReject={() => setAiPreview(null)}
+        />
+      )}
     </Dialog>
   );
 }
