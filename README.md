@@ -2,7 +2,7 @@
 
 > **Alpha status:** This software is in an early release phase. While functional end-to-end, it may contain bugs or breaking changes. Always maintain independent backups of your SOP data.
 
-Current app version: **0.1.8**
+Current app version: **0.2.0**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
@@ -19,30 +19,31 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - **Industrial rigor:** Built-in revision history, approval metadata, soft delete, and unique SOP ID tracking.
 - **Visual first:** Integrated image crop and annotation tools designed for step-by-step mechanical and technical instructions.
 - **Portable:** Export individual SOPs to self-contained `.sop` bundles for offline sharing across high-security facilities.
+- **AI-assisted writing:** Optional AI text enhancement on every prose field using your own API key. Supports Anthropic, OpenAI, and Gemini.
 
 ---
 
 ## Screenshots
 
-**SOP Library** - browse, search, and filter all documents by project tag and approval status.
+**SOP Library** — browse, search, and filter all documents by project tag and approval status.
 
 ![SOP Library](docs/screenshots/01-home-sop-library.png)
 
-**Document Viewer** - structured read-only view with full header, purpose, scope, safety notes, and step procedure rendered as a formatted document.
+**Document Viewer** — structured read-only view with full header, purpose, scope, safety notes, and step procedure rendered as a formatted document.
 
 ![Document Viewer](docs/screenshots/02-viewer-document.png)
 
-**Step Editor** - author sequential steps with action text, notes, expected output, visual aids, and attached tools and parts.
+**AI Enhancement** — before/after preview before accepting a rewrite.
 
-![Step Editor](docs/screenshots/03-editor-procedure-steps.png)
+![AI Enhancement Preview](docs/screenshots/05-ai-enhancement-preview.png)
 
-**Revision History** - full audit trail of every revision with status, approver, and date.
+**Procedure Editor** — author sequential steps with action text, notes, expected output, visual aids, and attached tools and parts. Sparkle buttons available on every field.
 
-![Revision History](docs/screenshots/04-editor-revisions.png)
+![Procedure Editor](docs/screenshots/06-editor-procedure-steps.png)
 
-**Document Header** - structured metadata including department, owner, dates, regulatory references, and distribution list.
+**Revision History** — full audit trail of every revision with status, approver, and date.
 
-![Document Header](docs/screenshots/05-editor-header.png)
+![Revision History](docs/screenshots/07-editor-revisions.png)
 
 ---
 
@@ -65,9 +66,20 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - Full Tools and Items library with search and clone
 - Item-level Qty field for SOP-level bill of materials
 - Step editor with image annotation, tool/item attachments, inline quantity/unit entry, drag-to-reorder, and add-step scroll preservation
+- AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key; keys stored in the OS keyring
 - Export SOPs to printable, text-selectable PDF via headless Chromium/Edge print-to-PDF
 - Portable `.sop` import/export bundles
 - In-app auto-update with launch dialog, Settings check, progress feedback, error details, and manual release fallback
+
+---
+
+## Platforms
+
+| Platform | Status | Notes |
+|---|---|---|
+| Linux | ✅ Supported | AppImage (recommended) or .deb |
+| Windows | ✅ Supported | NSIS .exe (recommended) or .msi |
+| macOS | ✅ Supported | Apple Silicon (M1+) only — .dmg. App is unsigned; right-click → Open on first launch to bypass Gatekeeper. |
 
 ---
 
@@ -113,7 +125,7 @@ Simple-SOP/
 |-- docs/
 |   |-- SOP_BUILDER_SPEC.md          # Canonical product and implementation spec
 |   |-- index.html                   # Public documentation/marketing page
-|   `-- sop-pdf-template.html        # PDF rendering reference
+|   `-- screenshots/                 # Landing page screenshots
 |-- public/
 |   `-- pdf-template.html            # Runtime PDF export template
 |-- src/                             # React frontend (TypeScript)
@@ -138,14 +150,15 @@ Simple-SOP/
 
 ## Architecture Notes
 
-- Auto-save triggers on field changes with debounce.
+- Auto-save triggers on field changes with 500ms debounce.
 - SQLite runs in WAL mode with foreign keys enabled.
 - DB integrity check runs at initialization.
 - Images are stored on disk by UUID; SQLite holds only references.
 - SOP IDs follow `SOP-{YYYY}-{6CHAR}` format with an unambiguous character set.
 - `.sop` bundles contain a JSON snapshot plus all referenced image files.
 - PDF export injects SOP data into `public/pdf-template.html`, embeds images as base64 data URIs, and renders through a Chromium-family browser in headless print-to-PDF mode.
-- Updates are served via a signed `latest.json` on GitHub Releases.
+- AI keys are stored in the OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) with a plaintext SQLite fallback if the keyring is unavailable.
+- Updates are served via a signed `latest.json` on GitHub Releases, covering Linux x86_64, Windows x86_64, and macOS aarch64.
 
 See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 
@@ -157,7 +170,7 @@ See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 - Keep the Viewer and `public/pdf-template.html` aligned.
 - Use Tauri commands for all persistent writes.
 - Validate frontend (`npm run build`) and Rust (`cargo check` in `src-tauri/`) after meaningful changes.
-- For releases, bump the app version, push to `master`, and manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.1.8`.
+- For releases, bump the version in both `src-tauri/Cargo.toml` and `package.json`, push to `master`, and manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.2.0`.
 
 ---
 
@@ -165,7 +178,9 @@ See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 
 - Linux `.deb` installs cannot self-update in place through the Tauri updater. Use the AppImage for auto-update support, or download `.deb` releases manually.
 - Windows installers are unsigned. Windows SmartScreen may warn on the first install; in-app updater downloads are still signature-verified by Tauri.
-- The production bundle depends on a Chromium-family browser being available for PDF export.
+- macOS builds are unsigned and unnotarized. Gatekeeper will block the app on first launch — right-click the app → **Open** → **Open** to proceed. Subsequent launches and auto-updates are unaffected.
+- macOS Intel (x86_64) is not supported. Apple Silicon (M1 or later) only.
+- PDF export requires a Chromium-family browser (Chrome, Edge, Chromium, or Brave) to be installed on the machine. A warning is shown in the app if none is detected.
 
 ---
 

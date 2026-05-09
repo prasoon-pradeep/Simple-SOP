@@ -9,7 +9,7 @@ A cross-platform **offline desktop application** for authoring Standard Operatin
 
 **Primary output:** A pixel-accurate, text-selectable PDF exported from an HTML template rendered by headless Chromium/Edge.
 **Secondary output:** A portable `.sop` file (self-contained bundle) that can be transferred between machines and fully reconstructed.  
-**Target platforms:** Linux and Windows (day one). macOS later.  
+**Target platforms:** Linux, Windows, and macOS (Apple Silicon, M1+).  
 **Auth:** None. No user accounts.  
 **Auto-save:** Every change persisted to SQLite immediately. No manual save required.
 
@@ -896,8 +896,8 @@ When a new version is released, users who already have the app installed are aut
 
 #### Versioning
 - [x] `Cargo.toml`, `Cargo.lock`, `package.json`, and `package-lock.json` are kept in sync for releases.
-- [x] Current release version in source: `0.1.8`.
-- [x] To ship a new version: bump versions, push to `master`, then manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.1.8`.
+- [x] Current release version in source: `0.2.0`.
+- [x] To ship a new version: bump versions in both `src-tauri/Cargo.toml` and `package.json`, push to `master`, then manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.2.0`.
 - [ ] Automate version synchronization so only one file needs to be edited before release.
 
 #### Signing keypair
@@ -923,14 +923,15 @@ The word `latest` is a first-class GitHub feature — it always redirects to the
   "notes": "What changed in this release",
   "pub_date": "2026-05-03T00:00:00Z",
   "platforms": {
-    "linux-x86_64":   { "url": "https://github.com/.../releases/download/v0.2.0/sop-builder.AppImage", "signature": "..." },
-    "windows-x86_64": { "url": "https://github.com/.../releases/download/v0.2.0/sop-builder.msi",      "signature": "..." }
+    "linux-x86_64":   { "url": "https://github.com/.../releases/download/v0.2.0/sop-builder.AppImage",    "signature": "..." },
+    "windows-x86_64": { "url": "https://github.com/.../releases/download/v0.2.0/sop-builder.exe",         "signature": "..." },
+    "darwin-aarch64": { "url": "https://github.com/.../releases/download/v0.2.0/sop-builder.app.tar.gz",  "signature": "..." }
   }
 }
 ```
 
 #### CI workflow changes
-- [x] Unified `release.yml` workflow: builds Linux + Windows, signs artifacts with `TAURI_SIGNING_PRIVATE_KEY`, generates `latest.json`, creates GitHub Release tagged `v{tag}`, uploads all installers + `latest.json`
+- [x] Unified `release.yml` workflow: builds Linux, Windows, and macOS (Apple Silicon), signs artifacts with `TAURI_SIGNING_PRIVATE_KEY`, generates `latest.json`, creates GitHub Release tagged `v{tag}`, uploads all installers + `latest.json`
 - [x] Workflow is manually triggered (`workflow_dispatch`) with a `tag` input — release timing is fully controlled
 
 #### Rust — update check on launch
@@ -947,7 +948,10 @@ The word `latest` is a first-class GitHub feature — it always redirects to the
 - Linux `.deb` installs: the Tauri updater can download but cannot replace a system-installed binary. AppImage is required for auto-update on Linux; `.deb` users get error details and a manual releases fallback link.
 
 #### Windows note
-Without a paid code signing certificate, Windows SmartScreen shows an *"unrecognised app"* warning on the **initial** `.exe`/`.msi` install only. Once installed, all subsequent updates via the updater are silent and bypasses SmartScreen entirely. Acceptable for v1.
+Without a paid code signing certificate, Windows SmartScreen shows an *"unrecognised app"* warning on the **initial** `.exe`/`.msi` install only. Once installed, all subsequent updates via the updater are silent and bypass SmartScreen entirely. Acceptable for v1.
+
+#### macOS note
+The app is unsigned and unnotarized. Gatekeeper blocks the first launch — user must right-click → **Open** → **Open** to proceed. Subsequent launches and auto-updates (via Tauri updater, which extracts in-process) are unaffected. Apple Silicon (aarch64) only; Intel Mac not supported.
 
 ### PHASE 12 — Polish & Testing
 - [ ] Linux end-to-end test: create → view → edit → export PDF → export .sop → import on fresh install
@@ -1071,7 +1075,7 @@ Sidebar switches mode based on context. Transition is instant (no animation need
 [footer — pinned bottom]
   □ Settings
   ● DB healthy
-  v0.1.8-alpha
+  v0.2.0-alpha
 ```
 
 **Mode B — Editor Nav (shown when SOP is open in editor)**
@@ -1252,7 +1256,7 @@ Sidebar switches mode based on context. Transition is instant (no animation need
 - ~~PDF HTML template visual design~~ — **DONE**: `sop-pdf-template.html` complete as of 2026-05-01
 - Excel export (explicitly deferred, do not build)
 - Formal approval routing workflow (deferred, manual status field only for now)
-- Mac platform support (deferred)
+- ~~Mac platform support (deferred)~~ — **DONE**: macOS Apple Silicon supported as of v0.2.0
 - Full-text search inside step content (deferred)
 - Field-level dropdowns for Department, Project (deferred — free text for now)
 

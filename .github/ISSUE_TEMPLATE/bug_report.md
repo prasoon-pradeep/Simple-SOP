@@ -29,8 +29,8 @@ labels: bug
 
 ## Environment
 - **OS**: <!-- e.g. Windows 11 22H2, Ubuntu 22.04 -->
-- **Version**: <!-- e.g. v0.1.8 - check Settings or the installer/release version -->
-- **Install format**: <!-- .exe / .msi / AppImage / .deb -->
+- **Version**: <!-- e.g. v0.2.0 - check Settings or the installer/release version -->
+- **Install format**: <!-- .exe / .msi / AppImage / .deb / .dmg -->
 
 ## Reproducibility
 <!-- Always / Sometimes / Only once -->
