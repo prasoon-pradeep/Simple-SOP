@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::Utc;
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use std::str::FromStr;
 use tauri::{AppHandle, Manager};
@@ -185,6 +186,78 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub async fn run_daily_backup(app_handle: &AppHandle) {
+    let app_dir = match app_handle.path().app_data_dir() {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("Backup: failed to get app data dir: {}", e);
+            return;
+        }
+    };
+
+    let backups_dir = app_dir.join("backups");
+    if let Err(e) = std::fs::create_dir_all(&backups_dir) {
+        eprintln!("Backup: failed to create backups dir: {}", e);
+        return;
+    }
+
+    let pool = app_handle.state::<SqlitePool>();
+    let today = Utc::now().format("%Y-%m-%d").to_string();
+
+    let last_backup: Option<(String,)> =
+        sqlx::query_as("SELECT value FROM app_config WHERE key = 'last_backup_date'")
+            .fetch_optional(pool.inner())
+            .await
+            .unwrap_or(None);
+
+    if let Some((date,)) = last_backup {
+        if date == today {
+            return;
+        }
+    }
+
+    let backup_path = backups_dir.join(format!("sop-builder-{}.db", today));
+    let _ = std::fs::remove_file(&backup_path);
+
+    // VACUUM INTO requires forward slashes even on Windows
+    let backup_path_str = backup_path.to_string_lossy().replace('\\', "/");
+    let vacuum_sql = format!("VACUUM INTO '{}'", backup_path_str);
+
+    if let Err(e) = sqlx::query(&vacuum_sql).execute(pool.inner()).await {
+        eprintln!("Backup: VACUUM INTO failed: {}", e);
+        return;
+    }
+
+    let _ = sqlx::query(
+        "INSERT INTO app_config (key, value) VALUES ('last_backup_date', ?) \
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    )
+    .bind(&today)
+    .execute(pool.inner())
+    .await;
+
+    // Prune: keep only the 30 most recent backups
+    let mut backups: Vec<_> = match std::fs::read_dir(&backups_dir) {
+        Ok(rd) => rd
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                let name = e.file_name();
+                let n = name.to_string_lossy();
+                n.starts_with("sop-builder-") && n.ends_with(".db")
+            })
+            .collect(),
+        Err(_) => return,
+    };
+
+    backups.sort_by_key(|e| e.file_name());
+
+    if backups.len() > 30 {
+        for old in &backups[..backups.len() - 30] {
+            let _ = std::fs::remove_file(old.path());
+        }
+    }
 }
 
 async fn migrate_db(pool: &SqlitePool) -> Result<()> {
