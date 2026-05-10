@@ -1020,6 +1020,17 @@ The OS is detected at runtime in Rust (`std::env::consts::OS`) so the correct pa
 
 **App identifier:** Current identifier is `com.pp.sop-builder` in `tauri.conf.json`. The old temporary identifier issue is resolved.
 
+**Dev/Prod data isolation (`tauri.dev.conf.json`):**
+
+`npm run tauri dev` and the installed production app share the same app data directory (`~/Library/Application Support/com.pp.sop-builder/` on macOS) because both use the same `identifier` in `tauri.conf.json`. This means dev experiments, test data, and schema migrations run against the real production SQLite database.
+
+Fix: create `src-tauri/tauri.dev.conf.json` — Tauri v2 automatically merges this file during `tauri dev` only; it is ignored by `tauri build`. Set the identifier to `com.pp.sop-builder.dev` so the dev build gets its own isolated data directory.
+
+- [ ] Create `src-tauri/tauri.dev.conf.json` with `identifier: "com.pp.sop-builder.dev"`
+- [ ] Verify `npm run tauri dev` creates a separate app data dir (check `~/Library/Application Support/` on macOS)
+- [ ] Confirm production build (`npm run tauri build`) is unaffected — identifier stays `com.pp.sop-builder`
+- [ ] Confirm the in-app updater does not prompt during dev (debug binary version won't match release)
+
 ### KNOWN ISSUES
 - **Linux `.deb` auto-update:** `.deb` installs cannot self-replace through Tauri updater. Use AppImage for in-app auto-update or manually download `.deb` releases.
 - **Windows SmartScreen:** Without a paid code-signing certificate, the initial installer can show an unrecognised-app warning. Updater artifacts are still Tauri-signed.
