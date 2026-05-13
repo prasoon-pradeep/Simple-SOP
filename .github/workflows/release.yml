@@ -217,28 +217,30 @@ jobs:
           REPO_URL="https://github.com/prasoon-pradeep/Simple-SOP/releases/download/${TAG}"
 
           NOTES="${{ github.event.inputs.notes }}"
+          PUB_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-          cat > latest.json << EOF
-          {
-            "version": "${VERSION}",
-            "notes": "${NOTES}",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "platforms": {
-              "linux-x86_64": {
-                "signature": "${LINUX_SIG}",
-                "url": "${REPO_URL}/$(basename "$LINUX_BUNDLE")"
-              },
-              "windows-x86_64": {
-                "signature": "${WINDOWS_SIG}",
-                "url": "${REPO_URL}/$(basename "$WINDOWS_BUNDLE")"
-              },
-              "darwin-aarch64": {
-                "signature": "${MACOS_SIG}",
-                "url": "${REPO_URL}/$(basename "$MACOS_BUNDLE")"
+          # Use jq --arg so all values are JSON-escaped automatically.
+          # This prevents broken latest.json when notes contain newlines, quotes, etc.
+          jq -n \
+            --arg version    "$VERSION" \
+            --arg notes      "$NOTES" \
+            --arg pub_date   "$PUB_DATE" \
+            --arg linux_sig  "$LINUX_SIG" \
+            --arg linux_url  "${REPO_URL}/$(basename "$LINUX_BUNDLE")" \
+            --arg win_sig    "$WINDOWS_SIG" \
+            --arg win_url    "${REPO_URL}/$(basename "$WINDOWS_BUNDLE")" \
+            --arg mac_sig    "$MACOS_SIG" \
+            --arg mac_url    "${REPO_URL}/$(basename "$MACOS_BUNDLE")" \
+            '{
+              version:  $version,
+              notes:    $notes,
+              pub_date: $pub_date,
+              platforms: {
+                "linux-x86_64":   { signature: $linux_sig, url: $linux_url },
+                "windows-x86_64": { signature: $win_sig,   url: $win_url   },
+                "darwin-aarch64": { signature: $mac_sig,   url: $mac_url   }
               }
-            }
-          }
-          EOF
+            }' > latest.json
 
           echo "Generated latest.json:"
           cat latest.json
