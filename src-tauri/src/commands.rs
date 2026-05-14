@@ -2219,11 +2219,9 @@ pub async fn set_ai_key(
     api_key: String,
     state: tauri::State<'_, SqlitePool>,
 ) -> Result<bool, String> {
-    // Attempt keyring write and immediately verify with a read-back.
-    // Only skip SQLite if the keyring round-trip succeeds — this avoids the
-    // Linux secret-service failure mode where set_password succeeds but
-    // get_password silently fails later (session lock / unlock race).
-    // Returns true if stored in keyring, false if stored in SQLite plaintext.
+    // Attempt keyring write and verify with a same-frame read-back (best-effort).
+    // Returns true if keyring round-trip succeeded (key also has encrypted copy),
+    // false if keyring was unavailable or unverifiable (SQLite only).
     let account = keyring_account(&provider);
     let keyring_verified = keyring::Entry::new(KEYRING_SERVICE, account)
         .ok()
@@ -2234,16 +2232,18 @@ pub async fn set_ai_key(
         })
         .is_some();
 
-    if !keyring_verified {
-        // Keyring unavailable or unreadable — persist in SQLite as fallback.
-        let config_key = format!("ai_key_{}", provider);
-        sqlx::query("INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-            .bind(&config_key)
-            .bind(&api_key)
-            .execute(state.inner())
-            .await
-            .map_err(|e| e.to_string())?;
-    }
+    // Always write to SQLite as the reliable source of truth.
+    // Keyring is best-effort extra security; cross-async-task reads can fail on
+    // Windows Credential Manager and Linux secret-service even when the same-frame
+    // write+read-back verified successfully. SQLite guarantees the key is always
+    // retrievable by get_key_for_provider regardless of platform keyring behaviour.
+    let config_key = format!("ai_key_{}", provider);
+    sqlx::query("INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+        .bind(&config_key)
+        .bind(&api_key)
+        .execute(state.inner())
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(keyring_verified)
 }

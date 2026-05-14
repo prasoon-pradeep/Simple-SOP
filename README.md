@@ -2,7 +2,7 @@
 
 > **Alpha status:** This software is in an early release phase. While functional end-to-end, it may contain bugs or breaking changes. Always maintain independent backups of your SOP data.
 
-Current app version: **0.2.0**
+Current app version: **0.2.1**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
@@ -66,7 +66,7 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - Full Tools and Items library with search and clone
 - Item-level Qty field for SOP-level bill of materials
 - Step editor with image annotation, tool/item attachments, inline quantity/unit entry, drag-to-reorder, and add-step scroll preservation
-- AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key; keys stored in the OS keyring
+- AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key; keys stored reliably in SQLite with an encrypted OS keyring copy (Windows Credential Manager, macOS Keychain, Linux Secret Service) where available
 - Export SOPs to printable, text-selectable PDF via headless Chromium/Edge print-to-PDF
 - Portable `.sop` import/export bundles
 - In-app auto-update with launch dialog, Settings check, progress feedback, error details, and manual release fallback
@@ -157,7 +157,7 @@ Simple-SOP/
 - SOP IDs follow `SOP-{YYYY}-{6CHAR}` format with an unambiguous character set.
 - `.sop` bundles contain a JSON snapshot plus all referenced image files.
 - PDF export injects SOP data into `public/pdf-template.html`, embeds images as base64 data URIs, and renders through a Chromium-family browser in headless print-to-PDF mode.
-- AI keys are stored in the OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) with a plaintext SQLite fallback if the keyring is unavailable.
+- AI keys are always written to SQLite as the reliable source of truth, with an additional encrypted copy in the OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) where available. This dual-store approach prevents key loss caused by cross-async-task keyring read failures on Windows and Linux.
 - Updates are served via a signed `latest.json` on GitHub Releases, covering Linux x86_64, Windows x86_64, and macOS aarch64.
 
 See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
