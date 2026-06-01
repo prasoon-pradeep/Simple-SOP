@@ -79,7 +79,7 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 |---|---|---|
 | Linux | ✅ Supported | AppImage (recommended) or .deb |
 | Windows | ✅ Supported | NSIS .exe (recommended) or .msi |
-| macOS | ✅ Supported | Apple Silicon (M1+) only — .dmg. App is unsigned; right-click → Open on first launch to bypass Gatekeeper. |
+| macOS | ✅ Supported | Apple Silicon (M1+) only — .dmg. App is unsigned; if you see **"damaged and can't be opened"**, run `xattr -cr /Applications/sop-builder.app` in Terminal, then launch normally. |
 
 ---
 
@@ -178,7 +178,7 @@ See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 
 - Linux `.deb` installs cannot self-update in place through the Tauri updater. Use the AppImage for auto-update support, or download `.deb` releases manually.
 - Windows installers are unsigned. Windows SmartScreen may warn on the first install; in-app updater downloads are still signature-verified by Tauri.
-- macOS builds are unsigned and unnotarized. Gatekeeper will block the app on first launch — right-click the app → **Open** → **Open** to proceed. Subsequent launches and auto-updates are unaffected.
+- macOS builds are unsigned and unnotarized. If you see **"damaged and can't be opened"**, open Terminal and run `xattr -cr /Applications/sop-builder.app`, then launch normally. Subsequent launches and auto-updates are unaffected.
 - macOS Intel (x86_64) is not supported. Apple Silicon (M1 or later) only.
 - PDF export requires a Chromium-family browser (Chrome, Edge, Chromium, or Brave) to be installed on the machine. A warning is shown in the app if none is detected.
 
