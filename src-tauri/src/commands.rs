@@ -2351,7 +2351,7 @@ pub async fn test_ai_connection(
                 .fetch_optional(state.inner())
                 .await
                 .map_err(|e| e.to_string())?
-                .unwrap_or_else(|| "gemini-2.0-flash-lite".to_string());
+                .unwrap_or_else(|| "gemini-2.5-flash".to_string());
             let url = format!(
                 "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
                 model, api_key
@@ -2494,7 +2494,7 @@ fn default_model(provider: &str) -> &'static str {
     match provider {
         "anthropic" => "claude-haiku-4-5-20251001",
         "openai" => "gpt-4o-mini",
-        "gemini" => "gemini-2.0-flash-lite",
+        "gemini" => "gemini-2.5-flash",
         _ => "",
     }
 }
