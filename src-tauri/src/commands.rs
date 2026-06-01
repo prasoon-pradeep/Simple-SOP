@@ -2323,7 +2323,7 @@ pub async fn test_ai_connection(
         }
         "openai" => {
             let body = serde_json::json!({
-                "model": "gpt-4o-mini",
+                "model": "gpt-5.4-mini",
                 "max_tokens": 32,
                 "messages": [
                     {"role": "system", "content": AI_SYSTEM_PROMPT},
@@ -2493,7 +2493,7 @@ pub async fn list_ai_models(
 fn default_model(provider: &str) -> &'static str {
     match provider {
         "anthropic" => "claude-haiku-4-5-20251001",
-        "openai" => "gpt-4o-mini",
+        "openai" => "gpt-5.4-mini",
         "gemini" => "gemini-2.5-flash",
         _ => "",
     }
