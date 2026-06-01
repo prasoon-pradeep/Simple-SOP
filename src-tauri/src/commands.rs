@@ -2291,6 +2291,7 @@ pub async fn delete_ai_key(
 pub async fn test_ai_connection(
     provider: String,
     api_key: String,
+    state: tauri::State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let client = reqwest::Client::new();
     let test_text = "Tighten bolts to specified torque.";
@@ -2346,9 +2347,14 @@ pub async fn test_ai_connection(
             }
         }
         "gemini" => {
+            let model: String = sqlx::query_scalar("SELECT value FROM app_config WHERE key = 'ai_model_gemini'")
+                .fetch_optional(state.inner())
+                .await
+                .map_err(|e| e.to_string())?
+                .unwrap_or_else(|| "gemini-2.0-flash-lite".to_string());
             let url = format!(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
-                api_key
+                "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+                model, api_key
             );
             let body = serde_json::json!({
                 "system_instruction": {"parts": [{"text": AI_SYSTEM_PROMPT}]},
@@ -2488,7 +2494,7 @@ fn default_model(provider: &str) -> &'static str {
     match provider {
         "anthropic" => "claude-haiku-4-5-20251001",
         "openai" => "gpt-4o-mini",
-        "gemini" => "gemini-1.5-flash",
+        "gemini" => "gemini-2.0-flash-lite",
         _ => "",
     }
 }
