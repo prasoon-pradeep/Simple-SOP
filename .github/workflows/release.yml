@@ -258,7 +258,7 @@ jobs:
             ### Installation
             - **Windows**: Download and run the `.exe` (NSIS installer) or `.msi`
             - **Linux**: Download the `.AppImage` (portable) or `.deb` (Debian/Ubuntu)
-            - **macOS (Apple Silicon)**: Download the `.dmg`, open it, drag SOP Builder to Applications. On first launch, right-click the app → **Open** → **Open** to bypass the Gatekeeper warning (app is unsigned).
+            - **macOS (Apple Silicon)**: Download the `.dmg`, open it, drag SOP Builder to Applications. If you see **"damaged and can't be opened"**, open Terminal and run: `xattr -cr /Applications/sop-builder.app` — then launch normally.
 
             The app will automatically check for future updates on launch.
           files: |
