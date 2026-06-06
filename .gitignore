@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Graphify — commit outputs but not cache
+graphify-out/cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

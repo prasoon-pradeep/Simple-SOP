@@ -1,0 +1,687 @@
+{
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/tsconfig.node.json": {
+    "mtime": 1778393032.421708,
+    "ast_hash": "767b2e9abe6452170cdc399ca052cfbc",
+    "semantic_hash": "767b2e9abe6452170cdc399ca052cfbc"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/tailwind.config.js": {
+    "mtime": 1778393032.421576,
+    "ast_hash": "7e05e8b4d5ed2ae766a500592e8a352d",
+    "semantic_hash": "7e05e8b4d5ed2ae766a500592e8a352d"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/package.json": {
+    "mtime": 1780741002.468488,
+    "ast_hash": "6c9b95093503a1f2f92b8e363cd9194f",
+    "semantic_hash": "6c9b95093503a1f2f92b8e363cd9194f"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/components.json": {
+    "mtime": 1778393032.4057338,
+    "ast_hash": "62dc66b41cb06871aed58b5931b566c1",
+    "semantic_hash": "62dc66b41cb06871aed58b5931b566c1"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/tsconfig.json": {
+    "mtime": 1778393032.42164,
+    "ast_hash": "ae4e47028a42f76de2278b578ca91aef",
+    "semantic_hash": "ae4e47028a42f76de2278b578ca91aef"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/vite.config.ts": {
+    "mtime": 1778393032.42179,
+    "ast_hash": "74443b41a218f39296acf23751f5bf2c",
+    "semantic_hash": "74443b41a218f39296acf23751f5bf2c"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/postcss.config.js": {
+    "mtime": 1778393032.410846,
+    "ast_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0",
+    "semantic_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.claude/settings.json": {
+    "mtime": 1778398203.18962,
+    "ast_hash": "457574037ee1cda5c03e6bbac1a46191",
+    "semantic_hash": "457574037ee1cda5c03e6bbac1a46191"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.claude/settings.local.json": {
+    "mtime": 1780742598.694697,
+    "ast_hash": "452172cefecd4957e41b47aa08da1e76",
+    "semantic_hash": "452172cefecd4957e41b47aa08da1e76"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/scripts/seed_demo_db.py": {
+    "mtime": 1778393032.4113507,
+    "ast_hash": "ea5a4c3eb92d3266335858339d1e48b8",
+    "semantic_hash": "ea5a4c3eb92d3266335858339d1e48b8"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/scripts/bump-version.js": {
+    "mtime": 1778396519.649539,
+    "ast_hash": "910f4d4a42908cd856bbb1cb79d4cd34",
+    "semantic_hash": "910f4d4a42908cd856bbb1cb79d4cd34"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/tauri.conf.json": {
+    "mtime": 1778393032.4171445,
+    "ast_hash": "a824d07d0479a11c135c293cfc9a801b",
+    "semantic_hash": "a824d07d0479a11c135c293cfc9a801b"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/build.rs": {
+    "mtime": 1778393032.412018,
+    "ast_hash": "1be34a5c61c2c35365de3dab14298f0b",
+    "semantic_hash": "1be34a5c61c2c35365de3dab14298f0b"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/capabilities/default.json": {
+    "mtime": 1778393032.4121344,
+    "ast_hash": "49a5e3926c0888a4be31be2e8370f581",
+    "semantic_hash": "49a5e3926c0888a4be31be2e8370f581"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/gen/schemas/capabilities.json": {
+    "mtime": 1778394630.9724123,
+    "ast_hash": "21dbf621519f9c8cb2996a1f43ecd0c6",
+    "semantic_hash": "21dbf621519f9c8cb2996a1f43ecd0c6"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/gen/schemas/acl-manifests.json": {
+    "mtime": 1778394630.9673877,
+    "ast_hash": "35975c72c44494e6b4bd6095294aa245",
+    "semantic_hash": "35975c72c44494e6b4bd6095294aa245"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/gen/schemas/macOS-schema.json": {
+    "mtime": 1778394630.9717171,
+    "ast_hash": "490ee54020fc9d72969ca03596030855",
+    "semantic_hash": "490ee54020fc9d72969ca03596030855"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/gen/schemas/desktop-schema.json": {
+    "mtime": 1778394630.9717171,
+    "ast_hash": "490ee54020fc9d72969ca03596030855",
+    "semantic_hash": "490ee54020fc9d72969ca03596030855"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/src/lib.rs": {
+    "mtime": 1778395564.7492766,
+    "ast_hash": "77f1cf22e5fb303e49f6295b38c59cba",
+    "semantic_hash": "77f1cf22e5fb303e49f6295b38c59cba"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/src/db.rs": {
+    "mtime": 1778395437.469848,
+    "ast_hash": "7cac3223a5dc7aa6975da3509aab16c9",
+    "semantic_hash": "7cac3223a5dc7aa6975da3509aab16c9"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/src/commands.rs": {
+    "mtime": 1780737454.2509887,
+    "ast_hash": "e6e2a56188f078c23ce9b1e12be86123",
+    "semantic_hash": "e6e2a56188f078c23ce9b1e12be86123"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/src/main.rs": {
+    "mtime": 1778393032.417075,
+    "ast_hash": "479d93d96af93f795ebb8922e7181e17",
+    "semantic_hash": "479d93d96af93f795ebb8922e7181e17"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.vscode/extensions.json": {
+    "mtime": 1778393032.405361,
+    "ast_hash": "a4038619f5414c01f04abbbdd4730820",
+    "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/App.tsx": {
+    "mtime": 1778393032.4172652,
+    "ast_hash": "87a9cc9b8648111bcffdefde100af316",
+    "semantic_hash": "87a9cc9b8648111bcffdefde100af316"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/main.tsx": {
+    "mtime": 1778393032.4207428,
+    "ast_hash": "939d1c08b4bd846fbca58f824f15d548",
+    "semantic_hash": "939d1c08b4bd846fbca58f824f15d548"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/types.ts": {
+    "mtime": 1778393032.4214218,
+    "ast_hash": "3e552b8022f401b56776fdaf4c251112",
+    "semantic_hash": "3e552b8022f401b56776fdaf4c251112"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/vite-env.d.ts": {
+    "mtime": 1778393032.4214966,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/store.ts": {
+    "mtime": 1778393032.4213526,
+    "ast_hash": "7f091ca59da7c6544fb8ea5503a7b5f6",
+    "semantic_hash": "7f091ca59da7c6544fb8ea5503a7b5f6"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/label.tsx": {
+    "mtime": 1778393032.4201932,
+    "ast_hash": "14579f07e6e3133b6ee65d3ec778b013",
+    "semantic_hash": "14579f07e6e3133b6ee65d3ec778b013"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/switch.tsx": {
+    "mtime": 1778393032.4203274,
+    "ast_hash": "9d44867fb03111847d76f6e6e94bccd9",
+    "semantic_hash": "9d44867fb03111847d76f6e6e94bccd9"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/dialog.tsx": {
+    "mtime": 1778393032.4200695,
+    "ast_hash": "11ef362287bf06207c3fcf73c8839c53",
+    "semantic_hash": "11ef362287bf06207c3fcf73c8839c53"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/badge.tsx": {
+    "mtime": 1778393032.4199085,
+    "ast_hash": "f9c097d427c421f83eb92772a4b8ec06",
+    "semantic_hash": "f9c097d427c421f83eb92772a4b8ec06"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/table.tsx": {
+    "mtime": 1778393032.4203887,
+    "ast_hash": "efdbaeb9710b2f60de7c0e18bd4e3528",
+    "semantic_hash": "efdbaeb9710b2f60de7c0e18bd4e3528"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/button.tsx": {
+    "mtime": 1778393032.4199934,
+    "ast_hash": "33f8ef5c351115f8904b2a2f3decef54",
+    "semantic_hash": "33f8ef5c351115f8904b2a2f3decef54"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/select.tsx": {
+    "mtime": 1778393032.4202611,
+    "ast_hash": "54f324485721c4a42a799237ae2e02ef",
+    "semantic_hash": "54f324485721c4a42a799237ae2e02ef"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/textarea.tsx": {
+    "mtime": 1778393032.4204545,
+    "ast_hash": "6eb8633e9e461056b9bf88dfaf25fc6d",
+    "semantic_hash": "6eb8633e9e461056b9bf88dfaf25fc6d"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/ui/input.tsx": {
+    "mtime": 1778393032.4201295,
+    "ast_hash": "c7cbc8cd45d01649277bd7107581cb36",
+    "semantic_hash": "c7cbc8cd45d01649277bd7107581cb36"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/layout/Header.tsx": {
+    "mtime": 1778393032.4190488,
+    "ast_hash": "88045a2d13d31e0a5189f09db7e2e915",
+    "semantic_hash": "88045a2d13d31e0a5189f09db7e2e915"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/layout/Sidebar.tsx": {
+    "mtime": 1778393032.4191282,
+    "ast_hash": "3356ae4d5e5ae184ca75e31ad0afc6f1",
+    "semantic_hash": "3356ae4d5e5ae184ca75e31ad0afc6f1"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/CropWindow.tsx": {
+    "mtime": 1778393032.4194145,
+    "ast_hash": "5224a777c9e51b4e2859edce5911bf32",
+    "semantic_hash": "5224a777c9e51b4e2859edce5911bf32"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/AnnotationWindow.tsx": {
+    "mtime": 1778393032.4193237,
+    "ast_hash": "e2c2fe37d8ccba1dc8afbe8161b311f5",
+    "semantic_hash": "e2c2fe37d8ccba1dc8afbe8161b311f5"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/ImageFrame.tsx": {
+    "mtime": 1778393032.419635,
+    "ast_hash": "9406d0aaa5c5c14a5cf52dceba8c8147",
+    "semantic_hash": "9406d0aaa5c5c14a5cf52dceba8c8147"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/DeleteSopModal.tsx": {
+    "mtime": 1778393032.4195704,
+    "ast_hash": "f9bd9dd9572c2f4c14b327fd8cd865ba",
+    "semantic_hash": "f9bd9dd9572c2f4c14b327fd8cd865ba"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/DatePicker.tsx": {
+    "mtime": 1778393032.4194965,
+    "ast_hash": "737bf7af354bbc489dc393b73bf49c14",
+    "semantic_hash": "737bf7af354bbc489dc393b73bf49c14"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/AIPreviewPanel.tsx": {
+    "mtime": 1778393032.4192362,
+    "ast_hash": "a872cb55c77d9900f5bbe16469b05738",
+    "semantic_hash": "a872cb55c77d9900f5bbe16469b05738"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/ImageUploadArea.tsx": {
+    "mtime": 1778393032.419716,
+    "ast_hash": "913fdc9a0924155f896611c39b32b088",
+    "semantic_hash": "913fdc9a0924155f896611c39b32b088"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/shared/SparkleButton.tsx": {
+    "mtime": 1778393032.419788,
+    "ast_hash": "2361df82fed9b6cfb8c9d5f18cda8381",
+    "semantic_hash": "2361df82fed9b6cfb8c9d5f18cda8381"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/RevisionModal.tsx": {
+    "mtime": 1778393032.4175837,
+    "ast_hash": "8687ec8e1a2f76dcb302963302c369c2",
+    "semantic_hash": "8687ec8e1a2f76dcb302963302c369c2"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/CrossSopSearch.tsx": {
+    "mtime": 1778393032.4174922,
+    "ast_hash": "1c5ad68d75ae058e372cd36b88ddf58f",
+    "semantic_hash": "1c5ad68d75ae058e372cd36b88ddf58f"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/ApprovalSection.tsx": {
+    "mtime": 1778393032.417728,
+    "ast_hash": "3b6550aa4569d855497d7d6cbca3e8aa",
+    "semantic_hash": "3b6550aa4569d855497d7d6cbca3e8aa"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/DefinitionsSection.tsx": {
+    "mtime": 1778393032.4178407,
+    "ast_hash": "6c7f8f4de67436cba1b0e4d34e19a8b0",
+    "semantic_hash": "6c7f8f4de67436cba1b0e4d34e19a8b0"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/ScopeSection.tsx": {
+    "mtime": 1778393032.4186208,
+    "ast_hash": "fccd970de723fab33055993c98bd6d30",
+    "semantic_hash": "fccd970de723fab33055993c98bd6d30"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/StepCard.tsx": {
+    "mtime": 1778393032.4187248,
+    "ast_hash": "7ae1f9ae61ac4775b27024112db215a8",
+    "semantic_hash": "7ae1f9ae61ac4775b27024112db215a8"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/ToolsSection.tsx": {
+    "mtime": 1778393032.4189374,
+    "ast_hash": "f38d9ee9c378179129983a96412075bc",
+    "semantic_hash": "f38d9ee9c378179129983a96412075bc"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/StepResourcePicker.tsx": {
+    "mtime": 1778393032.4188633,
+    "ast_hash": "7227fafcf216786553cf11fc353a36d2",
+    "semantic_hash": "7227fafcf216786553cf11fc353a36d2"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/ItemsSection.tsx": {
+    "mtime": 1778393032.4183078,
+    "ast_hash": "1454aa51c251cda769a1f9f0c6f0edcc",
+    "semantic_hash": "1454aa51c251cda769a1f9f0c6f0edcc"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/HeaderSection.tsx": {
+    "mtime": 1778393032.4179347,
+    "ast_hash": "30fc7493ffddee8c448107e8310509e7",
+    "semantic_hash": "30fc7493ffddee8c448107e8310509e7"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/ProcedureSection.tsx": {
+    "mtime": 1778393032.4184277,
+    "ast_hash": "487c7f6c93a39a1e6b434d6996e8c49b",
+    "semantic_hash": "487c7f6c93a39a1e6b434d6996e8c49b"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/components/editor/sections/SafetySection.tsx": {
+    "mtime": 1778393032.4185274,
+    "ast_hash": "890484730c6c4b5ffc349c497c57f0aa",
+    "semantic_hash": "890484730c6c4b5ffc349c497c57f0aa"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/lib/utils.ts": {
+    "mtime": 1778393032.420671,
+    "ast_hash": "5a6fd53fdcf2be529e9cc0b718fde352",
+    "semantic_hash": "5a6fd53fdcf2be529e9cc0b718fde352"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/pages/Settings.tsx": {
+    "mtime": 1780742163.3977733,
+    "ast_hash": "af71994d0799c0429754ea585ba0b8c1",
+    "semantic_hash": "af71994d0799c0429754ea585ba0b8c1"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/pages/Home.tsx": {
+    "mtime": 1778393032.4209497,
+    "ast_hash": "67ec741043cb209efec8d66654c3c827",
+    "semantic_hash": "67ec741043cb209efec8d66654c3c827"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/pages/Editor.tsx": {
+    "mtime": 1780740912.5060024,
+    "ast_hash": "8f31137d3b74d13cdc5c4bbde07b06db",
+    "semantic_hash": "8f31137d3b74d13cdc5c4bbde07b06db"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src/pages/Viewer.tsx": {
+    "mtime": 1780740936.8909595,
+    "ast_hash": "675f366ca5aedb8eb77f8f442da9e812",
+    "semantic_hash": "675f366ca5aedb8eb77f8f442da9e812"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/index.html": {
+    "mtime": 1778393032.4103768,
+    "ast_hash": "1d408a74bb21d754ec717bec6bb90bc5",
+    "semantic_hash": "1d408a74bb21d754ec717bec6bb90bc5"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/README.md": {
+    "mtime": 1780741098.2524407,
+    "ast_hash": "4a9928bbf3cede6eb4b89f58e3996f15",
+    "semantic_hash": "4a9928bbf3cede6eb4b89f58e3996f15"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/CLAUDE.md": {
+    "mtime": 1778393032.4054496,
+    "ast_hash": "80516008851fa3f92b663ee21135cc85",
+    "semantic_hash": "80516008851fa3f92b663ee21135cc85"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/index.html": {
+    "mtime": 1780741279.0436692,
+    "ast_hash": "8b0084c47f9b2537cccf46b43db969bd",
+    "semantic_hash": "8b0084c47f9b2537cccf46b43db969bd"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/sop-pdf-template.html": {
+    "mtime": 1778393032.4102848,
+    "ast_hash": "3ce360acf2e42c09403372c95d25c7bf",
+    "semantic_hash": "3ce360acf2e42c09403372c95d25c7bf"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/sop-builder-ui-reference.html": {
+    "mtime": 1778393032.4100718,
+    "ast_hash": "08700e38f3216a117f98cb327f989e49",
+    "semantic_hash": "08700e38f3216a117f98cb327f989e49"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/ai-enhancement-mock.html": {
+    "mtime": 1778393032.4061182,
+    "ast_hash": "63de8c5672fda903d37bdc8675fb5094",
+    "semantic_hash": "63de8c5672fda903d37bdc8675fb5094"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/SOP_BUILDER_SPEC.md": {
+    "mtime": 1778397534.2580042,
+    "ast_hash": "ab358b5c040a38e34e38a1d9d3b7d06a",
+    "semantic_hash": "ab358b5c040a38e34e38a1d9d3b7d06a"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/public/pdf-template.html": {
+    "mtime": 1778393032.410996,
+    "ast_hash": "540903fe570ae5621a5d50b44812cb47",
+    "semantic_hash": "540903fe570ae5621a5d50b44812cb47"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/workflows/release.yml": {
+    "mtime": 1780314745.9067316,
+    "ast_hash": "996c9fdfc2125e93eae41de9283b23aa",
+    "semantic_hash": "996c9fdfc2125e93eae41de9283b23aa"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/workflows/build-linux.yml": {
+    "mtime": 1778393032.40481,
+    "ast_hash": "bd83a56d27ce3d95f48e143317a5c025",
+    "semantic_hash": "bd83a56d27ce3d95f48e143317a5c025"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/workflows/pages.yml": {
+    "mtime": 1778393032.4049857,
+    "ast_hash": "cb55c454af8ee78a89b4e7b8fc260b5a",
+    "semantic_hash": "cb55c454af8ee78a89b4e7b8fc260b5a"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/workflows/build-windows.yml": {
+    "mtime": 1778393032.404898,
+    "ast_hash": "4920410b15d86efc609b6020a8d86804",
+    "semantic_hash": "4920410b15d86efc609b6020a8d86804"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/ISSUE_TEMPLATE/feature_request.md": {
+    "mtime": 1778393032.404593,
+    "ast_hash": "d97e098b1ef2da3e61fddba0042d7e38",
+    "semantic_hash": "d97e098b1ef2da3e61fddba0042d7e38"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/ISSUE_TEMPLATE/bug_report.md": {
+    "mtime": 1778393032.4045043,
+    "ast_hash": "ac87c8c5dc9a4229cc47ceb2f20ea65d",
+    "semantic_hash": "ac87c8c5dc9a4229cc47ceb2f20ea65d"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/.github/ISSUE_TEMPLATE/implementation_spec.md": {
+    "mtime": 1778393032.4046783,
+    "ast_hash": "e987737007c986ba0df94eb1630246a0",
+    "semantic_hash": "e987737007c986ba0df94eb1630246a0"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/07-editor-revisions.png": {
+    "mtime": 1778393032.4098408,
+    "ast_hash": "c9bf5db27fb32709d2c160f76e0916ef",
+    "semantic_hash": "c9bf5db27fb32709d2c160f76e0916ef"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/02-viewer-document.png": {
+    "mtime": 1778393032.4072006,
+    "ast_hash": "7181f15fb0b2ac91d2434ed6ae7f47e1",
+    "semantic_hash": "7181f15fb0b2ac91d2434ed6ae7f47e1"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/03-editor-scope-ai.png": {
+    "mtime": 1778393032.4076116,
+    "ast_hash": "05d501f64e6f69e14cd5bbc568aa4689",
+    "semantic_hash": "05d501f64e6f69e14cd5bbc568aa4689"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/01-home-sop-library.png": {
+    "mtime": 1778393032.406691,
+    "ast_hash": "ab94a0038043de02929e0f3695f91c66",
+    "semantic_hash": "ab94a0038043de02929e0f3695f91c66"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/04-settings-ai.png": {
+    "mtime": 1778393032.4082525,
+    "ast_hash": "b5c31e4f2733b025c706ef0243bbb235",
+    "semantic_hash": "b5c31e4f2733b025c706ef0243bbb235"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/06-editor-procedure-steps.png": {
+    "mtime": 1778393032.4094255,
+    "ast_hash": "7985a0596dfe9e50d8417a0fa1fd69ef",
+    "semantic_hash": "7985a0596dfe9e50d8417a0fa1fd69ef"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/docs/screenshots/05-ai-enhancement-preview.png": {
+    "mtime": 1778393032.4088693,
+    "ast_hash": "5917af7f63392a3b5214517695e1fcf6",
+    "semantic_hash": "5917af7f63392a3b5214517695e1fcf6"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/public/vite.svg": {
+    "mtime": 1778393032.4111712,
+    "ast_hash": "8e3a10e157f75ada21ab742c022d5430",
+    "semantic_hash": "8e3a10e157f75ada21ab742c022d5430"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/public/tauri.svg": {
+    "mtime": 1778393032.4110925,
+    "ast_hash": "f49b888a6830a38f02ffeb65891186b1",
+    "semantic_hash": "f49b888a6830a38f02ffeb65891186b1"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/icon.png": {
+    "mtime": 1778393032.4154007,
+    "ast_hash": "fed5e870ff0c3dc3e117068b14711ca2",
+    "semantic_hash": "fed5e870ff0c3dc3e117068b14711ca2"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square30x30Logo.png": {
+    "mtime": 1778393032.4128401,
+    "ast_hash": "30ac4485e49c7ddb853d3c68190808c5",
+    "semantic_hash": "30ac4485e49c7ddb853d3c68190808c5"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square150x150Logo.png": {
+    "mtime": 1778393032.4126918,
+    "ast_hash": "19e77ff394c88bfffadb6bfe71ffc1c0",
+    "semantic_hash": "19e77ff394c88bfffadb6bfe71ffc1c0"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/StoreLogo.png": {
+    "mtime": 1778393032.4132273,
+    "ast_hash": "c3827cea548f33e741d6c4fb50d96784",
+    "semantic_hash": "c3827cea548f33e741d6c4fb50d96784"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square107x107Logo.png": {
+    "mtime": 1778393032.4125485,
+    "ast_hash": "aa620f0f1ee0a132102710dcd96caf9e",
+    "semantic_hash": "aa620f0f1ee0a132102710dcd96caf9e"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square89x89Logo.png": {
+    "mtime": 1778393032.4131477,
+    "ast_hash": "6003f9db2ff9786a691a40c60358dd26",
+    "semantic_hash": "6003f9db2ff9786a691a40c60358dd26"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square310x310Logo.png": {
+    "mtime": 1778393032.412921,
+    "ast_hash": "df4a894aabb8690c50a801e8ebe4665b",
+    "semantic_hash": "df4a894aabb8690c50a801e8ebe4665b"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square142x142Logo.png": {
+    "mtime": 1778393032.4126186,
+    "ast_hash": "7117f7c47c117da23662957889f849e0",
+    "semantic_hash": "7117f7c47c117da23662957889f849e0"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/128x128.png": {
+    "mtime": 1778393032.4122531,
+    "ast_hash": "ec27f617dc94c5dc2876b3d4cc474832",
+    "semantic_hash": "ec27f617dc94c5dc2876b3d4cc474832"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square284x284Logo.png": {
+    "mtime": 1778393032.412775,
+    "ast_hash": "22e1d217eb0f23e4f56e139f6c520cf1",
+    "semantic_hash": "22e1d217eb0f23e4f56e139f6c520cf1"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/32x32.png": {
+    "mtime": 1778393032.412401,
+    "ast_hash": "f0d7af6099eaabacdab97c4d6f3ca7d8",
+    "semantic_hash": "f0d7af6099eaabacdab97c4d6f3ca7d8"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square44x44Logo.png": {
+    "mtime": 1778393032.4129958,
+    "ast_hash": "8716586d733d32cf4e6ef9d7371e3c62",
+    "semantic_hash": "8716586d733d32cf4e6ef9d7371e3c62"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/Square71x71Logo.png": {
+    "mtime": 1778393032.413072,
+    "ast_hash": "5f4008dc624f95ae9fa189f0f8f11a3a",
+    "semantic_hash": "5f4008dc624f95ae9fa189f0f8f11a3a"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/128x128@2x.png": {
+    "mtime": 1778393032.4123363,
+    "ast_hash": "18f160fcd6212006bb9fba8e5e026154",
+    "semantic_hash": "18f160fcd6212006bb9fba8e5e026154"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/64x64.png": {
+    "mtime": 1778393032.412467,
+    "ast_hash": "a94b846df81de4b13b1f1eaf54aeffec",
+    "semantic_hash": "a94b846df81de4b13b1f1eaf54aeffec"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-20x20@3x.png": {
+    "mtime": 1778393032.4156926,
+    "ast_hash": "345e8998bff176bd96e6bc9e3d7f3814",
+    "semantic_hash": "345e8998bff176bd96e6bc9e3d7f3814"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-512@2x.png": {
+    "mtime": 1778393032.4162939,
+    "ast_hash": "887bd638aa68ad99ee36073b6bd0ba84",
+    "semantic_hash": "887bd638aa68ad99ee36073b6bd0ba84"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png": {
+    "mtime": 1778393032.4166157,
+    "ast_hash": "3058bf852e282a3efbbf2279725a4adb",
+    "semantic_hash": "3058bf852e282a3efbbf2279725a4adb"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-20x20@2x.png": {
+    "mtime": 1778393032.4156287,
+    "ast_hash": "c445d48e2c1052d87eaea1d333ebb35c",
+    "semantic_hash": "c445d48e2c1052d87eaea1d333ebb35c"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-29x29@3x.png": {
+    "mtime": 1778393032.4159405,
+    "ast_hash": "d72ae8648561b2447b4a3dd6d18a8030",
+    "semantic_hash": "d72ae8648561b2447b4a3dd6d18a8030"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-40x40@2x.png": {
+    "mtime": 1778393032.4161274,
+    "ast_hash": "1b918bfeccc824454ffa658b01cdff01",
+    "semantic_hash": "1b918bfeccc824454ffa658b01cdff01"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-60x60@3x.png": {
+    "mtime": 1778393032.4164157,
+    "ast_hash": "73c877aea0d7cf7b61ca0b0d8159a276",
+    "semantic_hash": "73c877aea0d7cf7b61ca0b0d8159a276"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-40x40@2x-1.png": {
+    "mtime": 1778393032.4160647,
+    "ast_hash": "1b918bfeccc824454ffa658b01cdff01",
+    "semantic_hash": "1b918bfeccc824454ffa658b01cdff01"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-20x20@2x-1.png": {
+    "mtime": 1778393032.4155676,
+    "ast_hash": "c445d48e2c1052d87eaea1d333ebb35c",
+    "semantic_hash": "c445d48e2c1052d87eaea1d333ebb35c"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-60x60@2x.png": {
+    "mtime": 1778393032.4163532,
+    "ast_hash": "415d0f432d573d6c762a82b2b9a26513",
+    "semantic_hash": "415d0f432d573d6c762a82b2b9a26513"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-76x76@1x.png": {
+    "mtime": 1778393032.4164824,
+    "ast_hash": "1afea12290859a069eccd6d981cafd8f",
+    "semantic_hash": "1afea12290859a069eccd6d981cafd8f"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-40x40@3x.png": {
+    "mtime": 1778393032.4161944,
+    "ast_hash": "415d0f432d573d6c762a82b2b9a26513",
+    "semantic_hash": "415d0f432d573d6c762a82b2b9a26513"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-29x29@2x.png": {
+    "mtime": 1778393032.4158814,
+    "ast_hash": "c800898f7059890555119dae0a44ee1a",
+    "semantic_hash": "c800898f7059890555119dae0a44ee1a"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-76x76@2x.png": {
+    "mtime": 1778393032.4165468,
+    "ast_hash": "4d7aee9966f1b0a97c7ccf6daa909dbd",
+    "semantic_hash": "4d7aee9966f1b0a97c7ccf6daa909dbd"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-29x29@1x.png": {
+    "mtime": 1778393032.4157546,
+    "ast_hash": "a51ee8018d2ee6f14f9dfec445f65600",
+    "semantic_hash": "a51ee8018d2ee6f14f9dfec445f65600"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-40x40@1x.png": {
+    "mtime": 1778393032.4160035,
+    "ast_hash": "c445d48e2c1052d87eaea1d333ebb35c",
+    "semantic_hash": "c445d48e2c1052d87eaea1d333ebb35c"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-20x20@1x.png": {
+    "mtime": 1778393032.4155045,
+    "ast_hash": "f38ddbcbeb18ee09a04ad097724b7a67",
+    "semantic_hash": "f38ddbcbeb18ee09a04ad097724b7a67"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/ios/AppIcon-29x29@2x-1.png": {
+    "mtime": 1778393032.4158123,
+    "ast_hash": "c800898f7059890555119dae0a44ee1a",
+    "semantic_hash": "c800898f7059890555119dae0a44ee1a"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png": {
+    "mtime": 1778393032.4141057,
+    "ast_hash": "3c20075e8a97ccb96a6b04ebd6ea39ef",
+    "semantic_hash": "3c20075e8a97ccb96a6b04ebd6ea39ef"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-mdpi/ic_launcher.png": {
+    "mtime": 1778393032.4139874,
+    "ast_hash": "ccb82e8db573111570a26e3c57a32283",
+    "semantic_hash": "ccb82e8db573111570a26e3c57a32283"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png": {
+    "mtime": 1778393032.4141946,
+    "ast_hash": "15ad3349b27549e2459b308a9de850d7",
+    "semantic_hash": "15ad3349b27549e2459b308a9de850d7"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png": {
+    "mtime": 1778393032.4137633,
+    "ast_hash": "fd093676bdce47224007f487c16f6b9d",
+    "semantic_hash": "fd093676bdce47224007f487c16f6b9d"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-hdpi/ic_launcher.png": {
+    "mtime": 1778393032.413667,
+    "ast_hash": "7978fd56345349a86c63a2a48fb5a6b9",
+    "semantic_hash": "7978fd56345349a86c63a2a48fb5a6b9"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png": {
+    "mtime": 1778393032.4138396,
+    "ast_hash": "028331c3d13a178ee103e0677794d4c8",
+    "semantic_hash": "028331c3d13a178ee103e0677794d4c8"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1778393032.4149063,
+    "ast_hash": "9fadcf665df9b866001c0a26ed7e59a9",
+    "semantic_hash": "9fadcf665df9b866001c0a26ed7e59a9"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png": {
+    "mtime": 1778393032.414816,
+    "ast_hash": "1ec80e9309a2351b85230282affe7c79",
+    "semantic_hash": "1ec80e9309a2351b85230282affe7c79"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png": {
+    "mtime": 1778393032.4149823,
+    "ast_hash": "0c7bf8da794b047070aa9bac494bf6a6",
+    "semantic_hash": "0c7bf8da794b047070aa9bac494bf6a6"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1778393032.4146323,
+    "ast_hash": "456c4ecc50dc5c796977cc9577757428",
+    "semantic_hash": "456c4ecc50dc5c796977cc9577757428"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png": {
+    "mtime": 1778393032.4145527,
+    "ast_hash": "fb925686cbcd5c67093fd376a438de12",
+    "semantic_hash": "fb925686cbcd5c67093fd376a438de12"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png": {
+    "mtime": 1778393032.4147048,
+    "ast_hash": "328dc1bde22f5e6f78eea9ae89360767",
+    "semantic_hash": "328dc1bde22f5e6f78eea9ae89360767"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png": {
+    "mtime": 1778393032.4143796,
+    "ast_hash": "eb7dc8b816810e8ea96088375b77f421",
+    "semantic_hash": "eb7dc8b816810e8ea96088375b77f421"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png": {
+    "mtime": 1778393032.4143133,
+    "ast_hash": "e8fc1daa4908d69385108d40ce4e1613",
+    "semantic_hash": "e8fc1daa4908d69385108d40ce4e1613"
+  },
+  "/Users/pp/Documents/Personal/Coding/Public/Simple-SOP/src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png": {
+    "mtime": 1778393032.414445,
+    "ast_hash": "4de760df73dacb4db2919b41687382ec",
+    "semantic_hash": "4de760df73dacb4db2919b41687382ec"
+  }
+}
