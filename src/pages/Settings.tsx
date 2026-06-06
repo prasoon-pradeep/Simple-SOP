@@ -424,6 +424,14 @@ export default function Settings() {
                 <p className="text-[11px] text-text-tertiary">Active: <span className="font-mono font-semibold text-text-secondary">{aiModel}</span></p>
               )}
             </div>
+
+            <p className="text-[11px] text-text-tertiary mt-4">
+              By using AI enhancement you agree to your chosen provider's{' '}
+              <a href="https://www.anthropic.com/legal/consumer-terms" target="_blank" rel="noreferrer" className="text-brand hover:underline">Anthropic</a>,{' '}
+              <a href="https://openai.com/policies/terms-of-use" target="_blank" rel="noreferrer" className="text-brand hover:underline">OpenAI</a>, or{' '}
+              <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="text-brand hover:underline">Google</a>{' '}
+              terms of service and privacy policy. Your API key and SOP data are sent directly to the provider you configure.
+            </p>
           </div>
 
           <div className="border-t border-border-standard" />
@@ -529,6 +537,24 @@ export default function Settings() {
             <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 whitespace-pre-wrap font-mono overflow-y-auto max-h-72">
               {licenseText}
             </pre>
+          </div>
+
+          <div className="border-t border-border-standard" />
+
+          {/* Privacy Policy */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <ScrollText className="w-4 h-4 text-text-tertiary" />
+              <h2 className="text-base font-semibold text-text-primary">Privacy Policy</h2>
+            </div>
+            <p className="text-xs text-text-tertiary mb-4">Last updated: June 2026</p>
+            <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 space-y-3">
+              <p><span className="font-semibold text-text-primary">We collect nothing.</span> SOP Builder stores all your data locally on your machine in a SQLite database. No personal data, usage data, or SOP content is ever transmitted to or collected by SOP Builder Software.</p>
+              <p><span className="font-semibold text-text-primary">AI Enhancement.</span> If you choose to use AI enhancement, the text of the field you are improving is sent directly from your device to the AI provider you configure (Anthropic, OpenAI, or Google) using your own API key. This transmission is governed solely by that provider's terms of service and privacy policy — SOP Builder Software has no visibility into or control over it.</p>
+              <p><span className="font-semibold text-text-primary">Auto-updates.</span> On launch, the app contacts the GitHub API to check whether a new version is available. This is a standard HTTPS request from your device to GitHub's servers and is subject to GitHub's privacy policy. No SOP data is included in this request.</p>
+              <p><span className="font-semibold text-text-primary">No analytics, no telemetry.</span> The app contains no crash reporters, analytics SDKs, or tracking of any kind.</p>
+              <p className="text-text-tertiary">Questions? Open an issue on the <a href="https://github.com/prasoon-pradeep/Simple-SOP/issues" target="_blank" rel="noreferrer" className="text-brand hover:underline">GitHub repository</a>.</p>
+            </div>
           </div>
 
         </div>
