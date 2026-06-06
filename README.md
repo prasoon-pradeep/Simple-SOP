@@ -2,7 +2,7 @@
 
 > **Alpha status:** This software is in an early release phase. While functional end-to-end, it may contain bugs or breaking changes. Always maintain independent backups of your SOP data.
 
-Current app version: **0.2.1**
+Current app version: **0.2.5**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
