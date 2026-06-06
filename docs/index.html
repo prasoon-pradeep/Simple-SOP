@@ -782,7 +782,7 @@
       </div>
       <div class="download-card">
         <div class="os">macOS</div>
-        <div class="reqs">Apple Silicon (M1 or later) &middot; macOS 12+ &middot; On first launch: right-click the app → Open to bypass Gatekeeper</div>
+        <div class="reqs">Apple Silicon (M1 or later) &middot; macOS 12+ &middot; App is unsigned — if you see <strong>"damaged and can't be opened"</strong>, run <code>xattr -cr /Applications/sop-builder.app</code> in Terminal, then launch normally</div>
         <div class="formats">
           <a id="mac-dmg" href="https://github.com/prasoon-pradeep/Simple-SOP/releases/latest/download/sop-builder_0.2.0_aarch64.dmg">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
@@ -856,7 +856,7 @@
           <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <div class="faq-answer">
-          Yes — macOS (Apple Silicon, M1 or later) is supported as of v0.2.0. Download the <code>.dmg</code> from the releases page. On first launch, right-click the app → <strong>Open</strong> → <strong>Open</strong> to bypass the Gatekeeper warning (the app is unsigned). Intel Mac support is not available yet.
+          Yes — macOS (Apple Silicon, M1 or later) is supported. Download the <code>.dmg</code> from the releases page. The app is unsigned — if you see <strong>"damaged and can't be opened"</strong>, open Terminal and run: <code>xattr -cr /Applications/sop-builder.app</code>, then launch normally. Subsequent launches and auto-updates are unaffected. Intel Mac (x86_64) is not supported.
         </div>
       </div>
 
