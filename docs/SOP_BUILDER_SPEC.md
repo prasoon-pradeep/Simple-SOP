@@ -996,6 +996,58 @@ The app is unsigned and unnotarized. Gatekeeper blocks the first launch — user
 - [x] **Procedure add-step UX:** Adding a new step keeps the list mounted and scrolls the new step into view instead of jumping to the top
 - [x] **Home project pill:** Project column widened to 200px and project badges wrap/grow for multi-line names
 
+### PHASE 14 — Cycle Time Section
+
+**Goal:** Add a Cycle Time section to every SOP — positioned as section 3 in the document (between Safety and Tools).
+
+**Fields:**
+- `cycle_time_value` — numeric (nullable, optional field)
+- `cycle_time_unit` — enum: `seconds` | `minutes` | `hours` (default `minutes`)
+- `cycle_time_notes` — free text (nullable, optional — for edge cases like "per batch of 50")
+
+**DB schema change:** Two `ALTER TABLE` migrations on `sops`:
+```sql
+ALTER TABLE sops ADD COLUMN cycle_time_value REAL;
+ALTER TABLE sops ADD COLUMN cycle_time_unit TEXT DEFAULT 'minutes';
+ALTER TABLE sops ADD COLUMN cycle_time_notes TEXT;
+```
+`REAL` handles fractional values (e.g. 1.5 hours). Nullable so existing SOPs are unaffected — the section simply shows empty/blank if not filled in.
+
+**Editor:** New `CycleTimeSection` tab inserted between Safety & Training and Tools in the `SECTIONS` array. Number input + unit dropdown (sec/min/hr) + optional notes textarea. All three fields wired to auto-save.
+
+**Viewer / PDF:** New numbered section `3. Cycle Time` between Safety and Tools sections. Only rendered if `cycle_time_value` is non-null. Shows formatted value + unit + notes if present.
+
+**`.sop` export/import:** Include `cycle_time_value`, `cycle_time_unit`, `cycle_time_notes` in the JSON snapshot. Import maps them back to the DB columns.
+
+**⚠️ Agent note — backwards compatibility for `.sop` import:**
+
+The import pipeline (`import_sop` in `commands.rs`) deserializes `sop-data.json` into the `SOP` Rust struct, then runs an explicit `INSERT INTO sops (col1, col2, ...)` that binds every field individually — it does NOT rely on DB column defaults. This means:
+
+- **Old `.sop` → new app:** The three `cycle_time_*` keys will be absent from the JSON. If the `SOP` struct fields are plain `Option<T>`, Serde fills them as `None` and the INSERT binds `NULL` for all three — including `cycle_time_unit`, which should default to `'minutes'`. The DB `DEFAULT 'minutes'` does NOT fire on an explicit INSERT with a bound NULL. Fix: annotate `cycle_time_unit` in the `SOP` struct with `#[serde(default = "default_minutes")]` and add a `fn default_minutes() -> Option<String> { Some("minutes".to_string()) }` helper. This is the same pattern used for `ai_enhancements` in `SopBundle` (line 1377 — `#[serde(default)]`).
+- **New `.sop` → old app:** Old app's `SOP` struct has no `cycle_time_*` fields. Serde ignores unknown JSON keys by default — no error, no crash. Safe.
+- **Existing DB rows after migration:** `ALTER TABLE` with `DEFAULT 'minutes'` populates existing rows correctly. No action needed.
+- **The import INSERT SQL** at the bottom of `import_sop` must be updated to include the three new columns in both the column list and the `.bind()` chain. Match the existing pattern exactly.
+
+**⚠️ Agent note — all surfaces that must be updated:**
+
+This feature touches every layer of the stack. Do not consider the feature complete until all of the following are updated:
+
+1. **DB** (`db.rs`) — three `ALTER TABLE` migrations on `sops`. Follow the existing migration guard pattern (check column existence before altering).
+2. **Rust `SOP` struct** (`commands.rs`) — add three fields with correct types and `#[serde(default)]` as described above.
+3. **Auto-save command** (`commands.rs`) — the `save_sop_header` (or equivalent) command must include the three new fields in its UPDATE query.
+4. **Editor UI** (`CycleTimeSection.tsx` + `Editor.tsx`) — new sidebar tab between Safety and Tools. Number input + unit dropdown (seconds / minutes / hours) + optional notes textarea. All fields trigger auto-save on change.
+5. **Zustand store** (`store.ts`) — `currentSop` already holds the full `SOP` object, so no store shape change needed. Confirm the three new fields flow through correctly after the struct update.
+6. **Viewer** (`Viewer.tsx`) — new numbered section `3. Cycle Time` inserted between Safety (section 2) and Tools (section 3, now renumbered to 4). Only render the section if `cycle_time_value` is non-null. Display as e.g. `10 minutes` with notes below if present. All subsequent `sectionNum++` counters shift automatically.
+7. **PDF template** (`public/pdf-template.html`) — the PDF is rendered from this static template with SOP data injected at export time. Add the Cycle Time section in the same position as the Viewer — between Safety and Tools. Follow the existing section HTML/CSS structure. Only render if value is present. The Rust export command (`export_pdf` or equivalent in `commands.rs`) injects a JSON blob into the template — confirm the three new fields are included in that blob.
+8. **`.sop` export/import** — export includes the fields automatically via `SELECT *` → `SOP` struct → `serde_json`. Import INSERT must explicitly bind all three new columns as noted above.
+
+- [ ] DB migrations for three new `sops` columns
+- [ ] `CycleTimeSection.tsx` component (editor)
+- [ ] Wire auto-save commands for new fields
+- [ ] Viewer section render (conditional on value present)
+- [ ] PDF template update
+- [ ] `.sop` export/import inclusion
+
 ### FUTURE REQUIREMENTS
 
 **Automatic DB backups + corruption recovery screen:**
