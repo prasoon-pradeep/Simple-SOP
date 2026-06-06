@@ -28,7 +28,7 @@ Output rules:\n\
 \n\
 Field type contracts — each field has a specific output form. The field type will be declared before the text to improve:\n\
 - action: imperative prose. What to do. Start with a strong verb. Do not add CAUTION or NOTE callouts.\n\
-- notes: advisory prose. What to watch out for. Use NOTE: or CAUTION: prefix where appropriate.\n\
+- notes: advisory prose. What to watch out for. Do not add NOTE: or CAUTION: prefixes.\n\
 - expected_output: state description. What is true when the step is complete. Not an action or instruction — a factual statement of the end state.\n\
 - safety_notes: warning statements. What not to do or what could go wrong. Do not add warnings not present in the original.\n\
 - purpose: declarative prose. What this procedure achieves. One concise paragraph.\n\
