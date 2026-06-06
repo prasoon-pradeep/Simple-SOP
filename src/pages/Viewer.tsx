@@ -136,7 +136,8 @@ export default function Viewer() {
   const handleExportSop = async () => {
     if (!currentSop) return;
     try {
-      const suggestedName = `${currentSop.sop_id}-V${currentSop.version}.sop`;
+      const safeTitle = currentSop.title.replace(/[\/\\:*?"<>|]/g, '').trim();
+      const suggestedName = `${currentSop.sop_id} - ${safeTitle}.sop`;
       const selected = await save({
         filters: [{ name: 'SOP File', extensions: ['sop'] }],
         defaultPath: suggestedName,
@@ -154,7 +155,8 @@ export default function Viewer() {
     if (!currentSop) return;
     setPdfStatus('saving');
     try {
-      const suggestedName = `${currentSop.sop_id}-V${currentSop.version}.pdf`;
+      const safeTitle = currentSop.title.replace(/[\/\\:*?"<>|]/g, '').trim();
+      const suggestedName = `${currentSop.sop_id} - ${safeTitle}.pdf`;
       const outputPath = await save({
         filters: [{ name: 'PDF Document', extensions: ['pdf'] }],
         defaultPath: suggestedName,

@@ -138,7 +138,8 @@ export default function Editor() {
   const handleExportSop = async () => {
     if (!currentSop) return;
     try {
-      const suggestedName = `${currentSop.sop_id}-V${currentSop.version}.sop`;
+      const safeTitle = currentSop.title.replace(/[\/\\:*?"<>|]/g, '').trim();
+      const suggestedName = `${currentSop.sop_id} - ${safeTitle}.sop`;
       const selected = await save({
         filters: [{ name: 'SOP File', extensions: ['sop'] }],
         defaultPath: suggestedName,
