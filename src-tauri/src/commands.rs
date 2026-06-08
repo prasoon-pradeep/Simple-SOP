@@ -347,7 +347,7 @@ pub async fn get_sops(state: tauri::State<'_, SqlitePool>) -> Result<Vec<SOP>, S
                created_by, created_date, active_date, next_review_date, approval_status,
                regulatory_ref, distribution_list, related_documents, purpose, scope,
                safety_notes, training_required, training_details, created_at, updated_at,
-               is_deleted, deleted_at
+               is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes
         FROM sops
         WHERE is_deleted = 0
         ORDER BY updated_at DESC
@@ -368,7 +368,7 @@ pub async fn get_sop(id: String, state: tauri::State<'_, SqlitePool>) -> Result<
                created_by, created_date, active_date, next_review_date, approval_status,
                regulatory_ref, distribution_list, related_documents, purpose, scope,
                safety_notes, training_required, training_details, created_at, updated_at,
-               is_deleted, deleted_at
+               is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes
         FROM sops
         WHERE id = ?
         "#,
