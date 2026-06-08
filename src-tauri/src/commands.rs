@@ -2177,9 +2177,9 @@ pub async fn export_pdf(
         .spawn()
         .map_err(|e| format!("Failed to launch browser: {}", e))?;
 
-    // Poll for the output file to appear and be non-empty (up to 30 s, 2 s intervals).
+    // Poll for the output file to appear and be non-empty (up to 90 s, 2 s intervals).
     let mut file_ready = false;
-    for _ in 0..15 {
+    for _ in 0..45 {
         if output_path_buf.exists()
             && std::fs::metadata(&output_path_buf)
                 .map(|m| m.len() > 0)
