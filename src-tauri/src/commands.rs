@@ -2673,3 +2673,53 @@ pub async fn get_ai_enhancements(
     .await
     .map_err(|e| e.to_string())
 }
+
+// --------------------------------------------------------
+// Field Suggestions
+// --------------------------------------------------------
+
+#[tauri::command]
+pub async fn get_field_suggestions(
+    field: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Vec<String>, String> {
+    let allowed = ["department", "project_tag", "document_owner", "created_by", "distribution_list"];
+    if !allowed.contains(&field.as_str()) {
+        return Err(format!("Unknown field: {}", field));
+    }
+
+    let pool = state.inner();
+
+    if field == "distribution_list" {
+        // Collect all non-empty distribution_list values, split by comma, deduplicate
+        let rows: Vec<(String,)> =
+            sqlx::query_as("SELECT distribution_list FROM sops WHERE distribution_list IS NOT NULL AND distribution_list != '' AND is_deleted = 0")
+                .fetch_all(pool)
+                .await
+                .map_err(|e| e.to_string())?;
+
+        let mut seen = std::collections::HashSet::new();
+        let mut suggestions: Vec<String> = Vec::new();
+        for (val,) in rows {
+            for part in val.split(',') {
+                let trimmed = part.trim().to_string();
+                if !trimmed.is_empty() && seen.insert(trimmed.to_lowercase()) {
+                    suggestions.push(trimmed);
+                }
+            }
+        }
+        suggestions.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        return Ok(suggestions);
+    }
+
+    let query = format!(
+        "SELECT DISTINCT {} FROM sops WHERE {} IS NOT NULL AND {} != '' AND is_deleted = 0 ORDER BY {} ASC",
+        field, field, field, field
+    );
+    let rows: Vec<(String,)> = sqlx::query_as(&query)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows.into_iter().map(|(v,)| v).collect())
+}
