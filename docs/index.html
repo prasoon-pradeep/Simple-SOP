@@ -441,6 +441,102 @@
       font-style: italic;
     }
 
+    /* ── What's New ── */
+    .whats-new {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    .whats-new .section-label { margin-bottom: 0.5rem; }
+    .whats-new h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 2rem; }
+
+    .release-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .release-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.4rem;
+    }
+
+    .release-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .release-version {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .release-date {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .release-latest-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .release-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .release-card ul li {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      padding-left: 1rem;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .release-card ul li::before {
+      content: "·";
+      position: absolute;
+      left: 0;
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    .release-loading {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .whats-new-footer {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .whats-new-footer a {
+      color: var(--brand);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .whats-new-footer a:hover { opacity: 0.75; }
+
     /* ── FAQ ── */
     .faq-section {
       max-width: 720px;
@@ -586,6 +682,7 @@
       <a class="nav-link" href="#features">Features</a>
       <a class="nav-link" href="#screenshots">Screenshots</a>
       <a class="nav-link" href="#download">Download</a>
+      <a class="nav-link" href="#whats-new">What's New</a>
       <a class="nav-link" href="#faq">FAQ</a>
       <a class="nav-link" href="https://github.com/prasoon-pradeep/Simple-SOP">GitHub</a>
     </div>
@@ -793,6 +890,18 @@
     </div>
   </section>
 
+  <!-- What's New -->
+  <div class="whats-new" id="whats-new">
+    <div class="section-label">Changelog</div>
+    <h2>What's new</h2>
+    <div class="release-list" id="release-list">
+      <p class="release-loading">Loading release history…</p>
+    </div>
+    <div class="whats-new-footer">
+      <a href="https://github.com/prasoon-pradeep/Simple-SOP/releases" target="_blank" rel="noopener">View all releases on GitHub ↗</a>
+    </div>
+  </div>
+
   <!-- FAQ -->
   <div class="faq-section" id="faq">
     <div class="section-label">FAQ</div>
@@ -975,6 +1084,64 @@
     }
 
     updateVersionInfo();
+
+    // What's New — last 5 published releases
+    async function loadReleases() {
+      const container = document.getElementById('release-list');
+      try {
+        const res = await fetch('https://api.github.com/repos/prasoon-pradeep/Simple-SOP/releases?per_page=10');
+        if (!res.ok) throw new Error('API error');
+        const releases = await res.json();
+
+        const published = releases.filter(r => !r.draft && !r.prerelease).slice(0, 5);
+        if (published.length === 0) {
+          container.innerHTML = '<p class="release-loading">No releases found.</p>';
+          return;
+        }
+
+        container.innerHTML = published.map((r, i) => {
+          const date = new Date(r.published_at).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric'
+          });
+
+          // Strip ### Installation block and everything after it
+          const bodyClean = (r.body || '')
+            .replace(/###\s*Installation[\s\S]*/i, '')
+            .trim();
+
+          // Extract bullet lines (lines starting with -)
+          const bullets = bodyClean
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l.startsWith('- '))
+            .map(l => l.slice(2).trim())
+            .filter(Boolean);
+
+          const latestBadge = i === 0
+            ? '<span class="release-latest-badge">Latest</span>'
+            : '';
+
+          const bulletHtml = bullets.length
+            ? `<ul>${bullets.map(b => `<li>${b}</li>`).join('')}</ul>`
+            : '';
+
+          return `
+            <div class="release-card">
+              <div class="release-card-header">
+                <span class="release-version">${r.tag_name}</span>
+                <span class="release-date">${date}</span>
+                ${latestBadge}
+              </div>
+              ${bulletHtml}
+            </div>`;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = '<p class="release-loading">Could not load release history.</p>';
+      }
+    }
+
+    loadReleases();
   </script>
 
 </body>
