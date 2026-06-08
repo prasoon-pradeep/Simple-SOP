@@ -2177,9 +2177,9 @@ pub async fn export_pdf(
         .spawn()
         .map_err(|e| format!("Failed to launch browser: {}", e))?;
 
-    // Poll for the output file to appear and be non-empty (up to 30 s).
+    // Poll for the output file to appear and be non-empty (up to 30 s, 2 s intervals).
     let mut file_ready = false;
-    for _ in 0..120 {
+    for _ in 0..15 {
         if output_path_buf.exists()
             && std::fs::metadata(&output_path_buf)
                 .map(|m| m.len() > 0)
@@ -2188,7 +2188,7 @@ pub async fn export_pdf(
             file_ready = true;
             break;
         }
-        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
     }
 
     // Brief pause after file appears to let the OS flush the write buffer.
