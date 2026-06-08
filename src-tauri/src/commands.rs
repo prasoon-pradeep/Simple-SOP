@@ -2158,7 +2158,10 @@ pub async fn export_pdf(
     );
     let print_to_pdf_arg = format!("--print-to-pdf={}", output_path);
 
-    let result = tokio::process::Command::new(&chrome)
+    // Spawn without waiting for exit — on macOS headless Chrome writes the PDF
+    // and then hangs (helper processes keep the pipe open), so .output().await
+    // would block forever even though the file is already on disk.
+    let mut child = tokio::process::Command::new(&chrome)
         .args([
             "--headless=new",
             "--disable-gpu",
@@ -2171,39 +2174,37 @@ pub async fn export_pdf(
             &print_to_pdf_arg,
             &file_url,
         ])
-        .output()
-        .await
+        .spawn()
         .map_err(|e| format!("Failed to launch browser: {}", e))?;
 
-    // temp dirs drop here, deleting the HTML file and isolated browser profile
-    drop(browser_profile_dir);
-    drop(temp_dir);
-
-    if !result.status.success() {
-        let stderr = String::from_utf8_lossy(&result.stderr);
-        let stdout = String::from_utf8_lossy(&result.stdout);
-        let detail = stderr
-            .lines()
-            .chain(stdout.lines())
-            .filter(|line| !line.trim().is_empty())
-            .last()
-            .unwrap_or("unknown error")
-            .trim()
-            .to_string();
-        return Err(format!("PDF export failed. {}", detail));
-    }
-
-    for _ in 0..20 {
-        if output_path_buf.exists() {
+    // Poll for the output file to appear and be non-empty (up to 30 s).
+    let mut file_ready = false;
+    for _ in 0..120 {
+        if output_path_buf.exists()
+            && std::fs::metadata(&output_path_buf)
+                .map(|m| m.len() > 0)
+                .unwrap_or(false)
+        {
+            file_ready = true;
             break;
         }
         tokio::time::sleep(std::time::Duration::from_millis(250)).await;
     }
 
-    if !output_path_buf.exists() {
-        let stderr = String::from_utf8_lossy(&result.stderr);
-        let detail = stderr.lines().last().unwrap_or("unknown error").trim().to_string();
-        return Err(format!("PDF was not created. {}", detail));
+    // Brief pause after file appears to let the OS flush the write buffer.
+    if file_ready {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    }
+
+    // Always kill Chrome — it reliably doesn't self-terminate on macOS headless.
+    let _ = child.kill().await;
+
+    // temp dirs drop here, deleting the HTML file and isolated browser profile
+    drop(browser_profile_dir);
+    drop(temp_dir);
+
+    if !file_ready || !output_path_buf.exists() {
+        return Err("PDF export failed: browser did not produce a file within 30 seconds. Is a Chromium-based browser installed?".to_string());
     }
 
     Ok(())
