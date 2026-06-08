@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke } from '@tauri-apps/api/core';
-import { FileText, Target, ShieldAlert, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Download, FileDown } from 'lucide-react';
+import { FileText, Target, ShieldAlert, Timer, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Download, FileDown } from 'lucide-react';
 import { HeaderSection } from '@/components/editor/sections/HeaderSection';
 import { ScopeSection } from '@/components/editor/sections/ScopeSection';
 import { SafetySection } from '@/components/editor/sections/SafetySection';
+import { CycleTimeSection } from '@/components/editor/sections/CycleTimeSection';
 import { ToolsSection } from '@/components/editor/sections/ToolsSection';
 import { ItemsSection } from '@/components/editor/sections/ItemsSection';
 import { ProcedureSection } from '@/components/editor/sections/ProcedureSection';
@@ -21,6 +22,7 @@ const SECTIONS = [
   { id: 'header', label: 'Header', icon: FileText },
   { id: 'scope', label: 'Scope & Purpose', icon: Target },
   { id: 'safety', label: 'Safety & Training', icon: ShieldAlert },
+  { id: 'cycle_time', label: 'Cycle Time', icon: Timer },
   { id: 'tools', label: 'Tools', icon: Wrench },
   { id: 'items', label: 'Items', icon: Package },
   { id: 'procedure', label: 'Procedure', icon: ListOrdered },
@@ -162,6 +164,7 @@ export default function Editor() {
       case 'header': return <HeaderSection />;
       case 'scope': return <ScopeSection />;
       case 'safety': return <SafetySection />;
+      case 'cycle_time': return <CycleTimeSection />;
       case 'tools': return <ToolsSection />;
       case 'items': return <ItemsSection />;
       case 'procedure': return <ProcedureSection />;

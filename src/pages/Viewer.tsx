@@ -351,7 +351,24 @@ export default function Viewer() {
             </div>
           )}
 
-          {/* 3. Tools */}
+          {/* 3. Cycle Time */}
+          {currentSop.cycle_time_value != null && (
+            <div className="section">
+               <div className="section__header">{sectionNum++}. Cycle Time</div>
+               <div className="safety-wrap">
+                  <div className="safety-box">
+                     <div className="safety-box__content">
+                        <strong>{currentSop.cycle_time_value} {currentSop.cycle_time_unit ?? 'minutes'}</strong>
+                        {currentSop.cycle_time_notes && (
+                           <div style={{ marginTop: '4px', color: '#5a5650' }}>{currentSop.cycle_time_notes}</div>
+                        )}
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
+
+          {/* 4. Tools */}
           {tools.length > 0 && (
             <div className="section">
                <div className="section__header">{sectionNum++}. Equipment & Tools Required</div>

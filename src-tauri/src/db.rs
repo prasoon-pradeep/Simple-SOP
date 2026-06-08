@@ -287,6 +287,23 @@ async fn migrate_db(pool: &SqlitePool) -> Result<()> {
             .await?;
     }
 
+    let row: (i64,) =
+        sqlx::query_as("SELECT count(*) FROM pragma_table_info('sops') WHERE name='cycle_time_value'")
+            .fetch_one(pool)
+            .await?;
+
+    if row.0 == 0 {
+        sqlx::query("ALTER TABLE sops ADD COLUMN cycle_time_value REAL")
+            .execute(pool)
+            .await?;
+        sqlx::query("ALTER TABLE sops ADD COLUMN cycle_time_unit TEXT DEFAULT 'minutes'")
+            .execute(pool)
+            .await?;
+        sqlx::query("ALTER TABLE sops ADD COLUMN cycle_time_notes TEXT")
+            .execute(pool)
+            .await?;
+    }
+
     // Migration: Standardize 'Review' -> 'Under Review'
     sqlx::query(
         "UPDATE sops SET approval_status = 'Under Review' WHERE approval_status = 'Review'",

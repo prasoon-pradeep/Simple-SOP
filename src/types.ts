@@ -21,6 +21,9 @@ export interface SOP {
   training_details: string | null;
   created_at: string;
   updated_at: string;
+  cycle_time_value: number | null;
+  cycle_time_unit: string | null;
+  cycle_time_notes: string | null;
 }
 
 export interface Revision {

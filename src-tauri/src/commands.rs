@@ -136,6 +136,14 @@ pub struct SOP {
     pub updated_at: String,
     pub is_deleted: i64,
     pub deleted_at: Option<String>,
+    pub cycle_time_value: Option<f64>,
+    #[serde(default = "default_cycle_time_unit")]
+    pub cycle_time_unit: Option<String>,
+    pub cycle_time_notes: Option<String>,
+}
+
+fn default_cycle_time_unit() -> Option<String> {
+    Some("minutes".to_string())
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
@@ -421,7 +429,8 @@ pub async fn save_sop(payload: SOP, state: tauri::State<'_, SqlitePool>) -> Resu
             created_by = ?, created_date = ?, active_date = ?, next_review_date = ?,
             regulatory_ref = ?, distribution_list = ?, related_documents = ?,
             purpose = ?, scope = ?, safety_notes = ?, training_required = ?,
-            training_details = ?, updated_at = ?
+            training_details = ?, cycle_time_value = ?, cycle_time_unit = ?,
+            cycle_time_notes = ?, updated_at = ?
         WHERE id = ?
         "#,
     )
@@ -441,6 +450,9 @@ pub async fn save_sop(payload: SOP, state: tauri::State<'_, SqlitePool>) -> Resu
     .bind(&payload.safety_notes)
     .bind(payload.training_required)
     .bind(&payload.training_details)
+    .bind(payload.cycle_time_value)
+    .bind(&payload.cycle_time_unit)
+    .bind(&payload.cycle_time_notes)
     .bind(&ts)
     .bind(&payload.id)
     .execute(state.inner())
@@ -1694,8 +1706,8 @@ pub async fn finalize_import(
             created_by, created_date, active_date, next_review_date, approval_status,
             regulatory_ref, distribution_list, related_documents, purpose, scope,
             safety_notes, training_required, training_details, created_at, updated_at,
-            is_deleted, deleted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
     )
     .bind(&bundle.sop.id).bind(&bundle.sop.sop_id).bind(bundle.sop.version).bind(&bundle.sop.title)
@@ -1706,6 +1718,7 @@ pub async fn finalize_import(
     .bind(&bundle.sop.scope).bind(&bundle.sop.safety_notes).bind(if bundle.sop.training_required {1} else {0})
     .bind(&bundle.sop.training_details).bind(&bundle.sop.created_at).bind(&bundle.sop.updated_at)
     .bind(bundle.sop.is_deleted).bind(&bundle.sop.deleted_at)
+    .bind(bundle.sop.cycle_time_value).bind(&bundle.sop.cycle_time_unit).bind(&bundle.sop.cycle_time_notes)
     .execute(&mut *tx).await.map_err(|e| e.to_string())?;
 
     for rev in bundle.revisions {
@@ -2098,7 +2111,10 @@ pub async fn export_pdf(
             "scope": sop.scope,
             "safety_notes": sop.safety_notes,
             "training_required": sop.training_required,
-            "training_details": sop.training_details
+            "training_details": sop.training_details,
+            "cycle_time_value": sop.cycle_time_value,
+            "cycle_time_unit": sop.cycle_time_unit,
+            "cycle_time_notes": sop.cycle_time_notes
         },
         "tools": tools_json,
         "items": items_json,

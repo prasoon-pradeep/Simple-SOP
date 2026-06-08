@@ -1171,6 +1171,24 @@ function renderSafety(sop, n) {
 }
 
 /* ============================================================
+   RENDERER — CYCLE TIME
+   ============================================================ */
+function renderCycleTime(sop, n) {
+  if (sop.cycle_time_value == null) return '';
+  var unit = sop.cycle_time_unit || 'minutes';
+  var display = sop.cycle_time_value + ' ' + unit;
+  var notesHtml = sop.cycle_time_notes
+    ? '<div style="margin-top:4px;color:#5a5650;">' + esc(sop.cycle_time_notes) + '</div>'
+    : '';
+  return '<div class="section">'
+    + secHeader(n, 'CYCLE TIME')
+    + '<div class="safety-wrap"><div class="safety-box avoid-break">'
+    + '<div class="safety-box__content"><strong>' + esc(display) + '</strong>' + notesHtml + '</div>'
+    + '</div></div>'
+    + '</div>';
+}
+
+/* ============================================================
    RENDERER — TOOLS TABLE
    Includes image thumbnail column.
    ============================================================ */
@@ -1433,6 +1451,7 @@ function renderRevisions(revisions, n) {
   var h;
   h = renderPurposeScope(sop, n);   if (h) { out += h; n++; }
   h = renderSafety(sop, n);         if (h) { out += h; n++; }
+  h = renderCycleTime(sop, n);      if (h) { out += h; n++; }
   h = renderTools(data.tools, n);   if (h) { out += h; n++; }
   h = renderItems(data.items, n);   if (h) { out += h; n++; }
 
