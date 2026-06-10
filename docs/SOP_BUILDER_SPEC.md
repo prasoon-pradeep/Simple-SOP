@@ -406,6 +406,7 @@ Home (Mode A sidebar)
 ### 6.6 Settings (`/settings`)
 - Settings page is in scope and implemented.
 - Current settings: organisation/company name for PDF headers, app version display, manual update check/install flow, and license text.
+- **New setting:** Default image directory picker — user can select a directory (via native folder picker) that will be used as the initial location when opening file dialogs for image uploads. If no default is set, dialogs open to the user's home or default documents folder.
 - No dashboard, analytics page, user account page, or mobile-specific pages are in scope.
 
 ---
@@ -1003,7 +1004,7 @@ The app is unsigned and unnotarized. Gatekeeper blocks the first launch — user
 **Fields:**
 - `cycle_time_value` — numeric (nullable, optional field)
 - `cycle_time_unit` — enum: `seconds` | `minutes` | `hours` (default `minutes`)
-- `cycle_time_notes` — free text (nullable, optional — for edge cases like "per batch of 50")
+- `cycle_time_notes` — free text (nullable, optional — for edge cases like "per batch of 50") with AI enhancement capability
 
 **DB schema change:** Two `ALTER TABLE` migrations on `sops`:
 ```sql
@@ -1047,6 +1048,56 @@ This feature touches every layer of the stack. Do not consider the feature compl
 - [ ] Viewer section render (conditional on value present)
 - [ ] PDF template update
 - [ ] `.sop` export/import inclusion
+
+### PHASE 15 — Terminology, AI Enhancements & Settings
+
+**Goal:** Update product terminology to reflect consumables alongside tools/equipment, add AI-assisted note generation, and add a default image directory setting.
+
+**Sidebar Navigation:**
+- Rename "Tools Library" → "Tools & Consumables"
+- Update section label in Mode B (editor sidebar)
+
+**Editor Page Content:**
+- Update "Tools Library" section title → "Tools, Equipment & Consumables"
+- Rename the `tools` table column headers and labels to reflect "Tools, Equipment & Consumables"
+
+**Cycle Time Section — AI Notes Enhancement:**
+- `cycle_time_notes` field becomes eligible for AI-assisted text generation
+- Add "✨ Generate with AI" button alongside the notes textarea in `CycleTimeSection`
+- User can click button to generate smart notes suggestions based on the cycle time value and unit (e.g. "10 minutes per unit, ~6 cycles per hour")
+- AI generation is optional — user can still manually edit or leave blank
+- Generated text appears as placeholder/suggestion before user approves
+
+**Settings — Default Image Directory:**
+- Add new setting field in Settings page (`/settings`): "Default Image Directory"
+- UI: folder icon + path display + "Browse" button (opens native folder picker)
+- Store selected path in app config (Rust-side via `app_config` or similar persistent store)
+- When user clicks image upload in any part of the app (tools, items, steps), the file dialog opens pre-navigated to this directory
+- If no default set: fall back to OS default (home folder or documents)
+- User can change the default anytime via Settings
+
+**DB/Config changes:**
+- Add `default_image_directory` key to app config (not SQLite — this is app-level preference)
+
+**Fields affected:**
+- `cycle_time_notes` — same DB column, now with optional AI enhancement UI
+
+**Implementation notes:**
+- Terminology/labeling update (no DB schema changes except those already in Phase 14)
+- The AI button is purely UI-side and uses existing AI integration patterns in the app
+- All instances of "Tools Library" → "Tools & Consumables" in sidebar and page
+- PDF template may need cosmetic updates to reflect new terminology
+- File picker integration: pass the default directory path to Tauri's `dialog::FileDialogBuilder` via `.initial_directory()`
+- Config storage: use existing app config mechanism (check if `app_config` table/file exists or add if needed)
+
+- [ ] Rename sidebar section "Tools Library" → "Tools & Consumables"
+- [ ] Update editor page section title "Tools Library" → "Tools, Equipment & Consumables"
+- [ ] Add AI enhance button to `cycle_time_notes` textarea
+- [ ] Update PDF template section title and labels for consistency
+- [ ] Update `.sop` export/import labels (if any UI text references old terminology)
+- [ ] Add "Default Image Directory" setting to Settings page UI
+- [ ] Add config storage for default image directory (Rust-side)
+- [ ] Pass default directory to file picker dialogs throughout the app (tools, items, step images)
 
 ### FUTURE REQUIREMENTS
 
