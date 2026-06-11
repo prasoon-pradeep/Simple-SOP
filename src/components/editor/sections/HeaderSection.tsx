@@ -33,6 +33,7 @@ const SUGGESTION_FIELDS: (keyof Suggestions)[] = [
 export function HeaderSection() {
   const { currentSop, updateSopField } = useSopStore();
   const [suggestions, setSuggestions] = useState<Suggestions>(EMPTY_SUGGESTIONS);
+  const [dateErrors, setDateErrors] = useState<{ active_date?: string; next_review_date?: string }>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -123,15 +124,63 @@ export function HeaderSection() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="created_date">Created Date</Label>
-            <DatePicker value={currentSop.created_date || ''} onChange={(val) => updateSopField('created_date', val)} />
+            <DatePicker
+              value={currentSop.created_date || ''}
+              onChange={(val) => {
+                updateSopField('created_date', val);
+                // Re-validate active_date against the new created_date
+                const errors: typeof dateErrors = {};
+                if (val && currentSop.active_date && currentSop.active_date < val) {
+                  errors.active_date = 'Active Date cannot be before Created Date';
+                }
+                if (val && currentSop.next_review_date && currentSop.active_date && currentSop.next_review_date < currentSop.active_date) {
+                  errors.next_review_date = 'Next Review Date cannot be before Active Date';
+                }
+                setDateErrors(errors);
+              }}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="active_date">Active Date</Label>
-            <DatePicker value={currentSop.active_date || ''} onChange={(val) => updateSopField('active_date', val)} />
+            <DatePicker
+              value={currentSop.active_date || ''}
+              onChange={(val) => {
+                const cd = currentSop.created_date;
+                if (val && cd && val < cd) {
+                  setDateErrors(e => ({ ...e, active_date: 'Active Date cannot be before Created Date' }));
+                  return;
+                }
+                setDateErrors(e => ({ ...e, active_date: undefined }));
+                updateSopField('active_date', val);
+                // Re-validate next_review_date
+                if (val && currentSop.next_review_date && currentSop.next_review_date < val) {
+                  setDateErrors(e => ({ ...e, next_review_date: 'Next Review Date cannot be before Active Date' }));
+                } else {
+                  setDateErrors(e => ({ ...e, next_review_date: undefined }));
+                }
+              }}
+            />
+            {dateErrors.active_date && (
+              <p className="text-xs text-status-red">{dateErrors.active_date}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="next_review_date">Next Review Date</Label>
-            <DatePicker value={currentSop.next_review_date || ''} onChange={(val) => updateSopField('next_review_date', val)} />
+            <DatePicker
+              value={currentSop.next_review_date || ''}
+              onChange={(val) => {
+                const ad = currentSop.active_date;
+                if (val && ad && val < ad) {
+                  setDateErrors(e => ({ ...e, next_review_date: 'Next Review Date cannot be before Active Date' }));
+                  return;
+                }
+                setDateErrors(e => ({ ...e, next_review_date: undefined }));
+                updateSopField('next_review_date', val);
+              }}
+            />
+            {dateErrors.next_review_date && (
+              <p className="text-xs text-status-red">{dateErrors.next_review_date}</p>
+            )}
           </div>
         </div>
       </div>

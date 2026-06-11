@@ -1175,11 +1175,11 @@ In the exit prompt modal (section 11.2) when logging a revision:
 - DB constraints (optional but recommended): add CHECK constraints in schema if not already present
 
 **Surfaces to update:**
-- [ ] Header section: validate `created_date` vs `active_date` on field blur/change
-- [ ] "Log New Revision" form: validate `revision_date` >= created_date and >= previous revision date
-- [ ] Exit prompt modal: same revision date validations as above
-- [ ] Error messages: clear, inline, real-time
-- [ ] Rust command validation: ensure backend also validates before writing to DB
+- [x] Header section: validate `created_date` vs `active_date` on field blur/change
+- [x] "Log New Revision" form: validate `revision_date` >= created_date and >= previous revision date
+- [x] Exit prompt modal: same revision date validations as above
+- [x] Error messages: clear, inline, real-time
+- [x] Rust command validation: ensure backend also validates before writing to DB
 
 ---
 

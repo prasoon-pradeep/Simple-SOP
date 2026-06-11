@@ -37,18 +37,19 @@ export default function Editor() {
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [modalMode, setModalMode] = useState<'exit' | 'log'>('exit');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const { 
+  const {
     hasUnsavedRevision,
-    currentSop, 
-    editorOrigin, 
-    setDirty, 
+    currentSop,
+    revisions,
+    editorOrigin,
+    setDirty,
     setHasUnsavedRevision,
-    setCurrentSop, 
-    setRevisions, 
-    setTools, 
-    setItems, 
-    setStepsFull, 
-    setDefinitions 
+    setCurrentSop,
+    setRevisions,
+    setTools,
+    setItems,
+    setStepsFull,
+    setDefinitions
   } = useSopStore();
 
 
@@ -106,6 +107,7 @@ export default function Editor() {
           approval_status: data.status,
           approved_by: data.status === 'Approved' ? data.approvedBy : null,
           approval_date: data.status === 'Approved' ? data.approvalDate : null,
+          revision_date: data.revisionDate || null,
         }
       });
       
@@ -297,6 +299,8 @@ export default function Editor() {
         sopId={currentSop?.id}
         sopTitle={currentSop?.title}
         department={currentSop?.department ?? undefined}
+        createdDate={currentSop?.created_date ?? undefined}
+        lastRevisionDate={revisions.length > 0 ? revisions[revisions.length - 1].revision_date ?? undefined : undefined}
       />
     </div>
   );

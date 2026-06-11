@@ -470,6 +470,7 @@ pub struct CreateRevisionPayload {
     pub approval_status: Option<String>,
     pub approved_by: Option<String>,
     pub approval_date: Option<String>,
+    pub revision_date: Option<String>,
 }
 
 #[tauri::command]
@@ -490,12 +491,48 @@ pub async fn save_revision(
     let current_max: i64 = row.try_get("max_ver").unwrap_unwrap_or(0);
     let new_version = current_max + 1;
     let rev_id = Uuid::new_v4().to_string();
-    let now = Utc::now().format("%Y-%m-%d").to_string();
+    let today = Utc::now().format("%Y-%m-%d").to_string();
+    let revision_date = payload.revision_date.clone().unwrap_or_else(|| today.clone());
+
+    // Validate revision_date >= sop created_date
+    let sop_row = sqlx::query("SELECT created_date FROM sops WHERE id = ?")
+        .bind(&payload.sop_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+    if let Some(row) = sop_row {
+        let created_date: Option<String> = row.try_get("created_date").ok().flatten();
+        if let Some(cd) = created_date {
+            if !cd.is_empty() && revision_date < cd {
+                return Err(format!(
+                    "Revision Date ({}) cannot be before SOP Created Date ({})",
+                    revision_date, cd
+                ));
+            }
+        }
+    }
+
+    // Validate revision_date >= last revision date
+    let last_rev: Option<(String,)> = sqlx::query_as(
+        "SELECT revision_date FROM revisions WHERE sop_id = ? AND revision_date IS NOT NULL ORDER BY version DESC LIMIT 1"
+    )
+    .bind(&payload.sop_id)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(|e| e.to_string())?;
+    if let Some((last_date,)) = last_rev {
+        if !last_date.is_empty() && revision_date < last_date {
+            return Err(format!(
+                "Revision Date ({}) cannot be before the previous revision date ({})",
+                revision_date, last_date
+            ));
+        }
+    }
 
     sqlx::query(
         r#"
         INSERT INTO revisions (
-            id, sop_id, version, revision_notes, revised_by, revision_date, 
+            id, sop_id, version, revision_notes, revised_by, revision_date,
             approval_status, approved_by, approval_date
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
@@ -505,7 +542,7 @@ pub async fn save_revision(
     .bind(new_version)
     .bind(&payload.revision_notes)
     .bind(&payload.revised_by)
-    .bind(&now)
+    .bind(&revision_date)
     .bind(&payload.approval_status)
     .bind(&payload.approved_by)
     .bind(&payload.approval_date)

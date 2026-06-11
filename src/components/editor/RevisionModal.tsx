@@ -26,14 +26,19 @@ interface RevisionModalProps {
   sopId?: string;
   sopTitle?: string;
   department?: string;
+  createdDate?: string;
+  lastRevisionDate?: string;
 }
 
-export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCancel, mode = 'exit', sopId, sopTitle, department }: RevisionModalProps) {
+export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCancel, mode = 'exit', sopId, sopTitle, department, createdDate, lastRevisionDate }: RevisionModalProps) {
+  const today = new Date().toISOString().split('T')[0];
   const [notes, setNotes] = useState('');
   const [revisedBy, setRevisedBy] = useState('');
   const [status, setStatus] = useState('Draft');
   const [approvedBy, setApprovedBy] = useState('');
   const [approvalDate, setApprovalDate] = useState('');
+  const [revisionDate, setRevisionDate] = useState(today);
+  const [revisionDateError, setRevisionDateError] = useState('');
   const [aiPreview, setAiPreview] = useState<{ original: string; enhanced: string } | null>(null);
   const [aiProvider, setAiProvider] = useState('anthropic');
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
@@ -47,20 +52,41 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
 
   useEffect(() => {
     if (open) {
+      setRevisionDate(today);
+      setRevisionDateError('');
       invoke<string[]>('get_revision_name_suggestions')
         .then(names => setNameSuggestions(names))
         .catch(() => {});
     }
   }, [open]);
 
+  const validateRevisionDate = (date: string): string => {
+    if (createdDate && date < createdDate) {
+      return `Revision Date cannot be before SOP Created Date (${createdDate})`;
+    }
+    if (lastRevisionDate && date < lastRevisionDate) {
+      return `Revision Date cannot be before previous revision date (${lastRevisionDate})`;
+    }
+    return '';
+  };
+
+  const handleRevisionDateChange = (val: string) => {
+    setRevisionDate(val);
+    setRevisionDateError(validateRevisionDate(val));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm({ notes, revisedBy, status, approvedBy, approvalDate });
+    const err = validateRevisionDate(revisionDate);
+    if (err) { setRevisionDateError(err); return; }
+    onConfirm({ notes, revisedBy, status, approvedBy, approvalDate, revisionDate });
     setNotes('');
     setRevisedBy('');
     setStatus('Draft');
     setApprovedBy('');
     setApprovalDate('');
+    setRevisionDate(today);
+    setRevisionDateError('');
     entityId.current = crypto.randomUUID();
   };
 
@@ -106,14 +132,11 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="rev-by">Revised By</Label>
-                <SuggestionInput
-                  id="rev-by"
-                  value={revisedBy}
-                  onChange={setRevisedBy}
-                  suggestions={nameSuggestions}
-                  placeholder="Your Name"
-                />
+                <Label htmlFor="rev-date">Revision Date</Label>
+                <DatePicker value={revisionDate} onChange={handleRevisionDateChange} />
+                {revisionDateError && (
+                  <p className="text-xs text-status-red">{revisionDateError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rev-status">Status</Label>
@@ -128,6 +151,18 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
                 </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rev-by">Revised By</Label>
+                <SuggestionInput
+                  id="rev-by"
+                  value={revisedBy}
+                  onChange={setRevisedBy}
+                  suggestions={nameSuggestions}
+                  placeholder="Your Name"
+                />
               </div>
             </div>
             {status === 'Approved' && (
@@ -160,7 +195,7 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={!notes.trim()}>
+              <Button type="submit" disabled={!notes.trim() || !!revisionDateError}>
                 {mode === 'exit' ? 'Log Revision & Exit' : 'Save Revision'}
               </Button>
             </div>
