@@ -982,6 +982,7 @@ The app is unsigned and unnotarized. Gatekeeper blocks the first launch — user
 - [x] **Bug 21:** Paginated PDF preview with natural A4 flow (CSS `break-inside` rules)
 - [x] **Bug 22:** Renamed app to 'SOP Builder' in `package.json`
 - [x] **Bug 23:** Renamed project branding in `Cargo.toml` and `main.rs`
+- [x] **Bug 24:** Fixed DatePicker producing wrong date in UTC+ timezones — now formats from local year/month/day instead of `toISOString()`. Same-day created/active dates now correctly allowed. *(fix committed, not yet in a release)*
 - [x] **Refinement:** Showed saving indicator during step reorder in `ProcedureSection`
 - [x] **Refinement:** Widened Visual Aid section in `StepCard` by 30%
 - [x] **Refinement:** Aligned `StepCard` dividers in empty state by increasing action textarea `min-h`
