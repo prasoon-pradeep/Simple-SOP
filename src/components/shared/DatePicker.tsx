@@ -48,17 +48,28 @@ export function DatePicker({ value, onChange, className, placeholder }: DatePick
 
     // Days of current month
     const currentDate = value ? new Date(value + 'T00:00:00') : null;
+    const now = new Date();
+    const todayYear = now.getFullYear();
+    const todayMonth = now.getMonth();
+    const todayDay = now.getDate();
+
     for (let day = 1; day <= totalDays; day++) {
-      const isSelected = currentDate?.getFullYear() === year && 
-                         currentDate?.getMonth() === month && 
+      const isSelected = currentDate?.getFullYear() === year &&
+                         currentDate?.getMonth() === month &&
                          currentDate?.getDate() === day;
+      const isToday = year === todayYear && month === todayMonth && day === todayDay;
+
       days.push(
         <button
           key={day}
           onClick={() => handleDateSelect(day)}
           className={cn(
-            "h-8 w-8 flex items-center justify-center rounded-md text-sm transition-colors hover:bg-brand-light hover:text-brand",
-            isSelected ? "bg-brand text-white hover:bg-brand hover:text-white font-bold" : "text-text-secondary"
+            "h-8 w-8 flex items-center justify-center rounded-md text-sm transition-colors",
+            isSelected
+              ? "bg-brand text-white hover:bg-brand hover:text-white font-bold"
+              : isToday
+              ? "bg-brand-light text-brand font-semibold ring-1 ring-brand hover:bg-brand hover:text-white"
+              : "text-text-secondary hover:bg-brand-light hover:text-brand"
           )}
         >
           {day}
@@ -116,7 +127,20 @@ export function DatePicker({ value, onChange, className, placeholder }: DatePick
             {renderCalendar()}
           </div>
           
-          <div className="mt-4 pt-4 border-t border-border-subtle flex justify-end">
+          <div className="mt-4 pt-4 border-t border-border-subtle flex justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const today = new Date();
+                setViewDate(today);
+                onChange(today.toISOString().split('T')[0]);
+                setIsOpen(false);
+              }}
+              className="text-xs text-brand hover:text-brand"
+            >
+              Today
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => { onChange(''); setIsOpen(false); }} className="text-xs">
               Clear
             </Button>

@@ -1099,6 +1099,128 @@ This feature touches every layer of the stack. Do not consider the feature compl
 - [ ] Add config storage for default image directory (Rust-side)
 - [ ] Pass default directory to file picker dialogs throughout the app (tools, items, step images)
 
+### PHASE 16 — Date Picker Enhancements
+
+**Goal:** Improve date picker UX by highlighting the current date for better visual reference.
+
+**Changes:**
+- [x] Update `DatePicker` component to highlight today's date
+- [x] Visual highlight: distinct background colour (e.g. light blue or brand colour) on current date
+- [x] Current date should be visually distinct from selected date (if different)
+- [x] Apply to all date picker instances across the app (Header section, Safety section, Approval & Revisions, etc.)
+
+---
+
+### PHASE 17 — Dynamic Name Dropdowns in Revision Forms
+
+**Goal:** Improve "Log Revision" form UX by auto-populating name fields with a dropdown similar to the Header section architecture.
+
+**Fields affected:**
+- `Revised By` — in both the exit prompt modal (section 11.2) and the "Log New Revision" inline form (section 12.3)
+- `Approved By` — in both the exit prompt modal and the "Log New Revision" inline form
+
+**Architecture:**
+- Collect all unique names from previous revisions (`revisions.revised_by` and `revisions.approved_by` across all SOPs)
+- Build a dropdown/autocomplete list from this history
+- User can either select from the list or type a new name (free text fallback)
+- Same pattern as the Header section (if it uses dynamic name history)
+
+**Implementation notes:**
+- Query unique values from `revisions` table: `SELECT DISTINCT revised_by FROM revisions WHERE revised_by IS NOT NULL AND revised_by != ''` (similar for `approved_by`)
+- Store results in Zustand or fetch on demand when modal/form opens
+- Use same UI component pattern as Header section for consistency
+- Field remains optional — user can leave blank
+
+**Surfaces to update:**
+- [ ] Revision exit prompt modal (section 11.2) — "Revised By" and "Approved By" fields
+- [ ] "Log New Revision" inline form in Approval & Revisions tab (section 12.3) — same fields
+- [ ] Implement dropdown/autocomplete component if not already in Header section
+- [ ] Query `revisions` table for unique names on app load or modal open
+
+---
+
+### PHASE 18 — Date Validation & Interlocking Logic
+
+**Goal:** Enforce chronological and logical consistency across all date fields throughout the app.
+
+**Rule 1 — Header Section (Created Date ≤ Active/Release Date)**
+
+In the Header section (section 7.1):
+- `created_date` must be **less than or equal to** `active_date` (Release Date)
+- If user tries to set `active_date` before `created_date`, show inline error: *"Active Date cannot be before Created Date"*
+- Disable save/blur until dates are valid
+- `next_review_date` should be >= `active_date` (future-looking, but optional validation)
+
+**Rule 2 — Revision Section (Revision Date ≥ Created Date)**
+
+In the Approval & Revisions tab (section 12.3) when logging a new revision:
+- `revision_date` must be **greater than or equal to** `sops.created_date`
+- If user tries to set `revision_date` before the SOP's `created_date`, show inline error: *"Revision Date cannot be before SOP Created Date"*
+- Additionally: each new revision's `revision_date` should be >= the previous revision's `revision_date` (chronological order within the SOP)
+- If violation: show error: *"Revision Date cannot be before previous revision date"*
+- Disable save/confirm button until dates are valid
+
+**Rule 3 — Exit Prompt (Revision Date Validation)**
+
+In the exit prompt modal (section 11.2) when logging a revision:
+- Apply the same Rule 2 validations: `revision_date` >= `sops.created_date` and >= previous revision date
+- Show error inline in the modal
+- Disable the "Log Revision & Exit" button until valid
+
+**Implementation notes:**
+- Add client-side validation in each form (Header, Log New Revision, exit modal)
+- Validate on blur and on submit
+- Show real-time error messages (red text below field)
+- Server-side validation (Rust): validate on `save_sop_header`, `log_revision`, etc. commands to prevent DB inconsistency
+- DB constraints (optional but recommended): add CHECK constraints in schema if not already present
+
+**Surfaces to update:**
+- [ ] Header section: validate `created_date` vs `active_date` on field blur/change
+- [ ] "Log New Revision" form: validate `revision_date` >= created_date and >= previous revision date
+- [ ] Exit prompt modal: same revision date validations as above
+- [ ] Error messages: clear, inline, real-time
+- [ ] Rust command validation: ensure backend also validates before writing to DB
+
+---
+
+### PHASE 19 — Steps/Procedure UI Improvements
+
+**Goal:** Enable dynamic height expansion for textarea fields in procedure/steps section to improve readability and eliminate in-field scrolling for longer instruction text.
+
+**Current issue:**
+- Action, Notes/Cautions, and Expected Output textareas have fixed heights, forcing users to scroll within tight areas
+- Users cannot see full text without scrolling inside the field
+- Makes it difficult to read and edit longer procedure instructions
+
+**Solution — Dynamic Textarea Height:**
+- Textareas automatically expand vertically as content grows (auto-resize on input)
+- No fixed height limits — textarea grows with content
+- Card height flows naturally to accommodate expanded textareas
+- Keep current base size as-is; textareas expand as needed
+
+**Fields affected (in `StepCard.tsx`):**
+1. **Action / Instruction** textarea — dynamically expand
+2. **Expected Output** textarea — dynamically expand
+3. **Notes / Cautions** textarea — dynamically expand
+
+**Implementation approach:**
+- Use auto-height JavaScript (e.g. `textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'`)
+- Or use CSS `resize: vertical` + remove height constraints
+- Keep initial `min-height` at current values (no forced increase)
+- Remove any fixed `height` or `max-height` constraints
+- Textarea expands as user types or existing content is loaded
+- Card container flows naturally — no max-height on card
+- Maintain consistent vertical padding/spacing between fields
+
+**Surfaces to update:**
+- [ ] `StepCard.tsx` — implement auto-height on all three textareas
+- [ ] Remove any fixed height or max-height CSS constraints on textareas
+- [ ] Test with multi-line instructions to ensure textarea grows without internal scroll
+- [ ] Verify card layout remains clean and doesn't overflow page
+- [ ] Ensure step reorder drag handle remains visible and accessible
+
+---
+
 ### FUTURE REQUIREMENTS
 
 **Automatic DB backups + corruption recovery screen:**
