@@ -184,6 +184,8 @@ jobs:
           find artifacts/macos -maxdepth 3 -ls
 
       - name: Build latest.json
+        env:
+          NOTES: ${{ github.event.inputs.notes }}
         run: |
           TAG="${{ github.event.inputs.tag }}"
           VERSION="${{ steps.version.outputs.version }}"
@@ -216,7 +218,6 @@ jobs:
 
           REPO_URL="https://github.com/prasoon-pradeep/Simple-SOP/releases/download/${TAG}"
 
-          NOTES="${{ github.event.inputs.notes }}"
           PUB_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           # Use jq --arg so all values are JSON-escaped automatically.
