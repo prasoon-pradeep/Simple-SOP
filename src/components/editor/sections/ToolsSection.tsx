@@ -161,8 +161,8 @@ export function ToolsSection() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-text-primary">Tools & Equipment</h3>
-          <p className="text-sm text-text-tertiary">Manage all tools required for this procedure.</p>
+          <h3 className="text-lg font-bold text-text-primary">Tools, Equipment & Consumables</h3>
+          <p className="text-sm text-text-tertiary">Manage all tools, equipment and consumables required for this procedure.</p>
         </div>
         <div className="flex space-x-3">
           <Button variant="outline" size="sm" className="flex items-center" onClick={() => setIsSearchOpen(true)}>

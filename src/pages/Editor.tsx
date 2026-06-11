@@ -23,7 +23,7 @@ const SECTIONS = [
   { id: 'scope', label: 'Scope & Purpose', icon: Target },
   { id: 'safety', label: 'Safety & Training', icon: ShieldAlert },
   { id: 'cycle_time', label: 'Cycle Time', icon: Timer },
-  { id: 'tools', label: 'Tools', icon: Wrench },
+  { id: 'tools', label: 'Tools & Consumables', icon: Wrench },
   { id: 'items', label: 'Items', icon: Package },
   { id: 'procedure', label: 'Procedure', icon: ListOrdered },
   { id: 'definitions', label: 'Definitions', icon: BookOpen },

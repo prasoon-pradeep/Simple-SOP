@@ -4,7 +4,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { ArrowLeft, Save, ScrollText, RefreshCw, Sparkles, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Save, ScrollText, RefreshCw, Sparkles, AlertTriangle, Check, Eye, EyeOff, FolderOpen } from 'lucide-react';
+import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,8 @@ export default function Settings() {
   const [companyName, setCompanyName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [defaultImageDir, setDefaultImageDir] = useState('');
+  const [imageDirSaved, setImageDirSaved] = useState(false);
 
   const [appVersion, setAppVersion] = useState('');
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
@@ -65,6 +68,9 @@ export default function Settings() {
     invoke<string | null>('get_config_value', { key: 'company_name' }).then(val => {
       setCompanyName(val ?? '');
     });
+    invoke<string | null>('get_config_value', { key: 'default_image_directory' }).then(val => {
+      setDefaultImageDir(val ?? '');
+    }).catch(() => {});
     getVersion().then(setAppVersion);
     invoke<string | null>('get_config_value', { key: 'whats_new_notes' }).then(setReleaseNotes).catch(() => {});
     invoke<boolean>('check_keyring_available').then(setKeyringAvailable).catch(() => setKeyringAvailable(false));
@@ -272,6 +278,61 @@ export default function Settings() {
             >
               <Save className="w-4 h-4 mr-2" />
               {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save Settings'}
+            </Button>
+          </div>
+
+          <div className="border-t border-border-standard" />
+
+          {/* Default Image Directory */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <FolderOpen className="w-4 h-4 text-text-tertiary" />
+              <h2 className="text-base font-semibold text-text-primary">Default Image Directory</h2>
+            </div>
+            <p className="text-xs text-text-tertiary mb-4">
+              When adding images to tools, items, or steps the file picker will open here by default. Leave blank to use the OS default.
+            </p>
+            <div className="flex items-center gap-2 max-w-sm">
+              <Input
+                value={defaultImageDir}
+                readOnly
+                placeholder="Not set — using OS default"
+                className="flex-1 text-sm text-text-secondary bg-secondary cursor-default"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const selected = await openDialog({ directory: true, defaultPath: defaultImageDir || undefined });
+                  if (selected && typeof selected === 'string') {
+                    setDefaultImageDir(selected);
+                  }
+                }}
+              >
+                Browse
+              </Button>
+              {defaultImageDir && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-status-red hover:text-status-red"
+                  onClick={() => setDefaultImageDir('')}
+                  title="Clear"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            <Button
+              size="sm"
+              className="mt-3 bg-brand hover:bg-brand-hover text-white"
+              onClick={async () => {
+                await invoke('set_config_value', { key: 'default_image_directory', value: defaultImageDir || '' });
+                setImageDirSaved(true);
+                setTimeout(() => setImageDirSaved(false), 2000);
+              }}
+            >
+              {imageDirSaved ? <><Check className="w-4 h-4 mr-1" />Saved!</> : 'Save Directory'}
             </Button>
           </div>
 

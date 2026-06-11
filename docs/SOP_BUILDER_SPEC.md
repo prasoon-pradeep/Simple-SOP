@@ -1042,12 +1042,12 @@ This feature touches every layer of the stack. Do not consider the feature compl
 7. **PDF template** (`public/pdf-template.html`) — the PDF is rendered from this static template with SOP data injected at export time. Add the Cycle Time section in the same position as the Viewer — between Safety and Tools. Follow the existing section HTML/CSS structure. Only render if value is present. The Rust export command (`export_pdf` or equivalent in `commands.rs`) injects a JSON blob into the template — confirm the three new fields are included in that blob.
 8. **`.sop` export/import** — export includes the fields automatically via `SELECT *` → `SOP` struct → `serde_json`. Import INSERT must explicitly bind all three new columns as noted above.
 
-- [ ] DB migrations for three new `sops` columns
-- [ ] `CycleTimeSection.tsx` component (editor)
-- [ ] Wire auto-save commands for new fields
-- [ ] Viewer section render (conditional on value present)
-- [ ] PDF template update
-- [ ] `.sop` export/import inclusion
+- [x] DB migrations for three new `sops` columns
+- [x] `CycleTimeSection.tsx` component (editor)
+- [x] Wire auto-save commands for new fields
+- [x] Viewer section render (conditional on value present)
+- [x] PDF template update
+- [x] `.sop` export/import inclusion
 
 ### PHASE 15 — Terminology, AI Enhancements & Settings
 
@@ -1090,14 +1090,14 @@ This feature touches every layer of the stack. Do not consider the feature compl
 - File picker integration: pass the default directory path to Tauri's `dialog::FileDialogBuilder` via `.initial_directory()`
 - Config storage: use existing app config mechanism (check if `app_config` table/file exists or add if needed)
 
-- [ ] Rename sidebar section "Tools Library" → "Tools & Consumables"
-- [ ] Update editor page section title "Tools Library" → "Tools, Equipment & Consumables"
-- [ ] Add AI enhance button to `cycle_time_notes` textarea
-- [ ] Update PDF template section title and labels for consistency
-- [ ] Update `.sop` export/import labels (if any UI text references old terminology)
-- [ ] Add "Default Image Directory" setting to Settings page UI
-- [ ] Add config storage for default image directory (Rust-side)
-- [ ] Pass default directory to file picker dialogs throughout the app (tools, items, step images)
+- [x] Rename sidebar section "Tools Library" → "Tools & Consumables"
+- [x] Update editor page section title "Tools Library" → "Tools, Equipment & Consumables"
+- [x] Add AI enhance button to `cycle_time_notes` textarea
+- [x] Update PDF template section title and labels for consistency
+- [x] Update `.sop` export/import labels (if any UI text references old terminology)
+- [x] Add "Default Image Directory" setting to Settings page UI
+- [x] Add config storage for default image directory (Rust-side)
+- [x] Pass default directory to file picker dialogs throughout the app (tools, items, step images)
 
 ### PHASE 16 — Date Picker Enhancements
 

@@ -87,6 +87,7 @@ pub fn run() {
             commands::get_ai_enhancements,
             commands::get_field_suggestions,
             commands::get_revision_name_suggestions,
+            commands::read_file_as_base64,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1408,6 +1408,37 @@ pub async fn save_image(
     Ok(uuid)
 }
 
+#[tauri::command]
+pub fn read_file_as_base64(path: String) -> Result<String, String> {
+    let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
+    Ok(format!("data:{};base64,{}", mime_guess(&path), base64_encode(&bytes)))
+}
+
+fn mime_guess(path: &str) -> &'static str {
+    let lower = path.to_lowercase();
+    if lower.ends_with(".png") { "image/png" }
+    else if lower.ends_with(".jpg") || lower.ends_with(".jpeg") { "image/jpeg" }
+    else if lower.ends_with(".gif") { "image/gif" }
+    else if lower.ends_with(".webp") { "image/webp" }
+    else if lower.ends_with(".bmp") { "image/bmp" }
+    else { "image/png" }
+}
+
+fn base64_encode(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    const TABLE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    for chunk in bytes.chunks(3) {
+        let b0 = chunk[0] as usize;
+        let b1 = if chunk.len() > 1 { chunk[1] as usize } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as usize } else { 0 };
+        let _ = write!(out, "{}{}{}{}", TABLE[b0 >> 2] as char, TABLE[((b0 & 3) << 4) | (b1 >> 4)] as char,
+            if chunk.len() > 1 { TABLE[((b1 & 0xf) << 2) | (b2 >> 6)] as char } else { '=' },
+            if chunk.len() > 2 { TABLE[b2 & 0x3f] as char } else { '=' });
+    }
+    out
+}
+
 // --------------------------------------------------------
 // .SOP Export/Import
 // --------------------------------------------------------

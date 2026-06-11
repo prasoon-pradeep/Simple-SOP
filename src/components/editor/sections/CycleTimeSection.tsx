@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { useSopStore } from '@/store';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SparkleButton } from '@/components/shared/SparkleButton';
+import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
 
 const UNITS = [
   { value: 'seconds', label: 'Seconds' },
@@ -13,6 +16,14 @@ const UNITS = [
 
 export function CycleTimeSection() {
   const { currentSop, updateSopField } = useSopStore();
+  const [aiPreview, setAiPreview] = useState<{ original: string; enhanced: string } | null>(null);
+  const [aiProvider, setAiProvider] = useState('anthropic');
+
+  useEffect(() => {
+    invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
+      .then(p => { if (p) setAiProvider(p); })
+      .catch(() => {});
+  }, []);
 
   if (!currentSop) return <div className="p-6">No SOP loaded.</div>;
 
@@ -76,7 +87,19 @@ export function CycleTimeSection() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="cycle_time_notes">Notes <span className="text-text-quaternary font-normal">(optional)</span></Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="cycle_time_notes">Notes <span className="text-text-quaternary font-normal">(optional)</span></Label>
+            <SparkleButton
+              value={currentSop.cycle_time_notes || ''}
+              fieldName="cycle_time_notes"
+              entityType="sop"
+              entityId={currentSop.id}
+              sopId={currentSop.id}
+              sopTitle={currentSop.title}
+              department={currentSop.department ?? undefined}
+              onPreview={enhanced => setAiPreview({ original: currentSop.cycle_time_notes || '', enhanced })}
+            />
+          </div>
           <Textarea
             id="cycle_time_notes"
             value={currentSop.cycle_time_notes || ''}
@@ -86,6 +109,24 @@ export function CycleTimeSection() {
           />
         </div>
       </div>
+
+      {aiPreview && (
+        <AIPreviewPanel
+          open
+          originalText={aiPreview.original}
+          enhancedText={aiPreview.enhanced}
+          fieldName="cycle_time_notes"
+          entityType="sop"
+          entityId={currentSop.id}
+          sopId={currentSop.id}
+          provider={aiProvider}
+          onAccept={(text) => {
+            updateSopField('cycle_time_notes', text || null);
+            setAiPreview(null);
+          }}
+          onReject={() => setAiPreview(null)}
+        />
+      )}
     </div>
   );
 }
