@@ -899,7 +899,7 @@ When a new version is released, users who already have the app installed are aut
 - [x] `Cargo.toml`, `Cargo.lock`, `package.json`, and `package-lock.json` are kept in sync for releases.
 - [x] Current release version in source: `0.2.0`.
 - [x] To ship a new version: bump versions in both `src-tauri/Cargo.toml` and `package.json`, push to `master`, then manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.2.0`.
-- [ ] Automate version synchronization so only one file needs to be edited before release.
+- [x] Automate version synchronization so only one file needs to be edited before release.
 
 #### Signing keypair
 - [x] Updater public key is embedded in `tauri.conf.json` under `plugins.updater.pubkey`.
