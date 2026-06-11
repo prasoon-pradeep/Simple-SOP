@@ -28,9 +28,10 @@ export function DatePicker({ value, onChange, className, placeholder }: DatePick
   };
 
   const handleDateSelect = (day: number) => {
-    const selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    const formattedDate = selectedDate.toISOString().split('T')[0];
-    onChange(formattedDate);
+    const y = viewDate.getFullYear();
+    const m = String(viewDate.getMonth() + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    onChange(`${y}-${m}-${d}`);
     setIsOpen(false);
   };
 
@@ -134,7 +135,10 @@ export function DatePicker({ value, onChange, className, placeholder }: DatePick
               onClick={() => {
                 const today = new Date();
                 setViewDate(today);
-                onChange(today.toISOString().split('T')[0]);
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, '0');
+                const d = String(today.getDate()).padStart(2, '0');
+                onChange(`${y}-${m}-${d}`);
                 setIsOpen(false);
               }}
               className="text-xs text-brand hover:text-brand"
