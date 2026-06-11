@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "version": "node scripts/bump-version.js",
-    "release": "node scripts/release.js"
+    "release": "node scripts/release.cjs",
+    "install-hooks": "node scripts/install-hooks.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
