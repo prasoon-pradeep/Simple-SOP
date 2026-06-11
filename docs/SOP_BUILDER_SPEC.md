@@ -1213,11 +1213,11 @@ In the exit prompt modal (section 11.2) when logging a revision:
 - Maintain consistent vertical padding/spacing between fields
 
 **Surfaces to update:**
-- [ ] `StepCard.tsx` — implement auto-height on all three textareas
-- [ ] Remove any fixed height or max-height CSS constraints on textareas
-- [ ] Test with multi-line instructions to ensure textarea grows without internal scroll
-- [ ] Verify card layout remains clean and doesn't overflow page
-- [ ] Ensure step reorder drag handle remains visible and accessible
+- [x] `StepCard.tsx` — implement auto-height on all three textareas
+- [x] Remove any fixed height or max-height CSS constraints on textareas
+- [x] Test with multi-line instructions to ensure textarea grows without internal scroll
+- [x] Verify card layout remains clean and doesn't overflow page
+- [x] Ensure step reorder drag handle remains visible and accessible
 
 ---
 

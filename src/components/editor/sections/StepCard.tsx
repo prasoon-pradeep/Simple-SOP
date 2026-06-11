@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSopStore } from '@/store';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { SparkleButton } from '@/components/shared/SparkleButton';
@@ -97,6 +97,24 @@ function SortableImageItem({ img, src, onDelete, onLightbox }: SortableImageItem
   );
 }
 
+// ── Auto-resize hook ─────────────────────────────────────────────────────────
+
+function useAutoResize(value: string) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, []);
+
+  useEffect(() => {
+    resize();
+  }, [value, resize]);
+
+  return ref;
+}
+
 // ── StepCard ──────────────────────────────────────────────────────────────────
 
 interface StepCardProps {
@@ -123,6 +141,10 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [aiPreview, setAiPreview] = useState<{ field: string; original: string; enhanced: string } | null>(null);
   const [aiProvider, setAiProvider] = useState('anthropic');
+
+  const actionRef = useAutoResize(step.action || '');
+  const notesRef = useAutoResize(step.notes || '');
+  const outputRef = useAutoResize(step.expected_output || '');
 
   useEffect(() => {
     invoke<string | null>('get_config_value', { key: 'ai_active_provider' })
@@ -352,11 +374,12 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
               />
             </div>
             <Textarea
+              ref={actionRef}
               id={`action-${step.id}`}
               value={step.action || ''}
               onChange={(e) => updateStepField(step.id, 'action', e.target.value)}
               placeholder="What needs to be done?"
-              className="min-h-[103px] text-[13.5px] border-none focus-visible:ring-0 resize-none placeholder:italic"
+              className="min-h-[103px] text-[13.5px] border-none focus-visible:ring-0 resize-none placeholder:italic overflow-hidden"
             />
           </div>
 
@@ -381,11 +404,12 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                 />
               </div>
               <Textarea
+                ref={notesRef}
                 id={`notes-${step.id}`}
                 value={step.notes || ''}
                 onChange={(e) => updateStepField(step.id, 'notes', e.target.value)}
                 placeholder="Safety notes, tips..."
-                className="min-h-[60px] text-xs border-none focus-visible:ring-0 resize-none bg-transparent"
+                className="min-h-[60px] text-xs border-none focus-visible:ring-0 resize-none bg-transparent overflow-hidden"
               />
             </div>
             <div className="space-y-1.5">
@@ -408,11 +432,12 @@ export function StepCard({ stepFull, onRefresh }: StepCardProps) {
                 />
               </div>
               <Textarea
+                ref={outputRef}
                 id={`output-${step.id}`}
                 value={step.expected_output || ''}
                 onChange={(e) => updateStepField(step.id, 'expected_output', e.target.value)}
                 placeholder="Result of this step..."
-                className="min-h-[60px] text-xs border-none focus-visible:ring-0 resize-none bg-transparent"
+                className="min-h-[60px] text-xs border-none focus-visible:ring-0 resize-none bg-transparent overflow-hidden"
               />
             </div>
           </div>
