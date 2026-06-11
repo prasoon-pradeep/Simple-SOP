@@ -9,12 +9,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/shared/DatePicker';
 import { SparkleButton } from '@/components/shared/SparkleButton';
 import { AIPreviewPanel } from '@/components/shared/AIPreviewPanel';
+import { SuggestionInput } from '@/components/ui/suggestion-input';
 
 interface RevisionModalProps {
   open: boolean;
@@ -36,6 +36,7 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
   const [approvalDate, setApprovalDate] = useState('');
   const [aiPreview, setAiPreview] = useState<{ original: string; enhanced: string } | null>(null);
   const [aiProvider, setAiProvider] = useState('anthropic');
+  const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
   const entityId = useRef(crypto.randomUUID());
 
   useEffect(() => {
@@ -43,6 +44,14 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
       .then(p => { if (p) setAiProvider(p); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      invoke<string[]>('get_revision_name_suggestions')
+        .then(names => setNameSuggestions(names))
+        .catch(() => {});
+    }
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,10 +107,11 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rev-by">Revised By</Label>
-                <Input
+                <SuggestionInput
                   id="rev-by"
                   value={revisedBy}
-                  onChange={(e) => setRevisedBy(e.target.value)}
+                  onChange={setRevisedBy}
+                  suggestions={nameSuggestions}
                   placeholder="Your Name"
                 />
               </div>
@@ -124,10 +134,11 @@ export function RevisionModal({ open, onOpenChange, onConfirm, onDiscard, onCanc
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="appr-by">Approved By</Label>
-                  <Input
+                  <SuggestionInput
                     id="appr-by"
                     value={approvedBy}
-                    onChange={(e) => setApprovedBy(e.target.value)}
+                    onChange={setApprovedBy}
+                    suggestions={nameSuggestions}
                     placeholder="Approver Name"
                   />
                 </div>

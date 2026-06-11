@@ -1132,10 +1132,10 @@ This feature touches every layer of the stack. Do not consider the feature compl
 - Field remains optional — user can leave blank
 
 **Surfaces to update:**
-- [ ] Revision exit prompt modal (section 11.2) — "Revised By" and "Approved By" fields
-- [ ] "Log New Revision" inline form in Approval & Revisions tab (section 12.3) — same fields
-- [ ] Implement dropdown/autocomplete component if not already in Header section
-- [ ] Query `revisions` table for unique names on app load or modal open
+- [x] Revision exit prompt modal (section 11.2) — "Revised By" and "Approved By" fields
+- [x] "Log New Revision" inline form in Approval & Revisions tab (section 12.3) — same fields
+- [x] Implement dropdown/autocomplete component if not already in Header section
+- [x] Query `revisions` table for unique names on app load or modal open
 
 ---
 

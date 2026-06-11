@@ -2740,3 +2740,31 @@ pub async fn get_field_suggestions(
 
     Ok(rows.into_iter().map(|(v,)| v).collect())
 }
+
+#[tauri::command]
+pub async fn get_revision_name_suggestions(
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Vec<String>, String> {
+    let pool = state.inner();
+    let mut seen = std::collections::HashSet::new();
+    let mut names: Vec<String> = Vec::new();
+
+    for col in &["revised_by", "approved_by"] {
+        let query = format!(
+            "SELECT DISTINCT {} FROM revisions WHERE {} IS NOT NULL AND {} != '' ORDER BY {} ASC",
+            col, col, col, col
+        );
+        let rows: Vec<(String,)> = sqlx::query_as(&query)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+        for (name,) in rows {
+            if seen.insert(name.to_lowercase()) {
+                names.push(name);
+            }
+        }
+    }
+
+    names.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    Ok(names)
+}
