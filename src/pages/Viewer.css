@@ -538,3 +538,37 @@ td.col-tools-mats {
   padding: 10px;
   border: 1px solid var(--pdf-border-light);
 }
+
+/* ============================================================
+   TRANSLATIONS
+   ============================================================ */
+.translation-disclaimer {
+  margin: 0 0 14px 0;
+  padding: 8px 10px;
+  font-size: 7.5pt;
+  font-style: italic;
+  color: var(--pdf-text-muted);
+  background: #f7f7f7;
+  border: 1px solid var(--pdf-border-light);
+  border-radius: 3px;
+}
+
+.translation-row td {
+  border-top: 1px dashed #cccccc;
+  padding: 6px 8px;
+  background: #fafafa;
+}
+
+.translated-field-block { color: #888; }
+.translated-field-block + .translated-field-block { margin-top: 6px; }
+
+.translated-field-block__lang {
+  font-size: 6.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.translated-field-block__text { font-size: 8pt; }

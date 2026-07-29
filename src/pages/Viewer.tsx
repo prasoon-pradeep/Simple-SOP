@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
@@ -6,7 +6,7 @@ import { appDataDir, join } from '@tauri-apps/api/path';
 import { ArrowLeft, Pencil, Download, Database, CheckCircle2, Clock, XCircle, AlertCircle, FileArchive } from 'lucide-react';
 import { save } from '@tauri-apps/plugin-dialog';
 import { Button } from '@/components/ui/button';
-import { Definition, SOP, Revision, Tool, Item, StepFull } from '@/types';
+import { Definition, SOP, Revision, Tool, Item, StepFull, AiTranslation, SUPPORTED_LANGUAGES } from '@/types';
 import { cn } from '@/lib/utils';
 import './Viewer.css';
 
@@ -20,6 +20,7 @@ export default function Viewer() {
     tools, setTools,
     items, setItems,
     stepsFull, setStepsFull,
+    translations, setTranslations,
     setEditorOrigin,
     resetEditorState
   } = useSopStore();
@@ -51,7 +52,7 @@ export default function Viewer() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [sop, revs, defs, toolsData, itemsData, steps, configName] = await Promise.all([
+      const [sop, revs, defs, toolsData, itemsData, steps, configName, translationsData] = await Promise.all([
         invoke<SOP>('get_sop', { id }),
         invoke<Revision[]>('get_revisions', { sopId: id }),
         invoke<Definition[]>('get_definitions', { sopId: id }),
@@ -59,6 +60,7 @@ export default function Viewer() {
         invoke<Item[]>('get_items', { sopId: id }),
         invoke<StepFull[]>('get_steps_full', { sopId: id }),
         invoke<string | null>('get_config_value', { key: 'company_name' }),
+        invoke<AiTranslation[]>('get_translations', { sopId: id }),
       ]);
       setCompanyName(configName ?? 'My Company');
 
@@ -68,6 +70,7 @@ export default function Viewer() {
       setTools(toolsData);
       setItems(itemsData);
       setStepsFull(steps);
+      setTranslations(translationsData);
     } catch (error) {
       console.error("Failed to load SOP data", error);
     } finally {
@@ -182,6 +185,46 @@ export default function Viewer() {
   };
 
   let sectionNum = 1;
+
+  const languagesPresent = useMemo(() => {
+    const codes = new Set(translations.map(t => t.language));
+    return SUPPORTED_LANGUAGES.filter(l => codes.has(l.code));
+  }, [translations]);
+
+  // Renders one greyed-out block per language for a given entity's fields —
+  // mirrors renderTranslatedFields() in public/pdf-template.html so this
+  // preview matches what the actual PDF export produces.
+  const translatedFieldsBlock = (entityId: string, fields: [string, string][]) => {
+    const byLang: Record<string, Record<string, string>> = {};
+    for (const t of translations) {
+      if (t.entity_id !== entityId) continue;
+      (byLang[t.language] ??= {})[t.field_name] = t.translated_text;
+    }
+    const codes = Object.keys(byLang);
+    if (codes.length === 0) return null;
+
+    return (
+      <>
+        {codes.map(code => {
+          const langName = SUPPORTED_LANGUAGES.find(l => l.code === code)?.name || code;
+          return (
+            <div key={code} className="translated-field-block">
+              <div className="translated-field-block__lang">{langName} (unreviewed AI translation)</div>
+              {fields.map(([field, label]) => {
+                const text = byLang[code][field];
+                if (!text) return null;
+                return (
+                  <div key={field} className="translated-field-block__text">
+                    {label ? `${label}: ` : ''}{text}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </>
+    );
+  };
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
@@ -307,6 +350,13 @@ export default function Viewer() {
              )}
           </div>
 
+          {languagesPresent.length > 0 && (
+            <div className="translation-disclaimer">
+              This document includes AI-generated translations ({languagesPresent.map(l => l.name).join(', ')}) shown in grey beneath the original English text.
+              Translations are unreviewed. In case of any discrepancy, the English version is authoritative.
+            </div>
+          )}
+
           {/* 1. Purpose & Scope */}
           {(currentSop.purpose || currentSop.scope) && (
             <div className="section">
@@ -316,13 +366,19 @@ export default function Viewer() {
                      {currentSop.purpose && (
                         <tr>
                            <td className="ps-table__label">Purpose</td>
-                           <td className="ps-table__content">{currentSop.purpose}</td>
+                           <td className="ps-table__content">
+                              {currentSop.purpose}
+                              {translatedFieldsBlock(currentSop.id, [['purpose', '']])}
+                           </td>
                         </tr>
                      )}
                      {currentSop.scope && (
                         <tr>
                            <td className="ps-table__label">Scope</td>
-                           <td className="ps-table__content">{currentSop.scope}</td>
+                           <td className="ps-table__content">
+                              {currentSop.scope}
+                              {translatedFieldsBlock(currentSop.id, [['scope', '']])}
+                           </td>
                         </tr>
                      )}
                   </tbody>
@@ -338,7 +394,10 @@ export default function Viewer() {
                   {currentSop.safety_notes && (
                     <div className="safety-box">
                        <div className="safety-box__header">Safety & Environmental Hazards</div>
-                       <div className="safety-box__content">{currentSop.safety_notes}</div>
+                       <div className="safety-box__content">
+                          {currentSop.safety_notes}
+                          {translatedFieldsBlock(currentSop.id, [['safety_notes', '']])}
+                       </div>
                     </div>
                   )}
                   {currentSop.training_required && (
@@ -519,6 +578,14 @@ export default function Viewer() {
                                       </div>
                                    ))}
                                 </div>
+                             </td>
+                          </tr>
+                        )}
+                        {translatedFieldsBlock(s.step.id, [['action', 'Action'], ['notes', 'Notes'], ['expected_output', 'Expected Output']]) && (
+                          <tr className="translation-row">
+                             <td className="center muted align-middle">&#x21b3;</td>
+                             <td colSpan={4}>
+                                {translatedFieldsBlock(s.step.id, [['action', 'Action'], ['notes', 'Notes'], ['expected_output', 'Expected Output']])}
                              </td>
                           </tr>
                         )}
