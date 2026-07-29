@@ -1472,6 +1472,8 @@ pub struct SopBundle {
     pub step_items: Vec<StepItem>,
     #[serde(default)]
     pub ai_enhancements: Vec<AiEnhancement>,
+    #[serde(default)]
+    pub translations: Vec<AiTranslation>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1568,6 +1570,14 @@ pub async fn export_sop(
     .await
     .map_err(|e| e.to_string())?;
 
+    let translations = sqlx::query_as::<sqlx::Sqlite, AiTranslation>(
+        "SELECT * FROM ai_translations WHERE sop_id = ?",
+    )
+    .bind(&sop_id_uuid)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
     let bundle = SopBundle {
         sop: sop.clone(),
         revisions,
@@ -1579,6 +1589,7 @@ pub async fn export_sop(
         step_tools,
         step_items,
         ai_enhancements,
+        translations,
     };
 
     // 2. Prepare Temp Directory
@@ -1764,6 +1775,11 @@ pub async fn finalize_import(
             enh.sop_id = new_sop_uuid.clone();
         }
 
+        for tr in &mut bundle.translations {
+            tr.id = Uuid::new_v4().to_string();
+            tr.sop_id = new_sop_uuid.clone();
+        }
+
         new_sop_uuid
     } else {
         // Replace mode: Delete existing first
@@ -1777,6 +1793,7 @@ pub async fn finalize_import(
         sqlx::query("DELETE FROM definitions WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
         sqlx::query("DELETE FROM revisions WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
         sqlx::query("DELETE FROM ai_enhancements WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
+        sqlx::query("DELETE FROM ai_translations WHERE sop_id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
         sqlx::query("DELETE FROM sops WHERE id = ?").bind(&id).execute(&mut *tx).await.map_err(|e| e.to_string())?;
 
         id
@@ -1872,6 +1889,16 @@ pub async fn finalize_import(
         .bind(enh.id).bind(enh.sop_id).bind(enh.entity_type).bind(enh.entity_id)
         .bind(enh.field_name).bind(enh.original_text).bind(enh.enhanced_text)
         .bind(enh.provider).bind(enh.model).bind(enh.enhanced_at)
+        .execute(&mut *tx).await.map_err(|e| e.to_string())?;
+    }
+
+    for tr in bundle.translations {
+        sqlx::query(
+            "INSERT INTO ai_translations (id, sop_id, entity_type, entity_id, field_name, language, translated_text, source_hash, edited, provider, model, translated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(tr.id).bind(tr.sop_id).bind(tr.entity_type).bind(tr.entity_id)
+        .bind(tr.field_name).bind(tr.language).bind(tr.translated_text).bind(tr.source_hash)
+        .bind(tr.edited).bind(tr.provider).bind(tr.model).bind(tr.translated_at)
         .execute(&mut *tx).await.map_err(|e| e.to_string())?;
     }
 
