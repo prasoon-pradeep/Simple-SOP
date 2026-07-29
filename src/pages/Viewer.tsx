@@ -224,6 +224,19 @@ export default function Viewer() {
     );
   };
 
+  // Step translations render as full table rows mirroring the English row's
+  // column layout (Action / Expected Output / Notes / Tools & Materials),
+  // one row per language — not a merged paragraph.
+  const stepTranslationRows = (stepId: string): { code: string; action: string; notes: string; expected_output: string }[] => {
+    const byLang: Record<string, { action: string; notes: string; expected_output: string }> = {};
+    for (const t of translations) {
+      if (t.entity_id !== stepId) continue;
+      const entry = (byLang[t.language] ??= { action: '', notes: '', expected_output: '' });
+      (entry as any)[t.field_name] = t.translated_text;
+    }
+    return Object.keys(byLang).map(code => ({ code, ...byLang[code] }));
+  };
+
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Sidebar Mode C */}
@@ -586,14 +599,19 @@ export default function Viewer() {
                              </td>
                           </tr>
                         )}
-                        {translatedFieldsBlock(s.step.id, [['action', 'Action'], ['notes', 'Notes'], ['expected_output', 'Expected Output']]) && (
-                          <tr className="translation-row">
+                        {stepTranslationRows(s.step.id).map(tr => (
+                          <tr key={tr.code} className="translation-row">
                              <td className="center muted align-middle">&#x21b3;</td>
-                             <td colSpan={4}>
-                                {translatedFieldsBlock(s.step.id, [['action', 'Action'], ['notes', 'Notes'], ['expected_output', 'Expected Output']])}
+                             <td className="step-action">
+                                <div className="step-action__text">{tr.action}</div>
+                             </td>
+                             <td className="col-output italic" style={{ fontSize: '8pt' }}>{tr.expected_output || '—'}</td>
+                             <td className="col-notes" style={{ fontSize: '8pt' }}>{tr.notes || '—'}</td>
+                             <td className="col-tools-mats">
+                                <div className="center muted" style={{ padding: '8px' }}>—</div>
                              </td>
                           </tr>
-                        )}
+                        ))}
                       </React.Fragment>
                    ))}
                 </tbody>

@@ -557,10 +557,11 @@ td.col-tools-mats {
   margin-top: 4px;
 }
 
-.translation-row td {
+.steps-table tbody tr.translation-row td {
   border-top: 1px dashed #cccccc;
   padding: 6px 8px;
-  background: #fafafa;
+  background: #fafafa !important;
+  color: #888;
 }
 
 .translated-field-block { color: #888; }

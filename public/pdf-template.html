@@ -698,10 +698,11 @@
       margin-top: 4px;
     }
 
-    .translation-row td {
+    .steps-table tbody tr.translation-row td {
       border-top: 1px dashed #cccccc;
       padding: 6px 8px;
-      background: #fafafa;
+      background: #fafafa !important;
+      color: #888;
     }
 
     .translated-field-block { color: #888; }
@@ -1386,7 +1387,7 @@ function renderItems(items, n) {
    Images for each step shown as thumbnails below the step row,
    spanning the action + expected output + notes columns.
    ============================================================ */
-function renderSteps(steps, n, languages) {
+function renderSteps(steps, n) {
   var rows = '';
 
   if (!steps || steps.length === 0) {
@@ -1471,19 +1472,24 @@ function renderSteps(steps, n, languages) {
           + '</tr>';
       }
 
-      /* Translated action/notes/expected_output — one greyed-out block per language */
-      var translatedHtml = renderTranslatedFields(
-        step.translations,
-        [['action', 'Action'], ['notes', 'Notes'], ['expected_output', 'Expected Output']],
-        languages
-      );
-      if (translatedHtml) {
-        rows += '<tr class="translation-row avoid-break">'
-          + '<td class="col-step" style="vertical-align:middle;">'
-          +   '<span style="font-size:7pt;color:#999;">&#x21b3;</span>'
-          + '</td>'
-          + '<td colspan="4">' + translatedHtml + '</td>'
-          + '</tr>';
+      /* Translated action/notes/expected_output — one full row per language,
+         mirroring the English row's column layout (not a merged paragraph). */
+      if (step.translations) {
+        Object.keys(step.translations).forEach(function (code) {
+          var t = step.translations[code];
+          var fontClass = LANG_FONT_CLASS[code] || '';
+          rows += '<tr class="translation-row avoid-break ' + fontClass + '">'
+            + '<td class="col-step" style="vertical-align:middle;">'
+            +   '<span style="font-size:7pt;color:#999;">&#x21b3;</span>'
+            + '</td>'
+            + '<td class="step-action">'
+            +   '<div class="step-action__text">' + esc(t.action || '') + '</div>'
+            + '</td>'
+            + '<td class="col-output">' + esc(t.expected_output || '—') + '</td>'
+            + '<td class="col-notes">' + esc(t.notes || '—') + '</td>'
+            + '<td class="col-tools-mats"><div class="tm-section" style="color:#aaa;font-size:7.5pt;">—</div></td>'
+            + '</tr>';
+        });
       }
     });
   }
@@ -1590,7 +1596,7 @@ function renderRevisions(revisions, n) {
   h = renderTools(data.tools, n);   if (h) { out += h; n++; }
   h = renderItems(data.items, n);   if (h) { out += h; n++; }
 
-  out += renderSteps(data.steps, n, languages); n++;  /* always shown */
+  out += renderSteps(data.steps, n); n++;  /* always shown */
 
   h = renderDefinitions(data.definitions, n); if (h) { out += h; n++; }
   h = renderRevisions(data.revisions, n);     if (h) { out += h; n++; }
