@@ -288,22 +288,22 @@ export default function Viewer() {
                   <Button
                     disabled={pdfStatus !== 'idle'}
                     onClick={() => handleExportPdf(true)}
-                    className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-auto py-2.5 bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center text-center whitespace-normal leading-tight disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-4 h-4 mr-2 shrink-0" />
                     {pdfStatus === 'saving' && 'Choose save location…'}
                     {pdfStatus === 'rendering' && 'Rendering PDF…'}
                     {pdfStatus === 'error' && 'Export Failed'}
-                    {pdfStatus === 'idle' && 'Export PDF (with translations)'}
+                    {pdfStatus === 'idle' && 'Export PDF (Translated)'}
                   </Button>
                   <Button
                     disabled={pdfStatus !== 'idle'}
                     onClick={() => handleExportPdf(false)}
                     variant="outline"
-                    className="w-full font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-auto py-2.5 font-bold flex items-center justify-center text-center whitespace-normal leading-tight disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export PDF (English only)
+                    <Download className="w-4 h-4 mr-2 shrink-0" />
+                    Export PDF (English)
                   </Button>
                 </>
               ) : (
