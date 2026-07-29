@@ -2042,6 +2042,55 @@ fn file_url_from_path(path: &std::path::Path) -> String {
     }
 }
 
+/// Maps a translation language code to the Noto Sans font family that covers
+/// its script, plus a CSS class name applied to translated blocks in that language.
+/// Marathi shares Devanagari script with Hindi, so both use NotoSansDevanagari.
+fn font_family_for_language(code: &str) -> Option<(&'static str, &'static str)> {
+    match code {
+        "hi" | "mr" => Some(("NotoSansDevanagari", "lang-devanagari")),
+        "ta" => Some(("NotoSansTamil", "lang-ta")),
+        "ml" => Some(("NotoSansMalayalam", "lang-ml")),
+        "kn" => Some(("NotoSansKannada", "lang-kn")),
+        "te" => Some(("NotoSansTelugu", "lang-te")),
+        _ => None,
+    }
+}
+
+/// Builds a <style> block embedding the Indic-script fonts as base64 data URIs
+/// (the template is written to a standalone temp HTML file, so relative/app
+/// paths to the font assets won't resolve — data URIs work regardless of
+/// where the temp file ends up) plus per-language font-family rules.
+fn build_translation_font_style() -> String {
+    const DEVANAGARI: &[u8] = include_bytes!("../../public/fonts/NotoSansDevanagari.ttf");
+    const TAMIL: &[u8] = include_bytes!("../../public/fonts/NotoSansTamil.ttf");
+    const MALAYALAM: &[u8] = include_bytes!("../../public/fonts/NotoSansMalayalam.ttf");
+    const KANNADA: &[u8] = include_bytes!("../../public/fonts/NotoSansKannada.ttf");
+    const TELUGU: &[u8] = include_bytes!("../../public/fonts/NotoSansTelugu.ttf");
+
+    let face = |family: &str, bytes: &[u8]| -> String {
+        format!(
+            "@font-face {{ font-family: '{}'; src: url(data:font/ttf;base64,{}) format('truetype'); font-weight: 100 900; }}\n",
+            family,
+            BASE64_STANDARD.encode(bytes)
+        )
+    };
+
+    format!(
+        "<style>\n{}{}{}{}{}\
+         .lang-devanagari {{ font-family: 'NotoSansDevanagari', Arial, sans-serif; }}\n\
+         .lang-ta {{ font-family: 'NotoSansTamil', Arial, sans-serif; }}\n\
+         .lang-ml {{ font-family: 'NotoSansMalayalam', Arial, sans-serif; }}\n\
+         .lang-kn {{ font-family: 'NotoSansKannada', Arial, sans-serif; }}\n\
+         .lang-te {{ font-family: 'NotoSansTelugu', Arial, sans-serif; }}\n\
+         </style>",
+        face("NotoSansDevanagari", DEVANAGARI),
+        face("NotoSansTamil", TAMIL),
+        face("NotoSansMalayalam", MALAYALAM),
+        face("NotoSansKannada", KANNADA),
+        face("NotoSansTelugu", TELUGU),
+    )
+}
+
 #[tauri::command]
 pub async fn export_pdf(
     sop_id_uuid: String,
