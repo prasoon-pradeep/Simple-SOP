@@ -2081,6 +2081,7 @@ fn build_translation_font_style() -> String {
 pub async fn export_pdf(
     sop_id_uuid: String,
     output_path: String,
+    include_translations: bool,
     state: tauri::State<'_, SqlitePool>,
     app_handle: tauri::AppHandle,
 ) -> Result<(), String> {
@@ -2143,10 +2144,14 @@ pub async fn export_pdf(
     let tool_map: std::collections::HashMap<String, &Tool> = tools.iter().map(|t| (t.id.clone(), t)).collect();
     let item_map: std::collections::HashMap<String, &Item> = items.iter().map(|i| (i.id.clone(), i)).collect();
 
-    // Fetch translations and group by entity_id -> language -> field_name -> text
-    let translations = sqlx::query_as::<sqlx::Sqlite, AiTranslation>(
-        "SELECT * FROM ai_translations WHERE sop_id = ?"
-    ).bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+    // Fetch translations and group by entity_id -> language -> field_name -> text.
+    // Skipped entirely when the user chose an English-only export.
+    let translations: Vec<AiTranslation> = if include_translations {
+        sqlx::query_as::<sqlx::Sqlite, AiTranslation>("SELECT * FROM ai_translations WHERE sop_id = ?")
+            .bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?
+    } else {
+        Vec::new()
+    };
 
     let mut translations_by_entity: std::collections::HashMap<String, std::collections::HashMap<String, std::collections::HashMap<String, String>>> = std::collections::HashMap::new();
     let mut languages_present: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();

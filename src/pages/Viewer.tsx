@@ -159,7 +159,7 @@ export default function Viewer() {
     }
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (includeTranslations: boolean) => {
     if (!currentSop) return;
     setPdfStatus('saving');
     try {
@@ -171,7 +171,7 @@ export default function Viewer() {
       });
       if (!outputPath) { setPdfStatus('idle'); return; }
       setPdfStatus('rendering');
-      await invoke('export_pdf', { sopIdUuid: currentSop.id, outputPath });
+      await invoke('export_pdf', { sopIdUuid: currentSop.id, outputPath, includeTranslations });
       setPdfStatus('idle');
     } catch (e) {
       console.error('PDF export failed:', e);
@@ -283,17 +283,42 @@ export default function Viewer() {
                  <FileArchive className="w-4 h-4 mr-2" />
                  Export .sop
               </Button>
-              <Button
-                disabled={pdfStatus !== 'idle'}
-                onClick={handleExportPdf}
-                className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {pdfStatus === 'saving' && 'Choose save location…'}
-                {pdfStatus === 'rendering' && 'Rendering PDF…'}
-                {pdfStatus === 'error' && 'Export Failed'}
-                {pdfStatus === 'idle' && 'Export PDF'}
-              </Button>
+              {languagesPresent.length > 0 ? (
+                <>
+                  <Button
+                    disabled={pdfStatus !== 'idle'}
+                    onClick={() => handleExportPdf(true)}
+                    className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {pdfStatus === 'saving' && 'Choose save location…'}
+                    {pdfStatus === 'rendering' && 'Rendering PDF…'}
+                    {pdfStatus === 'error' && 'Export Failed'}
+                    {pdfStatus === 'idle' && 'Export PDF (with translations)'}
+                  </Button>
+                  <Button
+                    disabled={pdfStatus !== 'idle'}
+                    onClick={() => handleExportPdf(false)}
+                    variant="outline"
+                    className="w-full font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export PDF (English only)
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  disabled={pdfStatus !== 'idle'}
+                  onClick={() => handleExportPdf(false)}
+                  className="w-full bg-brand hover:bg-brand-hover text-white shadow-sm font-bold flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {pdfStatus === 'saving' && 'Choose save location…'}
+                  {pdfStatus === 'rendering' && 'Rendering PDF…'}
+                  {pdfStatus === 'error' && 'Export Failed'}
+                  {pdfStatus === 'idle' && 'Export PDF'}
+                </Button>
+              )}
               {pdfStatus === 'rendering' && (
                 <p className="text-xs text-center text-text-tertiary">Generating with Chromium…</p>
               )}
