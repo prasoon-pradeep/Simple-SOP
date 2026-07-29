@@ -989,6 +989,18 @@ function langName(languages, code) {
   return code;
 }
 
+/* Self-referential label shown above each translated block — the language's
+   own name plus the word "Translation", written in that language itself
+   (e.g. "മലയാളം വിവർത്തനം" rather than the English word "Malayalam"). */
+var NATIVE_LANGUAGE_LABEL = {
+  hi: 'हिन्दी अनुवाद',
+  ta: 'தமிழ் மொழிபெயர்ப்பு',
+  ml: 'മലയാളം വിവർത്തനം',
+  kn: 'ಕನ್ನಡ ಅನುವಾದ',
+  te: 'తెలుగు అనువాదం',
+  mr: 'मराठी भाषांतर'
+};
+
 /* Fixed boilerplate — hand-translated once rather than an AI call per export,
    since the wording never changes per-document. {names} is substituted with
    the (untranslated) list of language names, e.g. "Hindi, Tamil". */
@@ -1023,7 +1035,7 @@ function renderTranslatedFields(translations, fields, languages) {
     }).join('');
 
     return '<div class="translated-field-block ' + fontClass + '">'
-      + '<div class="translated-field-block__lang">' + esc(langName(languages, code)) + '</div>'
+      + '<div class="translated-field-block__lang">' + esc(NATIVE_LANGUAGE_LABEL[code] || langName(languages, code)) + '</div>'
       + lines
       + '</div>';
   }).join('');

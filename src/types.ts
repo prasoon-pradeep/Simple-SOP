@@ -149,6 +149,19 @@ export const SUPPORTED_LANGUAGES: { code: string; name: string }[] = [
   { code: 'mr', name: 'Marathi' },
 ];
 
+// Self-referential label shown above each translated block — the language's
+// own name plus the word "Translation", written in that language itself
+// (e.g. "മലയാളം വിവർത്തനം" rather than the English word "Malayalam").
+// Mirrors NATIVE_LANGUAGE_LABEL in public/pdf-template.html — keep in sync.
+export const NATIVE_LANGUAGE_LABEL: Record<string, string> = {
+  hi: 'हिन्दी अनुवाद',
+  ta: 'தமிழ் மொழிபெயர்ப்பு',
+  ml: 'മലയാളം വിവർത്തനം',
+  kn: 'ಕನ್ನಡ ಅನುವಾದ',
+  te: 'తెలుగు అనువాదం',
+  mr: 'मराठी भाषांतर',
+};
+
 // Fixed boilerplate — hand-translated once rather than an AI call per render,
 // since the wording never changes per-document. {names} is substituted with
 // the (untranslated) list of language names, e.g. "Hindi, Tamil".

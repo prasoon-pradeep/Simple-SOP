@@ -6,7 +6,7 @@ import { appDataDir, join } from '@tauri-apps/api/path';
 import { ArrowLeft, Pencil, Download, Database, CheckCircle2, Clock, XCircle, AlertCircle, FileArchive } from 'lucide-react';
 import { save } from '@tauri-apps/plugin-dialog';
 import { Button } from '@/components/ui/button';
-import { Definition, SOP, Revision, Tool, Item, StepFull, AiTranslation, SUPPORTED_LANGUAGES, DISCLAIMER_TEXT } from '@/types';
+import { Definition, SOP, Revision, Tool, Item, StepFull, AiTranslation, SUPPORTED_LANGUAGES, DISCLAIMER_TEXT, NATIVE_LANGUAGE_LABEL } from '@/types';
 import { cn } from '@/lib/utils';
 import './Viewer.css';
 
@@ -206,7 +206,7 @@ export default function Viewer() {
     return (
       <>
         {codes.map(code => {
-          const langName = SUPPORTED_LANGUAGES.find(l => l.code === code)?.name || code;
+          const langName = NATIVE_LANGUAGE_LABEL[code] || SUPPORTED_LANGUAGES.find(l => l.code === code)?.name || code;
           return (
             <div key={code} className="translated-field-block">
               <div className="translated-field-block__lang">{langName}</div>
