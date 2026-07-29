@@ -186,8 +186,8 @@ jobs:
       - name: Build latest.json
         env:
           NOTES: ${{ github.event.inputs.notes }}
+          TAG: ${{ github.event.inputs.tag }}
         run: |
-          TAG="${{ github.event.inputs.tag }}"
           VERSION="${{ steps.version.outputs.version }}"
 
           # Discover update bundles
