@@ -179,6 +179,22 @@ async fn create_tables(pool: &SqlitePool) -> Result<()> {
             enhanced_at   TEXT NOT NULL,
             FOREIGN KEY (sop_id) REFERENCES sops(id)
         );"#,
+        r#"CREATE TABLE IF NOT EXISTS ai_translations (
+            id              TEXT PRIMARY KEY,
+            sop_id          TEXT NOT NULL,
+            entity_type     TEXT NOT NULL,
+            entity_id       TEXT NOT NULL,
+            field_name      TEXT NOT NULL,
+            language        TEXT NOT NULL,
+            translated_text TEXT NOT NULL,
+            source_hash     TEXT NOT NULL,
+            edited          INTEGER NOT NULL DEFAULT 0,
+            provider        TEXT NOT NULL,
+            model           TEXT NOT NULL,
+            translated_at   TEXT NOT NULL,
+            FOREIGN KEY (sop_id) REFERENCES sops(id),
+            UNIQUE (entity_id, field_name, language)
+        );"#,
     ];
 
     for query in queries {
