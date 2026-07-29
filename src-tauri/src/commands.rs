@@ -2918,20 +2918,35 @@ fn language_name(code: &str) -> String {
         .unwrap_or_else(|| code.to_string())
 }
 
-const TRANSLATION_SYSTEM_PROMPT: &str = "You are translating content from an industrial Standard Operating Procedure.\n\
-Translate naturally and precisely for a technical/industrial audience reading in the target language.\n\
-\n\
-Preserve exactly as written — do NOT translate or alter:\n\
-- Units of measurement (e.g. Nm, PSI, mm, kg)\n\
-- Part numbers, model numbers, and tool/equipment names\n\
-- Standard abbreviations and acronyms (e.g. PPE, ISO, IEC)\n\
-- Any code or identifier in ALL CAPS that denotes a proper noun\n\
-\n\
-Output rules:\n\
-- Respond with ONLY a single JSON object, no explanation, no markdown fences.\n\
-- Every key present in the input JSON must be present in the output JSON.\n\
-- If an input value is empty, its output value must also be an empty string.\n\
-- Do not add content, warnings, or steps that are not present in the original text.";
+/// Used by translate_step, whose caller expects a JSON object back.
+const TRANSLATION_SYSTEM_PROMPT_JSON: &str = concat!(
+    "You are translating content from an industrial Standard Operating Procedure.\n",
+    "Translate naturally and precisely for a technical/industrial audience reading in the target language.\n\n",
+    "Preserve exactly as written — do NOT translate or alter:\n\
+     - Units of measurement (e.g. Nm, PSI, mm, kg)\n\
+     - Part numbers, model numbers, and tool/equipment names\n\
+     - Standard abbreviations and acronyms (e.g. PPE, ISO, IEC)\n\
+     - Any code or identifier in ALL CAPS that denotes a proper noun\n\n\
+     Do not add content, warnings, or steps that are not present in the original text.\n\n",
+    "Output rules:\n\
+     - Respond with ONLY a single JSON object, no explanation, no markdown fences.\n\
+     - Every key present in the input JSON must be present in the output JSON.\n\
+     - If an input value is empty, its output value must also be an empty string."
+);
+
+/// Used by translate_sop_field, whose caller expects a plain string back.
+const TRANSLATION_SYSTEM_PROMPT_TEXT: &str = concat!(
+    "You are translating content from an industrial Standard Operating Procedure.\n",
+    "Translate naturally and precisely for a technical/industrial audience reading in the target language.\n\n",
+    "Preserve exactly as written — do NOT translate or alter:\n\
+     - Units of measurement (e.g. Nm, PSI, mm, kg)\n\
+     - Part numbers, model numbers, and tool/equipment names\n\
+     - Standard abbreviations and acronyms (e.g. PPE, ISO, IEC)\n\
+     - Any code or identifier in ALL CAPS that denotes a proper noun\n\n\
+     Do not add content, warnings, or steps that are not present in the original text.\n\n",
+    "Output rules:\n\
+     - Respond with ONLY the translated text — no JSON, no quotes, no markdown fences, no explanation."
+);
 
 fn source_hash(parts: &[&str]) -> String {
     use sha2::{Digest, Sha256};
@@ -2947,6 +2962,7 @@ async fn call_translation_provider(
     provider: &str,
     model: &str,
     api_key: &str,
+    system_prompt: &str,
     user_message: &str,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
@@ -2956,7 +2972,7 @@ async fn call_translation_provider(
             let body = serde_json::json!({
                 "model": model,
                 "max_tokens": 1536,
-                "system": TRANSLATION_SYSTEM_PROMPT,
+                "system": system_prompt,
                 "messages": [{"role": "user", "content": user_message}]
             });
             let resp = client
@@ -2980,7 +2996,7 @@ async fn call_translation_provider(
                 "model": model,
                 "max_tokens": 1536,
                 "messages": [
-                    {"role": "system", "content": TRANSLATION_SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ]
             });
@@ -3005,7 +3021,7 @@ async fn call_translation_provider(
                 model, api_key
             );
             let body = serde_json::json!({
-                "system_instruction": {"parts": [{"text": TRANSLATION_SYSTEM_PROMPT}]},
+                "system_instruction": {"parts": [{"text": system_prompt}]},
                 "contents": [{"parts": [{"text": user_message}]}],
                 "generationConfig": {"maxOutputTokens": 1536}
             });
@@ -3100,7 +3116,7 @@ pub async fn translate_step(
         serde_json::to_string_pretty(&input).map_err(|e| e.to_string())?
     );
 
-    let raw = call_translation_provider(&provider, &model, &api_key, &user_message).await?;
+    let raw = call_translation_provider(&provider, &model, &api_key, TRANSLATION_SYSTEM_PROMPT_JSON, &user_message).await?;
 
     serde_json::from_str::<StepTranslationFields>(&raw)
         .map_err(|e| format!("Failed to parse AI translation response: {} (raw: {})", e, raw))
@@ -3126,7 +3142,7 @@ pub async fn translate_sop_field(
         field_name, lang_name, sop_title, text
     );
 
-    call_translation_provider(&provider, &model, &api_key, &user_message).await
+    call_translation_provider(&provider, &model, &api_key, TRANSLATION_SYSTEM_PROMPT_TEXT, &user_message).await
 }
 
 #[tauri::command]
