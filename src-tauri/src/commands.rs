@@ -227,6 +227,22 @@ pub struct AiEnhancement {
     pub enhanced_at: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct AiTranslation {
+    pub id: String,
+    pub sop_id: String,
+    pub entity_type: String,
+    pub entity_id: String,
+    pub field_name: String,
+    pub language: String,
+    pub translated_text: String,
+    pub source_hash: String,
+    pub edited: i64,
+    pub provider: String,
+    pub model: String,
+    pub translated_at: String,
+}
+
 // --------------------------------------------------------
 // Commands
 // --------------------------------------------------------
@@ -2757,6 +2773,292 @@ pub async fn get_ai_enhancements(
     .fetch_all(state.inner())
     .await
     .map_err(|e| e.to_string())
+}
+
+// --------------------------------------------------------
+// AI Translation
+// --------------------------------------------------------
+
+/// Fixed list of supported target languages: (code, display name).
+pub const SUPPORTED_LANGUAGES: [(&str, &str); 6] = [
+    ("hi", "Hindi"),
+    ("ta", "Tamil"),
+    ("ml", "Malayalam"),
+    ("kn", "Kannada"),
+    ("te", "Telugu"),
+    ("mr", "Marathi"),
+];
+
+fn language_name(code: &str) -> String {
+    SUPPORTED_LANGUAGES
+        .iter()
+        .find(|(c, _)| *c == code)
+        .map(|(_, name)| name.to_string())
+        .unwrap_or_else(|| code.to_string())
+}
+
+const TRANSLATION_SYSTEM_PROMPT: &str = "You are translating content from an industrial Standard Operating Procedure.\n\
+Translate naturally and precisely for a technical/industrial audience reading in the target language.\n\
+\n\
+Preserve exactly as written — do NOT translate or alter:\n\
+- Units of measurement (e.g. Nm, PSI, mm, kg)\n\
+- Part numbers, model numbers, and tool/equipment names\n\
+- Standard abbreviations and acronyms (e.g. PPE, ISO, IEC)\n\
+- Any code or identifier in ALL CAPS that denotes a proper noun\n\
+\n\
+Output rules:\n\
+- Respond with ONLY a single JSON object, no explanation, no markdown fences.\n\
+- Every key present in the input JSON must be present in the output JSON.\n\
+- If an input value is empty, its output value must also be an empty string.\n\
+- Do not add content, warnings, or steps that are not present in the original text.";
+
+fn source_hash(parts: &[&str]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    for part in parts {
+        hasher.update(part.as_bytes());
+        hasher.update([0u8]); // separator so ("ab","c") != ("a","bc")
+    }
+    format!("{:x}", hasher.finalize())
+}
+
+async fn call_translation_provider(
+    provider: &str,
+    model: &str,
+    api_key: &str,
+    user_message: &str,
+) -> Result<String, String> {
+    let client = reqwest::Client::new();
+
+    let raw = match provider {
+        "anthropic" => {
+            let body = serde_json::json!({
+                "model": model,
+                "max_tokens": 1536,
+                "system": TRANSLATION_SYSTEM_PROMPT,
+                "messages": [{"role": "user", "content": user_message}]
+            });
+            let resp = client
+                .post("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", api_key)
+                .header("anthropic-version", "2023-06-01")
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Anthropic error {}: {}", status, body));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            json["content"][0]["text"].as_str().unwrap_or("").trim().to_string()
+        }
+        "openai" => {
+            let body = serde_json::json!({
+                "model": model,
+                "max_tokens": 1536,
+                "messages": [
+                    {"role": "system", "content": TRANSLATION_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message}
+                ]
+            });
+            let resp = client
+                .post("https://api.openai.com/v1/chat/completions")
+                .header("Authorization", format!("Bearer {}", api_key))
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("OpenAI error {}: {}", status, body));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            json["choices"][0]["message"]["content"].as_str().unwrap_or("").trim().to_string()
+        }
+        "gemini" => {
+            let url = format!(
+                "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+                model, api_key
+            );
+            let body = serde_json::json!({
+                "system_instruction": {"parts": [{"text": TRANSLATION_SYSTEM_PROMPT}]},
+                "contents": [{"parts": [{"text": user_message}]}],
+                "generationConfig": {"maxOutputTokens": 1536}
+            });
+            let resp = client
+                .post(&url)
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Gemini error {}: {}", status, body));
+            }
+            let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            json["candidates"][0]["content"]["parts"][0]["text"]
+                .as_str()
+                .unwrap_or("")
+                .trim()
+                .to_string()
+        }
+        _ => return Err(format!("Unknown provider: {}", provider)),
+    };
+
+    if raw.is_empty() {
+        return Err("AI returned an empty response.".to_string());
+    }
+
+    // Strip markdown fences if the model added them despite instructions.
+    let cleaned = raw
+        .trim()
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```")
+        .trim();
+
+    Ok(cleaned.to_string())
+}
+
+async fn resolve_provider_and_model(
+    provider: &str,
+    state: &SqlitePool,
+) -> Result<(String, String), String> {
+    let api_key = get_key_for_provider(provider, state).await?;
+    let model_key = format!("ai_model_{}", provider);
+    let model: String = sqlx::query_scalar("SELECT value FROM app_config WHERE key = ?")
+        .bind(&model_key)
+        .fetch_optional(state)
+        .await
+        .map_err(|e| e.to_string())?
+        .unwrap_or_else(|| default_model(provider).to_string());
+    Ok((api_key, model))
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct StepTranslationFields {
+    pub action: String,
+    pub notes: String,
+    pub expected_output: String,
+}
+
+#[tauri::command]
+pub async fn translate_step(
+    provider: String,
+    language: String,
+    sop_title: String,
+    step_number: i64,
+    total_steps: i64,
+    action: String,
+    notes: String,
+    expected_output: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<StepTranslationFields, String> {
+    let (api_key, model) = resolve_provider_and_model(&provider, state.inner()).await?;
+    let lang_name = language_name(&language);
+
+    let input = serde_json::json!({
+        "action": action,
+        "notes": notes,
+        "expected_output": expected_output,
+    });
+
+    let user_message = format!(
+        "Translate the following step from a Standard Operating Procedure into {}.\n\n\
+         SOP: \"{}\"\n\
+         Step {} of {}\n\n\
+         Input JSON:\n{}",
+        lang_name,
+        sop_title,
+        step_number,
+        total_steps,
+        serde_json::to_string_pretty(&input).map_err(|e| e.to_string())?
+    );
+
+    let raw = call_translation_provider(&provider, &model, &api_key, &user_message).await?;
+
+    serde_json::from_str::<StepTranslationFields>(&raw)
+        .map_err(|e| format!("Failed to parse AI translation response: {} (raw: {})", e, raw))
+}
+
+#[tauri::command]
+pub async fn translate_sop_field(
+    provider: String,
+    language: String,
+    sop_title: String,
+    field_name: String,
+    text: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<String, String> {
+    let (api_key, model) = resolve_provider_and_model(&provider, state.inner()).await?;
+    let lang_name = language_name(&language);
+
+    let user_message = format!(
+        "Translate the following \"{}\" field of a Standard Operating Procedure into {}.\n\n\
+         SOP: \"{}\"\n\n\
+         Respond with ONLY the translated text — no JSON, no quotes, no explanation.\n\n\
+         Text:\n{}",
+        field_name, lang_name, sop_title, text
+    );
+
+    call_translation_provider(&provider, &model, &api_key, &user_message).await
+}
+
+#[tauri::command]
+pub async fn save_translation(
+    payload: AiTranslation,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO ai_translations (id, sop_id, entity_type, entity_id, field_name, language, translated_text, source_hash, edited, provider, model, translated_at) \
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \
+         ON CONFLICT(entity_id, field_name, language) DO UPDATE SET \
+            translated_text = excluded.translated_text, \
+            source_hash = excluded.source_hash, \
+            edited = excluded.edited, \
+            provider = excluded.provider, \
+            model = excluded.model, \
+            translated_at = excluded.translated_at",
+    )
+    .bind(&payload.id)
+    .bind(&payload.sop_id)
+    .bind(&payload.entity_type)
+    .bind(&payload.entity_id)
+    .bind(&payload.field_name)
+    .bind(&payload.language)
+    .bind(&payload.translated_text)
+    .bind(&payload.source_hash)
+    .bind(payload.edited)
+    .bind(&payload.provider)
+    .bind(&payload.model)
+    .bind(&payload.translated_at)
+    .execute(state.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_translations(
+    sop_id: String,
+    state: tauri::State<'_, SqlitePool>,
+) -> Result<Vec<AiTranslation>, String> {
+    sqlx::query_as::<sqlx::Sqlite, AiTranslation>(
+        "SELECT * FROM ai_translations WHERE sop_id = ? ORDER BY translated_at ASC",
+    )
+    .bind(sop_id)
+    .fetch_all(state.inner())
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn compute_translation_hash(text: String) -> Result<String, String> {
+    Ok(source_hash(&[&text]))
 }
 
 // --------------------------------------------------------
