@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { SOP, Revision, Definition, Tool, Item, Step, StepFull } from './types';
+import { SOP, Revision, Definition, Tool, Item, Step, StepFull, AiTranslation } from './types';
 
 interface SopState {
   sops: SOP[];
@@ -12,6 +12,7 @@ interface SopState {
   tools: Tool[];
   items: Item[];
   stepsFull: StepFull[];
+  translations: AiTranslation[];
 
   isDirty: boolean;
   hasUnsavedRevision: boolean;
@@ -41,6 +42,10 @@ interface SopState {
   setStepsFull: (stepsFull: StepFull[]) => void;
   updateStepField: (stepId: string, field: keyof Step, value: any) => void;
 
+  setTranslations: (translations: AiTranslation[]) => void;
+  upsertTranslation: (translation: AiTranslation) => void;
+  updateTranslationField: (id: string, value: string) => void;
+
   setDirty: (dirty: boolean) => void;
   setHasUnsavedRevision: (val: boolean) => void;
   setSaving: (saving: boolean) => void;
@@ -50,6 +55,7 @@ interface SopState {
 let saveTimeout: ReturnType<typeof setTimeout>;
 let stepSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 let defSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
+let translationSaveTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 export const useSopStore = create<SopState>((set, get) => ({
   sops: [],
@@ -61,6 +67,7 @@ export const useSopStore = create<SopState>((set, get) => ({
   tools: [],
   items: [],
   stepsFull: [],
+  translations: [],
 
   isDirty: false,
   hasUnsavedRevision: false,
@@ -81,6 +88,7 @@ export const useSopStore = create<SopState>((set, get) => ({
     tools: [],
     items: [],
     stepsFull: [],
+    translations: [],
     isDirty: false,
     hasUnsavedRevision: false,
     isSaving: false,
@@ -191,5 +199,34 @@ export const useSopStore = create<SopState>((set, get) => ({
   },
 
   setDirty: (dirty) => set({ isDirty: dirty }),
-  setHasUnsavedRevision: (val) => set({ hasUnsavedRevision: val })
+  setHasUnsavedRevision: (val) => set({ hasUnsavedRevision: val }),
+
+  setTranslations: (translations) => set({ translations }),
+
+  upsertTranslation: (translation) => set((state) => ({
+    translations: [...state.translations.filter(t => t.id !== translation.id), translation],
+  })),
+
+  // Manual edits in the Translations table are protected from silent AI
+  // regeneration — this flips `edited` to true so a later "re-translate"
+  // must be an explicit user action rather than an automatic overwrite.
+  updateTranslationField: (id, value) => {
+    set((state) => ({
+      translations: state.translations.map(t =>
+        t.id === id ? { ...t, translated_text: value, edited: true } : t
+      ),
+    }));
+
+    clearTimeout(translationSaveTimeouts[id]);
+    translationSaveTimeouts[id] = setTimeout(async () => {
+      const translation = get().translations.find(t => t.id === id);
+      if (translation) {
+        try {
+          await invoke('save_translation', { payload: translation });
+        } catch (error) {
+          console.error("Failed to save translation edit:", error);
+        }
+      }
+    }, 500);
+  },
 }));

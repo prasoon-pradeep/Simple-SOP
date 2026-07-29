@@ -123,3 +123,28 @@ export interface AiEnhancement {
   model: string;
   enhanced_at: string;
 }
+
+export interface AiTranslation {
+  id: string;
+  sop_id: string;
+  entity_type: 'step' | 'sop';
+  entity_id: string;
+  field_name: string;
+  language: string;
+  translated_text: string;
+  source_hash: string;
+  edited: boolean;
+  provider: string;
+  model: string;
+  translated_at: string;
+}
+
+// Mirrors SUPPORTED_LANGUAGES in src-tauri/src/commands.rs — keep in sync.
+export const SUPPORTED_LANGUAGES: { code: string; name: string }[] = [
+  { code: 'hi', name: 'Hindi' },
+  { code: 'ta', name: 'Tamil' },
+  { code: 'ml', name: 'Malayalam' },
+  { code: 'kn', name: 'Kannada' },
+  { code: 'te', name: 'Telugu' },
+  { code: 'mr', name: 'Marathi' },
+];

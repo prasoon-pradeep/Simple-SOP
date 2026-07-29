@@ -237,7 +237,7 @@ pub struct AiTranslation {
     pub language: String,
     pub translated_text: String,
     pub source_hash: String,
-    pub edited: i64,
+    pub edited: bool,
     pub provider: String,
     pub model: String,
     pub translated_at: String,
