@@ -553,10 +553,6 @@ td.col-tools-mats {
   border-radius: 3px;
 }
 
-.translation-disclaimer__line + .translation-disclaimer__line {
-  margin-top: 4px;
-}
-
 .translation-row td {
   border-top: 1px dashed #cccccc;
   padding: 6px 8px;

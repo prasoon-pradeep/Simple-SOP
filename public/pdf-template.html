@@ -694,10 +694,6 @@
       border-radius: 3px;
     }
 
-    .translation-disclaimer__line + .translation-disclaimer__line {
-      margin-top: 4px;
-    }
-
     .translation-row td {
       border-top: 1px dashed #cccccc;
       padding: 6px 8px;
@@ -1001,18 +997,6 @@ var NATIVE_LANGUAGE_LABEL = {
   mr: 'मराठी भाषांतर'
 };
 
-/* Fixed boilerplate — hand-translated once rather than an AI call per export,
-   since the wording never changes per-document. {names} is substituted with
-   the (untranslated) list of language names, e.g. "Hindi, Tamil". */
-var DISCLAIMER_TEXT = {
-  hi: 'इस दस्तावेज़ में AI-जनित अनुवाद ({names}) मूल अंग्रेज़ी पाठ के नीचे धूसर रंग में दिखाए गए हैं। अनुवाद की समीक्षा नहीं की गई है। किसी भी विसंगति की स्थिति में, अंग्रेज़ी संस्करण ही प्रामाणिक होगा।',
-  ta: 'இந்த ஆவணத்தில் AI-உருவாக்கிய மொழிபெயர்ப்புகள் ({names}) அசல் ஆங்கில உரையின் கீழ் சாம்பல் நிறத்தில் காட்டப்பட்டுள்ளன. மொழிபெயர்ப்புகள் மறுஆய்வு செய்யப்படவில்லை. ஏதேனும் முரண்பாடு ஏற்பட்டால், ஆங்கில பதிப்பே அதிகாரப்பூர்வமானது.',
-  ml: 'ഈ ഡോക്യുമെന്റിൽ AI ജനറേറ്റ് ചെയ്ത പരിഭാഷകൾ ({names}) യഥാർത്ഥ ഇംഗ്ലീഷ് വാചകത്തിന് താഴെ ചാര നിറത്തിൽ കാണിച്ചിരിക്കുന്നു. പരിഭാഷകൾ അവലോകനം ചെയ്തിട്ടില്ല. ഏതെങ്കിലും പൊരുത്തക്കേട് ഉണ്ടായാൽ, ഇംഗ്ലീഷ് പതിപ്പായിരിക്കും ആധികാരികം.',
-  kn: 'ಈ ದಾಖಲೆಯಲ್ಲಿ AI-ರಚಿತ ಅನುವಾದಗಳನ್ನು ({names}) ಮೂಲ ಇಂಗ್ಲಿಷ್ ಪಠ್ಯದ ಕೆಳಗೆ ಬೂದು ಬಣ್ಣದಲ್ಲಿ ತೋರಿಸಲಾಗಿದೆ. ಅನುವಾದಗಳನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿಲ್ಲ. ಯಾವುದೇ ವ್ಯತ್ಯಾಸ ಉಂಟಾದರೆ, ಇಂಗ್ಲಿಷ್ ಆವೃತ್ತಿಯೇ ಅಧಿಕೃತವಾಗಿರುತ್ತದೆ.',
-  te: 'ఈ పత్రంలో AI ద్వారా రూపొందించిన అనువాదాలు ({names}) అసలైన ఆంగ్ల వచనం క్రింద బూడిద రంగులో చూపబడ్డాయి. అనువాదాలు సమీక్షించబడలేదు. ఏదైనా వ్యత్యాసం ఉంటే, ఆంగ్ల వెర్షనే అధికారికమైనది.',
-  mr: 'या दस्तऐवजात AI-निर्मित भाषांतरे ({names}) मूळ इंग्रजी मजकुराच्या खाली करड्या रंगात दर्शविली आहेत. भाषांतरांचे पुनरावलोकन केलेले नाही. कोणतीही विसंगती आढळल्यास, इंग्रजी आवृत्ती अधिकृत असेल.'
-};
-
 /*
   translations: { "<lang>": { "<field>": "text", ... }, ... }
   fields: [["field", "Label"], ...] in the order they should render
@@ -1048,17 +1032,7 @@ function renderTranslationDisclaimer(languages) {
   var english = 'This document includes AI-generated translations (' + esc(names) + ') shown in grey beneath the original English text. '
     + 'Translations are unreviewed. In case of any discrepancy, the English version is authoritative.';
 
-  var translated = languages.map(function (l) {
-    var text = DISCLAIMER_TEXT[l.code];
-    if (!text) return '';
-    var fontClass = LANG_FONT_CLASS[l.code] || '';
-    return '<div class="translation-disclaimer__line ' + fontClass + '">' + esc(text.replace('{names}', names)) + '</div>';
-  }).join('');
-
-  return '<div class="translation-disclaimer">'
-    + '<div class="translation-disclaimer__line">' + english + '</div>'
-    + translated
-    + '</div>';
+  return '<div class="translation-disclaimer">' + english + '</div>';
 }
 
 function fmtDate(s) {
