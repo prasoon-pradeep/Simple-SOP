@@ -128,6 +128,11 @@ export default function Viewer() {
     return 'status--draft';
   };
 
+  const languagesPresent = useMemo(() => {
+    const codes = new Set(translations.map(t => t.language));
+    return SUPPORTED_LANGUAGES.filter(l => codes.has(l.code));
+  }, [translations]);
+
   if (isLoading || !currentSop) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background text-text-tertiary">
@@ -185,11 +190,6 @@ export default function Viewer() {
   };
 
   let sectionNum = 1;
-
-  const languagesPresent = useMemo(() => {
-    const codes = new Set(translations.map(t => t.language));
-    return SUPPORTED_LANGUAGES.filter(l => codes.has(l.code));
-  }, [translations]);
 
   // Renders one greyed-out block per language for a given entity's fields —
   // mirrors renderTranslatedFields() in public/pdf-template.html so this
