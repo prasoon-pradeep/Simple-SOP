@@ -4,7 +4,7 @@
 
 **Website & downloads:** https://prasoon-pradeep.github.io/Simple-SOP/
 
-Current app version: **0.2.6**
+Current app version: **0.3.0**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
@@ -22,6 +22,7 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - **Visual first:** Integrated image crop and annotation tools designed for step-by-step mechanical and technical instructions.
 - **Portable:** Export individual SOPs to self-contained `.sop` bundles for offline sharing across high-security facilities.
 - **AI-assisted writing:** Optional AI text enhancement on every prose field using your own API key. Supports Anthropic, OpenAI, and Gemini.
+- **Multilingual translation:** Translate steps and header fields into Hindi, Tamil, Malayalam, Kannada, Telugu, or Marathi using your own AI provider. PDFs and the in-app viewer show translations alongside the original English, with an unreviewed-AI disclaimer.
 
 ---
 
