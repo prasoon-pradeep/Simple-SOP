@@ -553,6 +553,10 @@ td.col-tools-mats {
   border-radius: 3px;
 }
 
+.translation-disclaimer__line + .translation-disclaimer__line {
+  margin-top: 4px;
+}
+
 .translation-row td {
   border-top: 1px dashed #cccccc;
   padding: 6px 8px;
@@ -561,14 +565,5 @@ td.col-tools-mats {
 
 .translated-field-block { color: #888; }
 .translated-field-block + .translated-field-block { margin-top: 6px; }
-
-.translated-field-block__lang {
-  font-size: 6.5pt;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #999;
-  margin-bottom: 2px;
-}
 
 .translated-field-block__text { font-size: 8pt; }

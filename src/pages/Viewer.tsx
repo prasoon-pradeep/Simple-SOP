@@ -6,7 +6,7 @@ import { appDataDir, join } from '@tauri-apps/api/path';
 import { ArrowLeft, Pencil, Download, Database, CheckCircle2, Clock, XCircle, AlertCircle, FileArchive } from 'lucide-react';
 import { save } from '@tauri-apps/plugin-dialog';
 import { Button } from '@/components/ui/button';
-import { Definition, SOP, Revision, Tool, Item, StepFull, AiTranslation, SUPPORTED_LANGUAGES, NATIVE_LANGUAGE_LABEL } from '@/types';
+import { Definition, SOP, Revision, Tool, Item, StepFull, AiTranslation, SUPPORTED_LANGUAGES, DISCLAIMER_TEXT } from '@/types';
 import { cn } from '@/lib/utils';
 import './Viewer.css';
 
@@ -206,10 +206,8 @@ export default function Viewer() {
     return (
       <>
         {codes.map(code => {
-          const langName = NATIVE_LANGUAGE_LABEL[code] || SUPPORTED_LANGUAGES.find(l => l.code === code)?.name || code;
           return (
             <div key={code} className="translated-field-block">
-              <div className="translated-field-block__lang">{langName}</div>
               {fields.map(([field, label]) => {
                 const text = byLang[code][field];
                 if (!text) return null;
@@ -352,8 +350,15 @@ export default function Viewer() {
 
           {languagesPresent.length > 0 && (
             <div className="translation-disclaimer">
-              This document includes AI-generated translations ({languagesPresent.map(l => l.name).join(', ')}) shown in grey beneath the original English text.
-              Translations are unreviewed. In case of any discrepancy, the English version is authoritative.
+              <div className="translation-disclaimer__line">
+                This document includes AI-generated translations ({languagesPresent.map(l => l.name).join(', ')}) shown in grey beneath the original English text.
+                Translations are unreviewed. In case of any discrepancy, the English version is authoritative.
+              </div>
+              {languagesPresent.map(l => DISCLAIMER_TEXT[l.code] && (
+                <div key={l.code} className="translation-disclaimer__line">
+                  {DISCLAIMER_TEXT[l.code].replace('{names}', languagesPresent.map(x => x.name).join(', '))}
+                </div>
+              ))}
             </div>
           )}
 
