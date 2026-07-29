@@ -680,6 +680,40 @@
       border: 1px solid var(--border-light);
     }
 
+    /* ============================================================
+       TRANSLATIONS
+       ============================================================ */
+    .translation-disclaimer {
+      margin: 0 0 14px 0;
+      padding: 8px 10px;
+      font-size: 7.5pt;
+      font-style: italic;
+      color: var(--text-muted);
+      background: #f7f7f7;
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+    }
+
+    .translation-row td {
+      border-top: 1px dashed #cccccc;
+      padding: 6px 8px;
+      background: #fafafa;
+    }
+
+    .translated-field-block { color: #888; }
+    .translated-field-block + .translated-field-block { margin-top: 6px; }
+
+    .translated-field-block__lang {
+      font-size: 6.5pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #999;
+      margin-bottom: 2px;
+    }
+
+    .translated-field-block__text { font-size: 8pt; }
+
   </style>
 </head>
 <body>
@@ -928,6 +962,66 @@ function escCSS(v) {
   return String(v || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
 
+/* ============================================================
+   TRANSLATIONS — shared helpers
+   ============================================================
+   Maps each supported language code to the CSS class that applies
+   the matching Noto Sans font (see build_translation_font_style in
+   commands.rs — Hindi and Marathi share the Devanagari script). */
+var LANG_FONT_CLASS = {
+  hi: 'lang-devanagari',
+  mr: 'lang-devanagari',
+  ta: 'lang-ta',
+  ml: 'lang-ml',
+  kn: 'lang-kn',
+  te: 'lang-te'
+};
+
+function langName(languages, code) {
+  if (!languages) return code;
+  for (var i = 0; i < languages.length; i++) {
+    if (languages[i].code === code) return languages[i].name;
+  }
+  return code;
+}
+
+/*
+  translations: { "<lang>": { "<field>": "text", ... }, ... }
+  fields: [["field", "Label"], ...] in the order they should render
+  Renders one greyed-out block per language, each listing the given
+  fields — used below both step rows and translatable SOP fields.
+*/
+function renderTranslatedFields(translations, fields, languages) {
+  if (!translations) return '';
+  var codes = Object.keys(translations);
+  if (codes.length === 0) return '';
+
+  return codes.map(function (code) {
+    var fontClass = LANG_FONT_CLASS[code] || '';
+    var lines = fields.map(function (pair) {
+      var key = pair[0], label = pair[1];
+      var text = translations[code][key];
+      if (!text) return '';
+      var prefix = label ? esc(label) + ': ' : '';
+      return '<div class="translated-field-block__text">' + prefix + esc(text) + '</div>';
+    }).join('');
+
+    return '<div class="translated-field-block ' + fontClass + '">'
+      + '<div class="translated-field-block__lang">' + esc(langName(languages, code)) + ' (unreviewed AI translation)</div>'
+      + lines
+      + '</div>';
+  }).join('');
+}
+
+function renderTranslationDisclaimer(languages) {
+  if (!languages || languages.length === 0) return '';
+  var names = languages.map(function (l) { return l.name; }).join(', ');
+  return '<div class="translation-disclaimer">'
+    + 'This document includes AI-generated translations (' + esc(names) + ') shown in grey beneath the original English text. '
+    + 'Translations are unreviewed. In case of any discrepancy, the English version is authoritative.'
+    + '</div>';
+}
+
 function fmtDate(s) {
   if (!s) return '—';
   try {
@@ -1120,7 +1214,7 @@ function secHeader(n, label) {
 /* ============================================================
    RENDERER — PURPOSE & SCOPE
    ============================================================ */
-function renderPurposeScope(sop, n) {
+function renderPurposeScope(sop, n, languages) {
   var hasPurpose = sop.purpose && sop.purpose.trim();
   var hasScope   = sop.scope   && sop.scope.trim();
   if (!hasPurpose && !hasScope) return '';
@@ -1128,11 +1222,15 @@ function renderPurposeScope(sop, n) {
   var rows = '';
   if (hasPurpose) rows += '<tr class="avoid-break">'
     + '<td class="ps-table__label">Purpose</td>'
-    + '<td class="ps-table__content">' + esc(sop.purpose) + '</td>'
+    + '<td class="ps-table__content">' + esc(sop.purpose)
+    +   renderTranslatedFields(sop.translations, [['purpose', '']], languages)
+    + '</td>'
     + '</tr>';
   if (hasScope) rows += '<tr class="avoid-break">'
     + '<td class="ps-table__label">Scope</td>'
-    + '<td class="ps-table__content">' + esc(sop.scope) + '</td>'
+    + '<td class="ps-table__content">' + esc(sop.scope)
+    +   renderTranslatedFields(sop.translations, [['scope', '']], languages)
+    + '</td>'
     + '</tr>';
 
   return '<div class="section">'
@@ -1145,7 +1243,7 @@ function renderPurposeScope(sop, n) {
    RENDERER — SAFETY & TRAINING
    No icon in safety header — plain bold uppercase text only.
    ============================================================ */
-function renderSafety(sop, n) {
+function renderSafety(sop, n, languages) {
   var hasSafety   = sop.safety_notes && sop.safety_notes.trim();
   var hasTraining = sop.training_required;
   if (!hasSafety && !hasTraining) return '';
@@ -1153,7 +1251,9 @@ function renderSafety(sop, n) {
   var safetyHtml = hasSafety
     ? '<div class="safety-box avoid-break">'
     +   '<div class="safety-box__header">SAFETY &amp; ENVIRONMENTAL HAZARDS — READ BEFORE STARTING</div>'
-    +   '<div class="safety-box__content">' + esc(sop.safety_notes) + '</div>'
+    +   '<div class="safety-box__content">' + esc(sop.safety_notes)
+    +     renderTranslatedFields(sop.translations, [['safety_notes', '']], languages)
+    +   '</div>'
     + '</div>'
     : '';
 
@@ -1268,7 +1368,7 @@ function renderItems(items, n) {
    Images for each step shown as thumbnails below the step row,
    spanning the action + expected output + notes columns.
    ============================================================ */
-function renderSteps(steps, n) {
+function renderSteps(steps, n, languages) {
   var rows = '';
 
   if (!steps || steps.length === 0) {
@@ -1350,6 +1450,21 @@ function renderSteps(steps, n) {
           + '<td colspan="4">'
           +   '<div class="step-images-wrap">' + imgBlocks + '</div>'
           + '</td>'
+          + '</tr>';
+      }
+
+      /* Translated action/notes/expected_output — one greyed-out block per language */
+      var translatedHtml = renderTranslatedFields(
+        step.translations,
+        [['action', 'Action'], ['notes', 'Notes'], ['expected_output', 'Expected Output']],
+        languages
+      );
+      if (translatedHtml) {
+        rows += '<tr class="translation-row avoid-break">'
+          + '<td class="col-step" style="vertical-align:middle;">'
+          +   '<span style="font-size:7pt;color:#999;">&#x21b3;</span>'
+          + '</td>'
+          + '<td colspan="4">' + translatedHtml + '</td>'
           + '</tr>';
       }
     });
@@ -1443,19 +1558,21 @@ function renderRevisions(revisions, n) {
 
   applyBrandAndPageStyle(data);
 
-  var n   = 1;
-  var out = '';
+  var n         = 1;
+  var out       = '';
+  var languages = data.translation_languages || [];
 
   out += renderTitleBlock(data);
+  out += renderTranslationDisclaimer(languages);
 
   var h;
-  h = renderPurposeScope(sop, n);   if (h) { out += h; n++; }
-  h = renderSafety(sop, n);         if (h) { out += h; n++; }
+  h = renderPurposeScope(sop, n, languages); if (h) { out += h; n++; }
+  h = renderSafety(sop, n, languages);       if (h) { out += h; n++; }
   h = renderCycleTime(sop, n);      if (h) { out += h; n++; }
   h = renderTools(data.tools, n);   if (h) { out += h; n++; }
   h = renderItems(data.items, n);   if (h) { out += h; n++; }
 
-  out += renderSteps(data.steps, n); n++;  /* always shown */
+  out += renderSteps(data.steps, n, languages); n++;  /* always shown */
 
   h = renderDefinitions(data.definitions, n); if (h) { out += h; n++; }
   h = renderRevisions(data.revisions, n);     if (h) { out += h; n++; }

@@ -2042,20 +2042,6 @@ fn file_url_from_path(path: &std::path::Path) -> String {
     }
 }
 
-/// Maps a translation language code to the Noto Sans font family that covers
-/// its script, plus a CSS class name applied to translated blocks in that language.
-/// Marathi shares Devanagari script with Hindi, so both use NotoSansDevanagari.
-fn font_family_for_language(code: &str) -> Option<(&'static str, &'static str)> {
-    match code {
-        "hi" | "mr" => Some(("NotoSansDevanagari", "lang-devanagari")),
-        "ta" => Some(("NotoSansTamil", "lang-ta")),
-        "ml" => Some(("NotoSansMalayalam", "lang-ml")),
-        "kn" => Some(("NotoSansKannada", "lang-kn")),
-        "te" => Some(("NotoSansTelugu", "lang-te")),
-        _ => None,
-    }
-}
-
 /// Builds a <style> block embedding the Indic-script fonts as base64 data URIs
 /// (the template is written to a standalone temp HTML file, so relative/app
 /// paths to the font assets won't resolve — data URIs work regardless of
@@ -2157,6 +2143,52 @@ pub async fn export_pdf(
     let tool_map: std::collections::HashMap<String, &Tool> = tools.iter().map(|t| (t.id.clone(), t)).collect();
     let item_map: std::collections::HashMap<String, &Item> = items.iter().map(|i| (i.id.clone(), i)).collect();
 
+    // Fetch translations and group by entity_id -> language -> field_name -> text
+    let translations = sqlx::query_as::<sqlx::Sqlite, AiTranslation>(
+        "SELECT * FROM ai_translations WHERE sop_id = ?"
+    ).bind(&sop_id_uuid).fetch_all(pool).await.map_err(|e| e.to_string())?;
+
+    let mut translations_by_entity: std::collections::HashMap<String, std::collections::HashMap<String, std::collections::HashMap<String, String>>> = std::collections::HashMap::new();
+    let mut languages_present: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for t in &translations {
+        languages_present.insert(t.language.clone());
+        translations_by_entity
+            .entry(t.entity_id.clone())
+            .or_default()
+            .entry(t.language.clone())
+            .or_default()
+            .insert(t.field_name.clone(), t.translated_text.clone());
+    }
+
+    let translations_for_entity = |entity_id: &str, fields: &[&str]| -> serde_json::Value {
+        match translations_by_entity.get(entity_id) {
+            None => serde_json::json!({}),
+            Some(langs) => {
+                let obj: serde_json::Map<String, serde_json::Value> = langs
+                    .iter()
+                    .map(|(lang, field_map)| {
+                        let mut per_field = serde_json::Map::new();
+                        for f in fields {
+                            per_field.insert(
+                                (*f).to_string(),
+                                serde_json::Value::String(field_map.get(*f).cloned().unwrap_or_default()),
+                            );
+                        }
+                        (lang.clone(), serde_json::Value::Object(per_field))
+                    })
+                    .collect();
+                serde_json::Value::Object(obj)
+            }
+        }
+    };
+
+    let languages_json: Vec<serde_json::Value> = languages_present
+        .iter()
+        .map(|code| serde_json::json!({ "code": code, "name": language_name(code) }))
+        .collect();
+
+    let sop_translations_json = translations_for_entity(&sop.id, &["purpose", "scope", "safety_notes"]);
+
     // Build SOP_DATA JSON
     let tools_json: Vec<serde_json::Value> = tools.iter().map(|t| {
         serde_json::json!({
@@ -2220,7 +2252,8 @@ pub async fn export_pdf(
             "notes": s.notes,
             "tools": s_tools,
             "items": s_items,
-            "images": s_images
+            "images": s_images,
+            "translations": translations_for_entity(&s.id, &["action", "notes", "expected_output"])
         })
     }).collect();
 
@@ -2274,13 +2307,15 @@ pub async fn export_pdf(
             "training_details": sop.training_details,
             "cycle_time_value": sop.cycle_time_value,
             "cycle_time_unit": sop.cycle_time_unit,
-            "cycle_time_notes": sop.cycle_time_notes
+            "cycle_time_notes": sop.cycle_time_notes,
+            "translations": sop_translations_json
         },
         "tools": tools_json,
         "items": items_json,
         "steps": steps_json,
         "definitions": definitions_json,
-        "revisions": revisions_json
+        "revisions": revisions_json,
+        "translation_languages": languages_json
     });
 
     let json_str = serde_json::to_string(&sop_data).map_err(|e| e.to_string())?;
@@ -2290,9 +2325,19 @@ pub async fn export_pdf(
         "No Chromium browser found. Install Google Chrome, Microsoft Edge, or Chromium.".to_string()
     })?;
 
-    // Embed template at compile time and inject real SOP_DATA before the mock-data script
+    // Embed template at compile time and inject real SOP_DATA before the mock-data script.
+    // Indic fonts are only embedded (~4MB base64) when this export actually has translations —
+    // not worth the size cost on the common English-only export.
     let pdf_template = include_str!("../../public/pdf-template.html");
-    let injection = format!("<script>window.SOP_DATA = {};</script>", json_str);
+    let font_style = if translations.is_empty() {
+        String::new()
+    } else {
+        build_translation_font_style()
+    };
+    let injection = format!(
+        "{}\n<script>window.SOP_DATA = {};</script>",
+        font_style, json_str
+    );
     let html = pdf_template.replacen("<head>", &format!("<head>\n{}", injection), 1);
 
     // Write standalone HTML to a temp directory (cleaned up on drop)
