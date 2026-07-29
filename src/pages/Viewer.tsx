@@ -294,7 +294,7 @@ export default function Viewer() {
                     {pdfStatus === 'saving' && 'Choose save location…'}
                     {pdfStatus === 'rendering' && 'Rendering PDF…'}
                     {pdfStatus === 'error' && 'Export Failed'}
-                    {pdfStatus === 'idle' && 'Export PDF (Translated)'}
+                    {pdfStatus === 'idle' && 'Export PDF (Multilingual)'}
                   </Button>
                   <Button
                     disabled={pdfStatus !== 'idle'}
