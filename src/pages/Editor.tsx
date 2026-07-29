@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSopStore } from '@/store';
 import { invoke } from '@tauri-apps/api/core';
-import { FileText, Target, ShieldAlert, Timer, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Download, FileDown } from 'lucide-react';
+import { FileText, Target, ShieldAlert, Timer, Wrench, Package, ListOrdered, BookOpen, CheckSquare, Download, FileDown, Languages } from 'lucide-react';
 import { HeaderSection } from '@/components/editor/sections/HeaderSection';
 import { ScopeSection } from '@/components/editor/sections/ScopeSection';
 import { SafetySection } from '@/components/editor/sections/SafetySection';
@@ -12,6 +12,7 @@ import { ItemsSection } from '@/components/editor/sections/ItemsSection';
 import { ProcedureSection } from '@/components/editor/sections/ProcedureSection';
 import { DefinitionsSection } from '@/components/editor/sections/DefinitionsSection';
 import { ApprovalSection } from '@/components/editor/sections/ApprovalSection';
+import { TranslationsSection } from '@/components/editor/sections/TranslationsSection';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RevisionModal } from '@/components/editor/RevisionModal';
@@ -27,6 +28,7 @@ const SECTIONS = [
   { id: 'items', label: 'Items', icon: Package },
   { id: 'procedure', label: 'Procedure', icon: ListOrdered },
   { id: 'definitions', label: 'Definitions', icon: BookOpen },
+  { id: 'translations', label: 'Translations', icon: Languages },
   { id: 'approval', label: 'Approval & Revisions', icon: CheckSquare },
 ];
 
@@ -171,6 +173,7 @@ export default function Editor() {
       case 'items': return <ItemsSection />;
       case 'procedure': return <ProcedureSection />;
       case 'definitions': return <DefinitionsSection />;
+      case 'translations': return <TranslationsSection />;
       case 'approval': return (
         <ApprovalSection 
           onLogRevision={() => {
