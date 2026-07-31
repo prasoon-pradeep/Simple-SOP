@@ -1,5 +1,11 @@
 # SOP Builder (Alpha)
 
+[![Latest Release](https://img.shields.io/github/v/release/prasoon-pradeep/Simple-SOP)](https://github.com/prasoon-pradeep/Simple-SOP/releases/latest)
+[![Linux Build](https://img.shields.io/github/actions/workflow/status/prasoon-pradeep/Simple-SOP/build-linux.yml?branch=master&label=linux%20build)](https://github.com/prasoon-pradeep/Simple-SOP/actions/workflows/build-linux.yml)
+[![Windows Build](https://img.shields.io/github/actions/workflow/status/prasoon-pradeep/Simple-SOP/build-windows.yml?branch=master&label=windows%20build)](https://github.com/prasoon-pradeep/Simple-SOP/actions/workflows/build-windows.yml)
+[![License](https://img.shields.io/github/license/prasoon-pradeep/Simple-SOP)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/prasoon-pradeep/Simple-SOP/total)](https://github.com/prasoon-pradeep/Simple-SOP/releases)
+
 > **Alpha status:** This software is in an early release phase. While functional end-to-end, it may contain bugs or breaking changes. Always maintain independent backups of your SOP data.
 
 **Website & downloads:** https://prasoon-pradeep.github.io/Simple-SOP/
@@ -80,9 +86,9 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 
 | Platform | Status | Notes |
 |---|---|---|
-| Linux | ✅ Supported | AppImage (recommended) or .deb |
-| Windows | ✅ Supported | NSIS .exe (recommended) or .msi |
-| macOS | ✅ Supported | Apple Silicon (M1+) only — .dmg. App is unsigned; if you see **"damaged and can't be opened"**, run `xattr -cr /Applications/sop-builder.app` in Terminal, then launch normally. |
+| Linux | Supported | AppImage (recommended) or .deb |
+| Windows | Supported | NSIS .exe (recommended) or .msi |
+| macOS | Supported | Apple Silicon (M1+) only — .dmg. App is unsigned; if you see **"damaged and can't be opened"**, run `xattr -cr /Applications/sop-builder.app` in Terminal, then launch normally. |
 
 ---
 
@@ -173,7 +179,7 @@ See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 - Keep the Viewer and `public/pdf-template.html` aligned.
 - Use Tauri commands for all persistent writes.
 - Validate frontend (`npm run build`) and Rust (`cargo check` in `src-tauri/`) after meaningful changes.
-- For releases, bump the version in both `src-tauri/Cargo.toml` and `package.json`, push to `master`, and manually dispatch `.github/workflows/release.yml` with a matching tag such as `v0.2.0`.
+- For releases, run `npm run version <major.minor.patch>` to sync the version across `package.json` and `src-tauri/Cargo.toml`, push to `master`, then run `npm run release -- <tag> "<notes>"` (e.g. `npm run release -- v0.3.1 "Fix PDF export layout"`), which validates the release notes and workflow file before dispatching `.github/workflows/release.yml`.
 
 ---
 
