@@ -3,7 +3,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/prasoon-pradeep/Simple-SOP)](https://github.com/prasoon-pradeep/Simple-SOP/releases/latest)
 [![Linux Build](https://img.shields.io/github/actions/workflow/status/prasoon-pradeep/Simple-SOP/build-linux.yml?branch=master&label=linux%20build)](https://github.com/prasoon-pradeep/Simple-SOP/actions/workflows/build-linux.yml)
 [![Windows Build](https://img.shields.io/github/actions/workflow/status/prasoon-pradeep/Simple-SOP/build-windows.yml?branch=master&label=windows%20build)](https://github.com/prasoon-pradeep/Simple-SOP/actions/workflows/build-windows.yml)
-[![License](https://img.shields.io/github/license/prasoon-pradeep/Simple-SOP)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT%20%2B%20Commons%20Clause-blue)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/prasoon-pradeep/Simple-SOP/total)](https://github.com/prasoon-pradeep/Simple-SOP/releases)
 
 > **Alpha status:** This software is in an early release phase. While functional end-to-end, it may contain bugs or breaking changes. Always maintain independent backups of your SOP data.
