@@ -1,6 +1,23 @@
 import { ReactNode } from 'react';
-import { LucideIcon, Home, FileText, Target, ShieldAlert, Timer, Wrench, Package } from 'lucide-react';
-import { Lead, SubHeading, DList, Code, FieldTable, InlineLink } from './helpUi';
+import {
+  LucideIcon,
+  Home,
+  FileText,
+  Target,
+  ShieldAlert,
+  Timer,
+  Wrench,
+  Package,
+  ListChecks,
+  Crop,
+  ListOrdered,
+  Languages,
+  History,
+  Sparkles,
+  HelpCircle,
+  ShieldCheck,
+} from 'lucide-react';
+import { Lead, SubHeading, DList, Code, FieldTable, FlowTable, Callout, InlineLink } from './helpUi';
 
 export interface HelpSection {
   id: string;
@@ -167,6 +184,167 @@ export const HELP_SECTIONS: HelpSection[] = [
             <><b>Unit</b> — pcs, kg, ml, etc. Once set on the library entry, it's reused automatically wherever the item is linked into a step</>,
           ]}
         />
+      </>
+    ),
+  },
+  {
+    id: 'd-steps',
+    title: 'Procedure Steps',
+    sub: '08 · Editor, Tab 7 — the core of the document',
+    icon: ListChecks,
+    keywords: 'step number action instruction expected output notes cautions tools needed items needed images drag handle reorder duplicate delete qty unit free text tag',
+    body: (
+      <>
+        <Lead>Each step is its own card. <b>Add Step</b> appends a new one at the bottom; the list keeps its scroll position instead of jumping to the top.</Lead>
+        <SubHeading>Per-step fields</SubHeading>
+        <DList
+          items={[
+            <><b>Step Number</b> — read-only, recalculated automatically on reorder</>,
+            <><b>Action / Instruction</b> — the main text, eligible for AI enhancement</>,
+            <><b>Expected Output</b> — what should result from the step</>,
+            <><b>Notes / Cautions</b> — free text</>,
+            <><b>Tools Needed</b> and <b>Items Needed</b> — see below</>,
+            <><b>Images</b> — multiple per step, each goes through crop + optional annotation</>,
+          ]}
+        />
+        <SubHeading>Tools &amp; items tagging</SubHeading>
+        <DList
+          items={[
+            <>Search your library and select — it appears as a tag. Or type free text and press Enter — it appears as a differently-styled tag. Both kinds can coexist on the same step</>,
+            <>For items, selecting a library entry shows <b>Unit</b> (pre-filled, read-only if the library item has one) and a small <b>Qty</b> input alongside the tag</>,
+            <>
+              Trying to link an item with no quantity entered pops a confirmation: <i>"You haven't specified a quantity for [Item]. Add it without a quantity?"</i> — Add Anyway renders <Code>—</Code> in the PDF, Go Back returns you to the input. Quantity, if entered, must be a positive number (no zero, no negatives)
+            </>,
+          ]}
+        />
+        <SubHeading>Managing steps</SubHeading>
+        <DList
+          items={[
+            <><b>Drag handle</b> reorders steps (dnd-kit) — step numbers renumber automatically</>,
+            <><b>Duplicate Step</b> makes a full independent copy (images re-referenced, not re-uploaded) appended right below the original — edit it freely afterward without touching the source step</>,
+            <><b>Delete Step</b> asks for confirmation first</>,
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: 'd-images',
+    title: 'Image Handling',
+    sub: '09 · Used in Tools, Items & Steps',
+    icon: Crop,
+    keywords: 'image crop 16:9 4:3 annotation konva arrow circle text label undo skip original annotated',
+    body: (
+      <>
+        <Lead>Every image — uploaded from disk or pasted from the clipboard — goes through the same two-stage flow.</Lead>
+        <SubHeading>1. Crop</SubHeading>
+        <DList items={[<>Choose <b>16:9</b> (default) or <b>4:3</b>, then adjust the crop area and confirm.</>]} />
+        <SubHeading>2. Annotate (optional — can be skipped)</SubHeading>
+        <DList
+          items={[
+            <>A Konva.js canvas over the cropped image with three tools: <b>Arrow</b> (click-drag), <b>Circle</b> (click center, drag radius), and <b>Text Label</b> (click, type)</>,
+            <>Annotations are draggable after placement, and an <b>Undo</b> button steps back through changes</>,
+          ]}
+        />
+        <Lead>Both the original crop and the annotated version are saved — the annotated one is always what appears in the Viewer and PDF.</Lead>
+      </>
+    ),
+  },
+  {
+    id: 'd-defs',
+    title: 'Definitions',
+    sub: '10 · Editor, Tab 8',
+    icon: ListOrdered,
+    keywords: 'term meaning jargon abbreviations glossary sort order',
+    body: (
+      <Lead>
+        A simple two-column table — <b>Term</b> and <b>Meaning</b> — for any jargon or abbreviations used in the SOP. Rows can be added or removed freely; the order you enter them in is preserved. Always rendered at the very end of the exported PDF, after every step.
+      </Lead>
+    ),
+  },
+  {
+    id: 'd-translations',
+    title: 'Translations',
+    sub: '11 · Editor, Tab 9',
+    icon: Languages,
+    keywords: 'translate hindi tamil malayalam kannada telugu marathi language stale outdated hash disclaimer',
+    body: (
+      <>
+        <Lead>
+          A dedicated tab for translating a SOP's prose fields — Purpose, Scope, Safety Notes, and every step's Action / Notes / Expected Output — into <b>Hindi, Tamil, Malayalam, Kannada, Telugu, or Marathi</b>, using whichever AI provider you've configured in Settings.
+        </Lead>
+        <SubHeading>How it works</SubHeading>
+        <DList
+          items={[
+            <>Select one or more target languages, then translate a field (or a whole step) with one click — it reuses the provider and key already set up in Settings, no separate key needed here</>,
+            <>Each translated field is stored per-language and shown alongside the English original in the Viewer and PDF, with an <b>unreviewed-AI disclaimer</b></>,
+          ]}
+        />
+        <SubHeading>Staying in sync</SubHeading>
+        <DList
+          items={[
+            <>If you edit the English source after it's been translated, the app hashes the source text and flags the existing translation as <b>outdated</b> — a clear signal to regenerate it rather than silently drifting out of sync</>,
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: 'd-approval',
+    title: 'Approval & Revisions',
+    sub: '12 · Editor, Tab 10',
+    icon: History,
+    keywords: 'revision notes revised by approval status approved by approval date exit prompt log new revision draft under review approved rejected version bump audit trail',
+    body: (
+      <>
+        <Lead>Every SOP starts life as <b>V1 / Draft</b> automatically, with an "Initial Draft" revision row. From there, the version number only moves forward when a revision is explicitly logged.</Lead>
+        <SubHeading>Two ways to log a revision</SubHeading>
+        <DList
+          items={[
+            <><b>Log New Revision</b> button at the bottom of this tab — works anytime, mid-session</>,
+            <>The <b>exit prompt</b> (see table below) — triggered automatically when you try to leave a SOP with unsaved changes</>,
+          ]}
+        />
+        <Lead>
+          Both paths ask for the same fields — <b>Revision Notes</b> (required), <b>Revised By</b>, <b>Approval Status</b>, <b>Approved By</b>, <b>Approval Date</b> — and produce identical database records. The SOP's overall status badge always mirrors whatever the latest revision says; it's never edited directly.
+        </Lead>
+        <SubHeading>When does the exit prompt appear?</SubHeading>
+        <FlowTable
+          rows={[
+            ['Closing the window, or navigating to Home / a different SOP / importing a file', true, '(only if something changed)'],
+            ['Switching between section tabs within the same SOP', false],
+            ['Export PDF or Export .sop', false],
+            ['App loses focus, alt-tab, screen lock', false],
+          ]}
+        />
+        <Callout icon={HelpCircle}>
+          The prompt is purely for the <b>audit trail</b>, not data safety — auto-save has already persisted every change to SQLite. Choosing "Exit Without Revision" loses nothing except the version bump.
+        </Callout>
+        <Callout icon={ShieldAlert}>
+          Logging a revision has its own date rule: <b>Revision Date</b> can't be before the SOP's Created Date, and can't be before the previous revision's date — the confirm button stays disabled until it's valid, in both the exit prompt and this tab's manual form.
+        </Callout>
+      </>
+    ),
+  },
+  {
+    id: 'd-ai',
+    title: 'AI Enhancement',
+    sub: '13 · Optional, bring your own key',
+    icon: Sparkles,
+    keywords: 'sparkle button generate with ai anthropic openai gemini provider model api key keyring before after preview',
+    body: (
+      <>
+        <Lead>
+          Every prose field in the app has a small sparkle button next to it — Purpose, Scope, Safety Notes, Step Action/Notes, Cycle Time notes, and more. Clicking it sends the field's current text to your configured AI provider and shows a <b>before/after preview</b> — nothing is overwritten until you explicitly accept. For translating a SOP into another language, see the dedicated <InlineLink to="d-translations">Translations</InlineLink> tab above.
+        </Lead>
+        <Callout icon={Sparkles}>
+          On empty fields the button becomes <b>Generate with AI</b> instead of rewriting existing text — e.g. on <InlineLink to="d-cycle">Cycle Time</InlineLink> notes, it drafts a suggestion straight from the value + unit you've entered (e.g. "10 minutes per unit, ~6 cycles per hour"). Still just a starting point — nothing saves until you accept or edit it.
+        </Callout>
+        <SubHeading>Providers</SubHeading>
+        <DList items={[<>Anthropic, OpenAI, or Gemini — pick a provider and model in Settings, and set your own API key for it before the sparkle button will work</>]} />
+        <Callout icon={ShieldCheck}>
+          Your API key is stored in SQLite as the source of truth, with an encrypted copy in your OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) where available — nothing is sent anywhere except directly to your chosen AI provider.
+        </Callout>
       </>
     ),
   },
