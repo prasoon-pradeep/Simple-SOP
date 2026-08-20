@@ -3,6 +3,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { useSopStore } from '@/store';
 import { AiTranslation, SUPPORTED_LANGUAGES } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Languages, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,7 +16,7 @@ const SOP_FIELDS: { field: SopFieldName; label: string }[] = [
 ];
 
 export function TranslationsSection() {
-  const { currentSop, stepsFull, translations, setTranslations, upsertTranslation, updateTranslationField } = useSopStore();
+  const { currentSop, stepsFull, translations, setTranslations, upsertTranslation, updateTranslationField, updateSopField } = useSopStore();
 
   const [selectedLangs, setSelectedLangs] = useState<string[]>([]);
   const [provider, setProvider] = useState<string | null>(null);
@@ -46,6 +48,12 @@ export function TranslationsSection() {
     try {
       const data = await invoke<AiTranslation[]>('get_translations', { sopId: currentSop.id });
       setTranslations(data);
+      // Pre-select any language this SOP already has saved translations for, so returning
+      // to the tab shows existing work immediately instead of requiring a chip click first.
+      const existingLangs = Array.from(new Set(data.map(t => t.language)));
+      if (existingLangs.length > 0) {
+        setSelectedLangs(prev => Array.from(new Set([...prev, ...existingLangs])));
+      }
     } catch (error) {
       console.error('Failed to load translations', error);
     } finally {
@@ -210,6 +218,8 @@ export function TranslationsSection() {
 
   if (isLoading) return <div className="p-12 text-center text-text-tertiary">Loading translations...</div>;
 
+  const translationsDisabled = !!currentSop?.translations_disabled;
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 pb-24">
       <div className="border-b border-border-subtle pb-4">
@@ -221,8 +231,26 @@ export function TranslationsSection() {
           AI-generated translations are unreviewed — the English version stays authoritative in case of discrepancy.
           A disclaimer is added automatically to any PDF export that includes translated content.
         </p>
+        <div className="flex items-center gap-2 mt-3">
+          <Switch
+            id="translations_disabled"
+            checked={translationsDisabled}
+            onCheckedChange={(checked) => updateSopField('translations_disabled', checked)}
+          />
+          <Label htmlFor="translations_disabled" className="text-sm text-text-secondary cursor-pointer">
+            Disable Translations
+          </Label>
+        </div>
       </div>
 
+      {translationsDisabled ? (
+        <div className="py-12 border-2 border-dashed border-border-standard rounded-lg flex flex-col items-center justify-center text-text-quaternary bg-surface/50">
+          <Languages className="w-10 h-10 mb-2 opacity-20" />
+          <p>Translations are disabled for this SOP.</p>
+          <p className="text-xs mt-1">Any translations already generated are still saved — turn this back on to view or generate them.</p>
+        </div>
+      ) : (
+        <>
       <div className="flex flex-wrap items-center gap-2">
         {SUPPORTED_LANGUAGES.map(l => (
           <button
@@ -407,6 +435,8 @@ export function TranslationsSection() {
             </tbody>
           </table>
         </div>
+      )}
+        </>
       )}
     </div>
   );

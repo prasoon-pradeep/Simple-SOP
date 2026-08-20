@@ -24,6 +24,7 @@ export interface SOP {
   cycle_time_value: number | null;
   cycle_time_unit: string | null;
   cycle_time_notes: string | null;
+  translations_disabled: boolean;
 }
 
 export interface Revision {
