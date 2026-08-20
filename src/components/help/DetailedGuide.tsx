@@ -64,7 +64,7 @@ export function DetailedGuide() {
         )}
       </div>
 
-      <nav className="sticky top-0 z-[5] bg-panel flex flex-wrap gap-1.5 py-2.5 pb-4">
+      <nav className="flex flex-wrap gap-1.5 py-2.5 pb-4">
         {HELP_SECTIONS.filter((s) => !visibleIds || visibleIds.has(s.id)).map((s) => (
           <button
             key={s.id}
