@@ -7,7 +7,8 @@ import {
   Folder,
   Settings,
   Database,
-  ChevronRight
+  ChevronRight,
+  HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -118,6 +119,13 @@ export function Sidebar() {
 
       {/* Footer Nav */}
       <div className="p-3 border-t border-border-standard space-y-1 bg-panel/50">
+        <button
+          onClick={() => navigate('/help')}
+          className="w-full flex items-center px-3 py-2 rounded-md text-xs font-medium text-text-tertiary hover:bg-hover hover:text-text-primary transition-colors"
+        >
+          <HelpCircle className="w-3.5 h-3.5 mr-3" />
+          Help
+        </button>
         <button
           onClick={() => navigate('/settings')}
           className="w-full flex items-center px-3 py-2 rounded-md text-xs font-medium text-text-tertiary hover:bg-hover hover:text-text-primary transition-colors"
