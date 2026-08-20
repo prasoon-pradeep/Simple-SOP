@@ -10,7 +10,7 @@
 
 **Website & downloads:** https://prasoon-pradeep.github.io/Simple-SOP/
 
-Current app version: **0.3.0**
+Current app version: **0.3.1**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
@@ -79,6 +79,7 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - Export SOPs to printable, text-selectable PDF via headless Chromium/Edge print-to-PDF
 - Portable `.sop` import/export bundles
 - In-app auto-update with launch dialog, Settings check, progress feedback, error details, and manual release fallback
+- Built-in Help guide with a Quick Start walkthrough (shown automatically when the library is empty) and a searchable detailed reference for every field, tab, and rule, reachable anytime from the sidebar
 
 ---
 
@@ -143,7 +144,8 @@ Simple-SOP/
 |   |   |-- Home.tsx
 |   |   |-- Editor.tsx
 |   |   |-- Viewer.tsx
-|   |   `-- Settings.tsx
+|   |   |-- Settings.tsx
+|   |   `-- Help.tsx
 |   |-- store.ts
 |   `-- types.ts
 |-- src-tauri/                       # Rust backend and Tauri app
