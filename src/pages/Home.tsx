@@ -27,6 +27,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { QuickStart } from '@/components/help/QuickStart';
 import { cn } from '@/lib/utils';
 import { DeleteSopModal } from '@/components/shared/DeleteSopModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -230,6 +231,10 @@ export default function Home() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
+          {!isLoading && sops.length === 0 ? (
+            <QuickStart onCreateSop={handleCreateSop} onOpenFullGuide={() => navigate('/help')} />
+          ) : (
+           <>
            <div className="bg-surface border border-border-standard rounded-lg overflow-hidden shadow-sm">
               <Table>
                 <TableHeader className="bg-secondary/50 border-b border-border-standard">
@@ -325,6 +330,8 @@ export default function Home() {
                  <span className="text-text-secondary font-bold font-mono">SQLite Local</span>
               </div>
            </div>
+          </>
+          )}
         </div>
       </main>
 
