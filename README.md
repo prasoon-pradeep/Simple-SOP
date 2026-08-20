@@ -205,3 +205,9 @@ Licensed by **SOP Builder Software** under the **MIT License + Commons Clause**.
 - **Trademarks:** "SOP Builder" and its logos cannot be used to brand a competing service.
 
 See [LICENSE](LICENSE) for the full legal text.
+
+---
+
+## Acknowledgements
+
+- App icon based on an icon from [Iconoir](https://iconoir.com), licensed under the [MIT License](https://github.com/iconoir-icons/iconoir/blob/main/LICENSE) (Copyright © 2021 Luca Burgio).
