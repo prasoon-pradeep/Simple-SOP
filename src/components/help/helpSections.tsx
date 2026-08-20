@@ -16,8 +16,25 @@ import {
   Sparkles,
   HelpCircle,
   ShieldCheck,
+  Download,
+  ArrowLeftRight,
+  SlidersHorizontal,
+  RefreshCw,
+  LifeBuoy,
 } from 'lucide-react';
-import { Lead, SubHeading, DList, Code, FieldTable, FlowTable, Callout, InlineLink } from './helpUi';
+import {
+  Lead,
+  SubHeading,
+  DList,
+  Code,
+  FieldTable,
+  FlowTable,
+  Callout,
+  InlineLink,
+  PlatformGrid,
+  OrderedSteps,
+  StatusSplit,
+} from './helpUi';
 
 export interface HelpSection {
   id: string;
@@ -344,6 +361,159 @@ export const HELP_SECTIONS: HelpSection[] = [
         <DList items={[<>Anthropic, OpenAI, or Gemini — pick a provider and model in Settings, and set your own API key for it before the sparkle button will work</>]} />
         <Callout icon={ShieldCheck}>
           Your API key is stored in SQLite as the source of truth, with an encrypted copy in your OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) where available — nothing is sent anywhere except directly to your chosen AI provider.
+        </Callout>
+      </>
+    ),
+  },
+  {
+    id: 'd-pdf',
+    title: 'PDF Export',
+    sub: '14 · From the Viewer sidebar',
+    icon: Download,
+    keywords: 'export pdf chromium edge chrome brave text selectable content order filename status stamp',
+    body: (
+      <>
+        <Lead>
+          Click <b>Export PDF</b> in the Viewer. The app injects your SOP's data into a print template and renders it through a headless Chromium-family browser (Chrome, Edge, Chromium, or Brave — one must be installed) into a fully <b>text-selectable</b> PDF, not an image.
+        </Lead>
+        <SubHeading>Content order</SubHeading>
+        <DList
+          items={[
+            <>Header fields → Scope &amp; Purpose → Safety &amp; Training → Cycle Time (if set) → Tools library → Items library → Steps (with image sub-rows) → Definitions → Revision History</>,
+          ]}
+        />
+        <Lead>
+          A native save dialog lets you pick the location; the file is named <Code>{'{SOP-ID}-V{N}.pdf'}</Code>, e.g. <Code>SOP-2026-8F3AB2-V3.pdf</Code>. The status stamp on the PDF always reflects the current approval status.
+        </Lead>
+      </>
+    ),
+  },
+  {
+    id: 'd-sop',
+    title: '.sop Import / Export',
+    sub: '15 · From Editor & Home',
+    icon: ArrowLeftRight,
+    keywords: 'sop file bundle zip export import replace new copy conflict portable',
+    body: (
+      <>
+        <Lead>A portable, self-contained way to move a single SOP between machines — no shared network or cloud account needed.</Lead>
+        <SubHeading>Export</SubHeading>
+        <DList items={[<>Bundles this SOP's full data snapshot plus every referenced image file into a zipped <Code>.sop</Code> file. Available from the Editor's sidebar footer — doesn't trigger the dirty/revision prompt.</>]} />
+        <SubHeading>Import</SubHeading>
+        <DList
+          items={[
+            <>Pick a <Code>.sop</Code> file from Home — the app validates it and checks whether that SOP's unique ID already exists locally</>,
+            <>If it's new: imports directly. If it already exists: asks whether to <b>replace</b> the existing copy or bring it in as a <b>new copy</b> with a fresh ID</>,
+            <>Lands you in the Viewer for the imported SOP once done</>,
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: 'd-settings',
+    title: 'Settings',
+    sub: '16 · Settings Page',
+    icon: SlidersHorizontal,
+    keywords: 'company name organisation default image directory ai enhancement model updates licence privacy policy',
+    body: (
+      <DList
+        items={[
+          <><b>Company Name</b> — appears in the header of every exported PDF</>,
+          <><b>Default Image Directory</b> — a folder your file dialogs open to by default whenever you upload an image, anywhere in the app; falls back to your OS default if unset</>,
+          <><b>AI Enhancement</b> — pick a provider (Anthropic / OpenAI / Gemini), enter your own API key, and choose a specific model from that provider — required before any sparkle-button or Translations feature works</>,
+          <><b>Updates</b> — a manual "Check for Updates" trigger with the same progress/verify/apply flow as the automatic launch check</>,
+          <>
+            <b>Licence Agreement</b> and <b>Privacy Policy</b> — the full legal text and a plain-language statement that nothing is collected: no data leaves your machine except direct calls to your own configured AI provider, and a version check to GitHub on launch
+          </>,
+        ]}
+      />
+    ),
+  },
+  {
+    id: 'd-update',
+    title: 'Auto-Update',
+    sub: '17 · Runs in the background',
+    icon: RefreshCw,
+    keywords: 'update github signed appimage deb smartscreen gatekeeper unsigned',
+    body: (
+      <>
+        <Lead>
+          On every launch, the app checks GitHub in the background — non-blocking, never delays startup. If a newer version exists, a dialog shows the version number, release notes, and lets you install with one click, with a visible download → verify → apply progress flow. Every downloaded update is cryptographically signature-checked before it's applied.
+        </Lead>
+        <PlatformGrid
+          items={[
+            { t: 'Linux', d: "AppImage auto-updates in place. .deb installs cannot self-replace — you'll get a manual download link instead." },
+            { t: 'Windows', d: 'First install may show a SmartScreen "unrecognised app" warning (no paid cert). All updates after that are silent.' },
+            { t: 'macOS', d: 'Unsigned — first launch needs right-click → Open. Apple Silicon only. Updates after that are unaffected.' },
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: 'd-safe',
+    title: 'Data & Safety',
+    sub: '18 · Why you can trust it',
+    icon: ShieldCheck,
+    keywords: 'sqlite wal foreign keys integrity check images uuid autosave alpha backup local no cloud no telemetry',
+    body: (
+      <>
+        <DList
+          items={[
+            <>Everything lives in a local SQLite database on this machine — no cloud, no account, no telemetry</>,
+            <>Runs in <b>WAL mode</b> with foreign keys enforced, tuned for crash-safe writes under rapid auto-save</>,
+            <>An <b>integrity check</b> runs on every app launch. If it fails, the app refuses to open and tells you to restore from a <Code>.sop</Code> backup instead of risking further writes</>,
+            <>Images are stored as files on disk by UUID — SQLite holds only references, never the image bytes themselves</>,
+            <>Auto-save is debounced at 500ms and writes atomically via Rust — there's no scenario where a change is "half saved"</>,
+          ]}
+        />
+        <Callout icon={ShieldAlert}>
+          This app is in <b>Alpha</b>. It's functional end-to-end, but you should keep independent backups of anything important — export a <Code>.sop</Code> copy periodically.
+        </Callout>
+      </>
+    ),
+  },
+  {
+    id: 'd-recover',
+    title: 'Recovering From Corruption',
+    sub: "19 · If the app won't open",
+    icon: LifeBuoy,
+    keywords: 'corrupted database backup snapshot recovery restore rename sop-builder.db',
+    body: (
+      <>
+        <Lead>A corrupted local database is rare, but here's exactly what happens and what to do if it does.</Lead>
+        <StatusSplit
+          now={
+            <DList
+              items={[
+                <>An integrity check runs on every launch. If it fails, the app shows an error and refuses to open rather than risk further writes</>,
+                <>Recovery means restoring from a <Code>.sop</Code> file you exported earlier — there's no automatic backup yet, so this only works if you've been exporting periodically (see <InlineLink to="d-safe">Data &amp; Safety</InlineLink>)</>,
+              ]}
+            />
+          }
+          planned={
+            <DList
+              items={[
+                <>A daily automatic snapshot of the whole database, keeping the last 30 days</>,
+                <>A dedicated recovery screen with exact, OS-specific steps to swap in the latest snapshot yourself — no in-app restore button, just clear instructions</>,
+              ]}
+            />
+          }
+        />
+        <SubHeading>The manual recovery steps, once snapshots ship</SubHeading>
+        <OrderedSteps
+          items={[
+            <>Close SOP Builder completely</>,
+            <>Open the app's data folder in your file manager (path shown on the error screen itself, detected for your OS)</>,
+            <>Rename <Code>sop-builder.db</Code> to <Code>sop-builder_corrupted.db</Code> — don't delete it</>,
+            <>Open the <Code>backups/</Code> subfolder and copy the most recent snapshot, e.g. <Code>sop-builder-2026-05-03.db</Code></>,
+            <>Paste it into the parent folder and rename it to <Code>sop-builder.db</Code></>,
+            <>Relaunch SOP Builder</>,
+          ]}
+        />
+        <Callout icon={ShieldAlert}>
+          Until automatic snapshots ship, your own <Code>.sop</Code> exports are the only backup that exists. Export the SOPs that matter most whenever you finish a meaningful edit.
         </Callout>
       </>
     ),
