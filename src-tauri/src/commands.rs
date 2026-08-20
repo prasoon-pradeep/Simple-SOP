@@ -140,6 +140,8 @@ pub struct SOP {
     #[serde(default = "default_cycle_time_unit")]
     pub cycle_time_unit: Option<String>,
     pub cycle_time_notes: Option<String>,
+    #[serde(default)]
+    pub translations_disabled: bool,
 }
 
 fn default_cycle_time_unit() -> Option<String> {
@@ -363,7 +365,8 @@ pub async fn get_sops(state: tauri::State<'_, SqlitePool>) -> Result<Vec<SOP>, S
                created_by, created_date, active_date, next_review_date, approval_status,
                regulatory_ref, distribution_list, related_documents, purpose, scope,
                safety_notes, training_required, training_details, created_at, updated_at,
-               is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes
+               is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes,
+               translations_disabled
         FROM sops
         WHERE is_deleted = 0
         ORDER BY updated_at DESC
@@ -384,7 +387,8 @@ pub async fn get_sop(id: String, state: tauri::State<'_, SqlitePool>) -> Result<
                created_by, created_date, active_date, next_review_date, approval_status,
                regulatory_ref, distribution_list, related_documents, purpose, scope,
                safety_notes, training_required, training_details, created_at, updated_at,
-               is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes
+               is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes,
+               translations_disabled
         FROM sops
         WHERE id = ?
         "#,
@@ -446,7 +450,7 @@ pub async fn save_sop(payload: SOP, state: tauri::State<'_, SqlitePool>) -> Resu
             regulatory_ref = ?, distribution_list = ?, related_documents = ?,
             purpose = ?, scope = ?, safety_notes = ?, training_required = ?,
             training_details = ?, cycle_time_value = ?, cycle_time_unit = ?,
-            cycle_time_notes = ?, updated_at = ?
+            cycle_time_notes = ?, translations_disabled = ?, updated_at = ?
         WHERE id = ?
         "#,
     )
@@ -469,6 +473,7 @@ pub async fn save_sop(payload: SOP, state: tauri::State<'_, SqlitePool>) -> Resu
     .bind(payload.cycle_time_value)
     .bind(&payload.cycle_time_unit)
     .bind(&payload.cycle_time_notes)
+    .bind(payload.translations_disabled)
     .bind(&ts)
     .bind(&payload.id)
     .execute(state.inner())
@@ -1807,8 +1812,9 @@ pub async fn finalize_import(
             created_by, created_date, active_date, next_review_date, approval_status,
             regulatory_ref, distribution_list, related_documents, purpose, scope,
             safety_notes, training_required, training_details, created_at, updated_at,
-            is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            is_deleted, deleted_at, cycle_time_value, cycle_time_unit, cycle_time_notes,
+            translations_disabled
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
     )
     .bind(&bundle.sop.id).bind(&bundle.sop.sop_id).bind(bundle.sop.version).bind(&bundle.sop.title)
@@ -1820,6 +1826,7 @@ pub async fn finalize_import(
     .bind(&bundle.sop.training_details).bind(&bundle.sop.created_at).bind(&bundle.sop.updated_at)
     .bind(bundle.sop.is_deleted).bind(&bundle.sop.deleted_at)
     .bind(bundle.sop.cycle_time_value).bind(&bundle.sop.cycle_time_unit).bind(&bundle.sop.cycle_time_notes)
+    .bind(if bundle.sop.translations_disabled {1} else {0})
     .execute(&mut *tx).await.map_err(|e| e.to_string())?;
 
     for rev in bundle.revisions {
