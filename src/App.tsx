@@ -4,6 +4,7 @@ import Editor from "./pages/Editor";
 import Home from "./pages/Home";
 import Viewer from "./pages/Viewer";
 import Settings from "./pages/Settings";
+import Help from "./pages/Help";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { getVersion } from '@tauri-apps/api/app';
@@ -223,6 +224,7 @@ function App() {
           <Route path="/sop/:id/edit" element={<Editor />} />
           <Route path="/sop/:id/view" element={<Viewer />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/help" element={<Help />} />
         </Routes>
       </Router>
     </>
