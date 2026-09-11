@@ -1,0 +1,294 @@
+# Compliance Handoff — Legal/Privacy Documentation Tasks
+
+This document specifies five tasks agreed after a legal/compliance review of the app
+(GDPR / India DPDP Act 2023 / CCPA-adjacent, plus general license hygiene). Each task
+gives the exact file(s) to touch, the exact wording to use, and the reasoning, so it
+can be implemented without further legal back-and-forth. Follow the wording as given —
+it was chosen deliberately (e.g. no personal name/email, no company entity, specific
+liability figures kept as-is).
+
+Do not add anything beyond what's specified here (no extra clauses, no rewording of
+existing LICENSE text, no scope creep into unrelated settings/UI).
+
+---
+
+## Task 1 — Document plaintext API key storage (no code change)
+
+**Problem:** AI provider API keys are always written to the local SQLite database in
+plaintext (`src-tauri/src/commands.rs`, the `set_api_key`-style command around line
+2469: `sqlx::query("INSERT INTO app_config ...").bind(&config_key).bind(&api_key)...`
+runs unconditionally). The OS keyring (Windows Credential Manager / macOS Keychain /
+Linux Secret Service) is only a best-effort *additional* copy — it is not a substitute
+for the SQLite write, and SQLite is not encrypted. Current README wording implies the
+SQLite copy is protected ("stored reliably in SQLite with an encrypted OS keyring
+copy"), which overstates the protection. This is a documentation fix only — do not
+change the storage behavior.
+
+**1a. `README.md`** — find this line (under the Features list):
+
+> AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key; keys stored reliably in SQLite with an encrypted OS keyring copy (Windows Credential Manager, macOS Keychain, Linux Secret Service) where available
+
+Replace with:
+
+> AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key. Your API key is always stored in the local SQLite database in plain text. Where your operating system supports it (Windows Credential Manager, macOS Keychain, Linux Secret Service), a second copy is also stored in a secure OS credential store, but this does not encrypt the SQLite copy — treat the key as a plaintext credential protected only by your device's user-account security.
+
+**1b. `src/pages/Settings.tsx`** — inside the existing Privacy Policy block (around
+line 612-618), add a new paragraph after the "AI Enhancement" paragraph and before the
+"Auto-updates" paragraph:
+
+```
+<p><span className="font-semibold text-text-primary">API key storage.</span> Your AI provider API key is stored locally on your device. It is always written to the app's local SQLite database in plain text. Where your operating system supports it, a second copy is also stored in an OS-level secure credential store (Windows Credential Manager, macOS Keychain, or Linux Secret Service) — but the SQLite copy itself is never encrypted. Anyone with access to your local user account or a backup of the app's data folder could read this key.</p>
+```
+
+---
+
+## Task 2 — Privacy Policy: `PRIVACY.md` + update in-app copy
+
+**Decisions locked in:**
+- Controller name: **"SOP Builder"** (project name — no personal name or company entity)
+- Contact: a **GitHub noreply address** — format `ID+username@users.noreply.github.com`
+  or `username@users.noreply.github.com` depending on the account's email-privacy
+  setting. **Before using this, verify the exact address in the GitHub account's
+  Settings → Emails page** (the "Keep my email addresses private" setting determines
+  the exact format) and substitute it for `[GITHUB_NOREPLY_EMAIL]` below.
+- No physical address, no phone number.
+
+**2a. Create `PRIVACY.md` at the repository root** with this content:
+
+```markdown
+# Privacy Policy — SOP Builder
+
+Last updated: [DATE OF IMPLEMENTATION]
+
+## Who this policy covers
+
+This policy is issued by **SOP Builder**, an independent open-source project.
+Contact for any privacy question or request: **[GITHUB_NOREPLY_EMAIL]**
+
+## What we collect
+
+We collect nothing. SOP Builder stores all your data locally on your machine in a
+SQLite database. No personal data, usage data, or SOP content is ever transmitted to
+or collected by SOP Builder.
+
+## AI Enhancement and Translation
+
+If you choose to use the AI enhancement or translation features, the text of the
+field you are improving or translating is sent directly from your device to the AI
+provider you configure (Anthropic, OpenAI, or Google) using your own API key. SOP
+Builder has no visibility into or control over that transmission — it is governed
+solely by your chosen provider's terms of service and privacy policy.
+
+**If the content you send (including step text or embedded images) contains personal
+data about other people** — for example, employee names, photos, or other
+identifying information — **you are the data controller (or data fiduciary, under
+India's DPDP Act) for that data.** You are responsible for having a lawful basis to
+process and transmit it, and for complying with any applicable data protection law
+before sending it to a third-party AI provider. SOP Builder acts only as a conduit
+for a transmission you initiate with your own credentials; it is not a party to the
+processing.
+
+## Cross-border data transfer
+
+When you use the AI enhancement or translation features, the data you submit is
+transmitted to servers operated by your chosen provider (Anthropic, OpenAI, or
+Google), which may be located outside your country, including in the United States.
+This transfer happens directly between your device and the provider, using your own
+API key — SOP Builder does not route, store, or have access to this data at any
+point.
+
+## Auto-updates
+
+On launch, the app contacts the GitHub API to check whether a new version is
+available. This is a standard HTTPS request from your device to GitHub's servers,
+made under GitHub's legitimate interest in serving update metadata, and is subject to
+GitHub's own privacy policy. No SOP data is included in this request.
+
+## No analytics, no telemetry
+
+The app contains no crash reporters, analytics SDKs, or tracking of any kind.
+
+## Your data, your control
+
+Because all data is stored locally on your device, you have complete control over it
+at all times:
+- **Access:** all your data is already on your device, in the app's local database.
+- **Correction:** edit any SOP directly in the app.
+- **Deletion:** delete a SOP in the app, or uninstall the app and remove its data
+  folder to delete everything.
+- **Portability:** use the app's `.sop` export feature to obtain a portable copy of
+  any SOP at any time.
+
+We hold no copy of your data, so there is nothing for us to act on regarding these
+rights beyond what the app itself already gives you.
+
+## Retention
+
+SOP Builder does not retain any of your data, because it never receives or stores
+any of it outside your own device. Data persists locally for as long as you keep it
+in the app.
+
+## Children's privacy
+
+SOP Builder is not directed at, and is not intended for use by, children. It collects
+no data from anyone, regardless of age.
+
+## Changes to this policy
+
+If this policy changes, the "Last updated" date above will be revised, and the
+updated text will be reflected both here and in the app's Settings screen.
+
+## Questions or requests
+
+Contact **[GITHUB_NOREPLY_EMAIL]**, or open an issue on the
+[GitHub repository](https://github.com/prasoon-pradeep/Simple-SOP/issues) for
+non-sensitive questions.
+```
+
+**2b. Update `src/pages/Settings.tsx`** — replace the existing in-app Privacy Policy
+block (lines ~605-618) so its content matches `PRIVACY.md` (condensed for in-app
+display is fine, but it must include the new AI controller/processor paragraph, the
+data-subject-rights paragraph, and the updated contact). Update the "Last updated"
+date to match.
+
+**2c. Link `PRIVACY.md` from `README.md`** — add a line near the top (next to the
+License badge) or in a "Privacy" section, e.g.:
+
+> See [PRIVACY.md](PRIVACY.md) for the privacy policy.
+
+**2d. If the project has a public website** (per README, `https://prasoon-pradeep.github.io/Simple-SOP/`),
+publish the same policy there as a linked page, discoverable before download.
+
+---
+
+## Task 3 — Third-party license NOTICE file (automated)
+
+**Decision:** auto-generate, wired into the existing release script
+(`scripts/release.cjs`), not a one-time manual file.
+
+**3a. Add tooling:**
+- Rust/Cargo dependency tree: use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about)
+  to generate license notices for `src-tauri`'s dependency tree.
+- npm dependency tree: use `license-checker` (or `license-report`) to generate notices
+  for the frontend's `node_modules` tree.
+
+**3b. Output file:** generate a single `THIRD-PARTY-NOTICES.txt` at the repository
+root, concatenating both the Cargo-derived and npm-derived notices under clear
+headers (`## Rust / Cargo dependencies`, `## JavaScript / npm dependencies`).
+
+**3c. Wire into the release flow:** add a step to `scripts/release.cjs` (or a
+`predist`/`prerelease` npm script it calls) that regenerates
+`THIRD-PARTY-NOTICES.txt` before packaging, so it never goes stale relative to the
+dependencies actually shipped in that release's binary.
+
+**3d. Reference it from `README.md`:** add a line, e.g.:
+
+> Third-party software notices: see [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+
+**3e. Keep the existing Iconoir icon acknowledgement** (from the recent
+"acknowledgements for the Iconoir-sourced app icon" commit) as-is — it's separate from
+this automated file and doesn't need to be merged into it.
+
+---
+
+## Task 4 — Terms of Use: `TERMS.md` + in-app section
+
+**Decision:** standalone `TERMS.md` file, also displayed in-app (same pattern as the
+existing License Agreement section, which imports `LICENSE` via
+`import licenseText from '../../LICENSE?raw'` in `src/pages/Settings.tsx`).
+
+**4a. Create `TERMS.md` at the repository root:**
+
+```markdown
+# Terms of Use — SOP Builder
+
+Last updated: [DATE OF IMPLEMENTATION]
+
+By installing or using SOP Builder, you agree to these Terms of Use and to the
+software's [LICENSE](LICENSE).
+
+## Alpha software
+
+SOP Builder is currently in an alpha release phase. It is functional end-to-end, but
+may contain bugs, incomplete features, or breaking changes between versions. **Always
+keep independent backups of your SOP data.** SOP Builder is not liable for data loss.
+
+## What this software is for
+
+SOP Builder is a tool for creating, editing, and managing documentation. It is not a
+source of professional safety, legal, or engineering advice, and the accuracy, safety,
+or regulatory compliance of any procedure you create or manage with it is your
+responsibility alone, not SOP Builder's.
+
+## Acceptable use
+
+You may use, copy, modify, and distribute this software under the terms of the
+[LICENSE](LICENSE) file, which includes a Commons Clause restriction: you may not
+sell this software, offer it as a paid hosted service, or charge others for access to
+it or its functionality.
+
+## AI features
+
+If you use the optional AI enhancement or translation features, you are responsible
+for complying with your chosen AI provider's own terms of service and privacy policy,
+and for ensuring you have the right to submit any content you send to that provider.
+See the [Privacy Policy](PRIVACY.md) for more detail on how this works.
+
+## No warranty, limitation of liability
+
+This software is provided "as is," without warranty of any kind. See the
+[LICENSE](LICENSE) file for the full warranty disclaimer and limitation of liability
+that governs your use of this software.
+
+## Changes to these terms
+
+If these terms change, the "Last updated" date above will be revised, and the
+updated text will be reflected both here and in the app's Settings screen.
+
+## Questions
+
+Open an issue on the
+[GitHub repository](https://github.com/prasoon-pradeep/Simple-SOP/issues), or contact
+[GITHUB_NOREPLY_EMAIL] for privacy-related questions.
+```
+
+**4b. Update `src/pages/Settings.tsx`:**
+- Add `import termsText from '../../TERMS.md?raw';` alongside the existing
+  `licenseText` import (line 13).
+- Add a new section following the same structure as the existing "Licence Agreement"
+  block (lines ~589-601), placed before it (Terms of Use should read first, then
+  License, then Privacy Policy):
+
+```tsx
+{/* Terms of Use */}
+<div>
+  <div className="flex items-center gap-2 mb-1">
+    <ScrollText className="w-4 h-4 text-text-tertiary" />
+    <h2 className="text-base font-semibold text-text-primary">Terms of Use</h2>
+  </div>
+  <p className="text-xs text-text-tertiary mb-4">
+    By installing and using SOP Builder you agree to the terms below.
+  </p>
+  <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 whitespace-pre-wrap font-mono overflow-y-auto max-h-72">
+    {termsText}
+  </pre>
+</div>
+
+<div className="border-t border-border-standard" />
+```
+
+**4c. Link `TERMS.md` from `README.md`**, next to the existing License badge/link.
+
+---
+
+## Cross-cutting notes for the implementing engineer
+
+- Do not alter the LICENSE file's liability cap (₹100 / amount paid, whichever
+  greater) or indemnification clause — this was reviewed and deliberately kept as-is.
+- Do not add "open source" as a description of this project anywhere public-facing —
+  the Commons Clause restriction means it is source-available, not OSI open source.
+- Before finalizing, replace every `[GITHUB_NOREPLY_EMAIL]` placeholder with the
+  actual verified noreply address from the GitHub account's Settings → Emails page,
+  and every `[DATE OF IMPLEMENTATION]` with the actual date these docs are merged.
+- Keep wording consistent across `PRIVACY.md`, `TERMS.md`, and their in-app
+  counterparts in `Settings.tsx` — if one is edited later, update all three.

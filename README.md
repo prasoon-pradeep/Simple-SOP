@@ -10,6 +10,8 @@
 
 **Website & downloads:** https://prasoon-pradeep.github.io/Simple-SOP/
 
+See [PRIVACY.md](PRIVACY.md) for the privacy policy.
+
 Current app version: **0.3.1**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
@@ -75,7 +77,7 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - Full Tools and Items library with search and clone
 - Item-level Qty field for SOP-level bill of materials
 - Step editor with image annotation, tool/item attachments, inline quantity/unit entry, drag-to-reorder, and add-step scroll preservation
-- AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key; keys stored reliably in SQLite with an encrypted OS keyring copy (Windows Credential Manager, macOS Keychain, Linux Secret Service) where available
+- AI text enhancement on all prose fields — uses your own Anthropic, OpenAI, or Gemini API key. Your API key is always stored in the local SQLite database in plain text. Where your operating system supports it (Windows Credential Manager, macOS Keychain, Linux Secret Service), a second copy is also stored in a secure OS credential store, but this does not encrypt the SQLite copy — treat the key as a plaintext credential protected only by your device's user-account security.
 - Export SOPs to printable, text-selectable PDF via headless Chromium/Edge print-to-PDF
 - Portable `.sop` import/export bundles
 - In-app auto-update with launch dialog, Settings check, progress feedback, error details, and manual release fallback
