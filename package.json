@@ -10,6 +10,7 @@
     "tauri": "tauri",
     "version": "node scripts/bump-version.js",
     "release": "node scripts/release.cjs",
+    "notices": "node scripts/generate-notices.cjs",
     "install-hooks": "node scripts/install-hooks.cjs"
   },
   "dependencies": {
@@ -46,6 +47,7 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.5.0",
+    "license-checker": "^25.0.1",
     "postcss": "^8.5.13",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.8.3",

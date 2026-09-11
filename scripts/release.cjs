@@ -165,6 +165,34 @@ try {
   warnings.push(`[CHECK 3 — VERSION COLLISION] gh CLI error: ${e.message}`);
 }
 
+// ── Check 4: THIRD-PARTY-NOTICES.txt is up to date ────────────────────────────
+// Regenerates the notices file from the current dependency trees and fails if
+// that differs from what's committed, so a release never ships stale notices.
+try {
+  const notices = spawnSync('node', [path.join(__dirname, 'generate-notices.cjs')], {
+    encoding: 'utf8',
+  });
+  if (notices.status !== 0) {
+    errors.push(
+      `[CHECK 4 — THIRD-PARTY NOTICES] Failed to regenerate THIRD-PARTY-NOTICES.txt:\n` +
+      `${notices.stderr || notices.stdout}\n` +
+      `  Fix: resolve the error above, then re-run this script.`
+    );
+  } else {
+    const diff = spawnSync('git', ['diff', '--stat', '--', 'THIRD-PARTY-NOTICES.txt'], {
+      encoding: 'utf8',
+    });
+    if (diff.stdout && diff.stdout.trim()) {
+      errors.push(
+        `[CHECK 4 — THIRD-PARTY NOTICES] THIRD-PARTY-NOTICES.txt is out of date with the current dependency tree.\n` +
+        `  Fix: review the regenerated file (\`git diff THIRD-PARTY-NOTICES.txt\`), commit it, then re-run this script.`
+      );
+    }
+  }
+} catch (e) {
+  warnings.push(`[CHECK 4 — THIRD-PARTY NOTICES] Could not run generate-notices.cjs: ${e.message}`);
+}
+
 // ── Report ────────────────────────────────────────────────────────────────────
 if (warnings.length > 0) {
   console.warn('\n⚠  Warnings (non-blocking):');
