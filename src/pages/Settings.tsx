@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import licenseText from '../../LICENSE?raw';
 import termsText from '../../TERMS.md?raw';
+import privacyText from '../../PRIVACY.md?raw';
+import { renderSimpleMarkdown } from '../lib/markdown';
 
 const AI_PROVIDERS = [
   { id: 'anthropic', label: 'Anthropic' },
@@ -596,9 +598,9 @@ export default function Settings() {
             <p className="text-xs text-text-tertiary mb-4">
               By installing and using SOP Builder you agree to the terms below.
             </p>
-            <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 whitespace-pre-wrap font-mono overflow-y-auto max-h-72">
-              {termsText}
-            </pre>
+            <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 overflow-y-auto max-h-72">
+              {renderSimpleMarkdown(termsText)}
+            </div>
           </div>
 
           <div className="border-t border-border-standard" />
@@ -625,16 +627,11 @@ export default function Settings() {
               <ScrollText className="w-4 h-4 text-text-tertiary" />
               <h2 className="text-base font-semibold text-text-primary">Privacy Policy</h2>
             </div>
-            <p className="text-xs text-text-tertiary mb-4">Last updated: September 2026</p>
-            <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 space-y-3">
-              <p><span className="font-semibold text-text-primary">We collect nothing.</span> SOP Builder stores all your data locally on your machine in a SQLite database. No personal data, usage data, or SOP content is ever transmitted to or collected by SOP Builder Software.</p>
-              <p><span className="font-semibold text-text-primary">AI Enhancement.</span> If you choose to use AI enhancement, the text of the field you are improving is sent directly from your device to the AI provider you configure (Anthropic, OpenAI, or Google) using your own API key. This transmission is governed solely by that provider's terms of service and privacy policy — SOP Builder Software has no visibility into or control over it.</p>
-              <p><span className="font-semibold text-text-primary">API key storage.</span> Your AI provider API key is stored locally on your device. It is always written to the app's local SQLite database in plain text. Where your operating system supports it, a second copy is also stored in an OS-level secure credential store (Windows Credential Manager, macOS Keychain, or Linux Secret Service) — but the SQLite copy itself is never encrypted. Anyone with access to your local user account or a backup of the app's data folder could read this key.</p>
-              <p><span className="font-semibold text-text-primary">If the content you send to an AI provider contains personal data about other people</span> — for example, employee names, photos, or other identifying information — you are the data controller (or data fiduciary, under India's DPDP Act) for that data. You are responsible for having a lawful basis to process and transmit it, and for complying with any applicable data protection law before sending it to a third-party AI provider. SOP Builder acts only as a conduit for a transmission you initiate with your own credentials; it is not a party to the processing.</p>
-              <p><span className="font-semibold text-text-primary">Auto-updates.</span> On launch, the app contacts the GitHub API to check whether a new version is available. This is a standard HTTPS request from your device to GitHub's servers and is subject to GitHub's privacy policy. No SOP data is included in this request.</p>
-              <p><span className="font-semibold text-text-primary">No analytics, no telemetry.</span> The app contains no crash reporters, analytics SDKs, or tracking of any kind.</p>
-              <p><span className="font-semibold text-text-primary">Your data, your control.</span> Because all data is stored locally on your device, you already have full access, correction, deletion, and portability over it: edit or delete any SOP in the app, use the <span className="font-semibold">.sop</span> export feature for a portable copy, or uninstall the app and remove its data folder to delete everything. We hold no copy of your data, so there is nothing for us to act on beyond what the app itself already gives you.</p>
-              <p className="text-text-tertiary">See the full <a href="https://github.com/prasoon-pradeep/Simple-SOP/blob/master/PRIVACY.md" target="_blank" rel="noreferrer" className="text-brand hover:underline">Privacy Policy</a> for more detail. Questions or requests: <a href="mailto:134857089+prasoon-pradeep@users.noreply.github.com" className="text-brand hover:underline">134857089+prasoon-pradeep@users.noreply.github.com</a>, or open an issue on the <a href="https://github.com/prasoon-pradeep/Simple-SOP/issues" target="_blank" rel="noreferrer" className="text-brand hover:underline">GitHub repository</a>.</p>
+            <p className="text-xs text-text-tertiary mb-4">
+              By installing and using SOP Builder you agree to the privacy policy below.
+            </p>
+            <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 overflow-y-auto max-h-72">
+              {renderSimpleMarkdown(privacyText)}
             </div>
           </div>
 
