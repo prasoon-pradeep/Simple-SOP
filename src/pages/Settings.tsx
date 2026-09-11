@@ -24,8 +24,20 @@ type ProviderId = typeof AI_PROVIDERS[number]['id'];
 
 const RELEASES_URL = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest';
 
+const UPDATE_CHECK_TIMEOUT_MS = 7 * 60 * 1000;
+
 function formatUpdateError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  const message = error instanceof Error ? error.message : String(error);
+  if (/timed? ?out|timeout/i.test(message)) {
+    return "Update check timed out after 7 minutes. This can happen right after a new release is published, while GitHub's servers catch up — try again in a few minutes.";
+  }
+  return message;
+}
+
+function formatMMSS(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
 export default function Settings() {
@@ -52,6 +64,17 @@ export default function Settings() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [updateError, setUpdateError] = useState('');
   const [pendingUpdate, setPendingUpdate] = useState<Awaited<ReturnType<typeof check>>>(null);
+  const [connectingElapsed, setConnectingElapsed] = useState(0);
+
+  useEffect(() => {
+    if (updateStatus !== 'connecting') return;
+    const start = Date.now();
+    setConnectingElapsed(0);
+    const id = setInterval(() => {
+      setConnectingElapsed(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [updateStatus]);
 
   // AI Enhancement state
   const [aiProvider, setAiProvider] = useState<ProviderId>('anthropic');
@@ -189,7 +212,7 @@ export default function Settings() {
     setUpdateError('');
     setPendingUpdate(null);
     try {
-      const update = await check();
+      const update = await check({ timeout: UPDATE_CHECK_TIMEOUT_MS });
       if (update?.available) {
         setUpdateVersion(update.version);
         setPendingUpdate(update);
@@ -532,7 +555,9 @@ export default function Settings() {
               </div>
 
               {updateStatus === 'connecting' && (
-                <p className="text-xs text-text-tertiary">Connecting to update server…</p>
+                <p className="text-xs text-text-tertiary">
+                  Connecting to update server… ({formatMMSS(connectingElapsed)} / 7:00 max)
+                </p>
               )}
               {updateStatus === 'up-to-date' && (
                 <p className="text-xs text-status-green font-semibold">You're on the latest version.</p>
