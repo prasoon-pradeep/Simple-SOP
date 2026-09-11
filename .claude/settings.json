@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE '(^|[[:space:]])(git[[:space:]]+push|gh[[:space:]])'; then active=$(gh auth status 2>&1 | awk '/Logged in.*account/ {acc=$(NF-1)} /Active account: true/ {print acc; exit}'); if [ \"$active\" != \"prasoon-pradeep\" ]; then printf '{\"decision\":\"block\",\"reason\":\"Wrong GitHub account active (%s). Run: gh auth switch --user prasoon-pradeep\"}\\n' \"$active\"; fi; fi",
+            "statusMessage": "Checking GitHub account..."
+          },
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE 'gh[[:space:]]+workflow[[:space:]]+run.*release\\.yml'; then tag=$(echo \"$cmd\" | grep -oE 'tag=v?[0-9]+\\.[0-9]+\\.[0-9]+' | grep -oE '[0-9]+\\.[0-9]+\\.[0-9]+'); if [ -z \"$tag\" ]; then printf '{\"decision\":\"block\",\"reason\":\"No tag=vX.Y.Z found in command. Add --field tag=vX.Y.Z\"}\\n'; exit 0; fi; latest_raw=$(gh api repos/prasoon-pradeep/Simple-SOP/releases/latest --jq '.tag_name' 2>/dev/null); if [ -z \"$latest_raw\" ]; then exit 0; fi; latest=$(echo \"$latest_raw\" | sed 's/^v//'); higher=$(printf \"%s\\n%s\" \"$tag\" \"$latest\" | sort -V | tail -1); if [ \"$higher\" != \"$tag\" ] || [ \"$tag\" = \"$latest\" ]; then printf '{\"decision\":\"block\",\"reason\":\"Version v%s is not greater than latest release %s. Run: npm run version X.Y.Z first\"}\\n' \"$tag\" \"$latest_raw\"; fi; fi",
+            "statusMessage": "Checking release version..."
+          }
+        ]
+      }
+    ]
+  }
+}
