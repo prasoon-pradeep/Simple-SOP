@@ -21,19 +21,22 @@ Every GitHub release MUST include meaningful release notes describing what chang
 2. **GitHub release `body`** — this is what the GitHub releases page and the GitHub API return. It must also contain the feature/fix summary, not just installation instructions.
 
 ### Format for release notes
+The `notes` input passed to `release.yml` must be **bullet points only** — nothing else:
 ```
-## What's new in vX.Y.Z
-
 - Short description of feature or fix
 - Short description of feature or fix
-
-### Installation
-- Windows: ...
-- Linux: ...
 ```
+
+Do NOT include a `## What's new in vX.Y.Z` header or an `### Installation` section in the
+`notes` input. `release.yml` already wraps whatever you pass into its own `## What's new`
+header and appends its own `### Installation` section to both the GitHub release body and
+(for the header) implicitly expects bullets-only content in `latest.json`. Adding either of
+those yourself duplicates them — this shipped in the v0.3.1 release notes as a literal
+doubled header and two conflicting Installation sections in both the GitHub release body
+and the in-app "What's New" dialog.
 
 ### When cutting a release
-- The `release.yml` workflow accepts a `notes` input. Always populate it with a human-readable summary of what changed.
+- The `release.yml` workflow accepts a `notes` input. Always populate it with a human-readable, bullet-point-only summary of what changed (see format above).
 - Never trigger a release without filling in the notes input.
 - Notes should be written from the user's perspective (what they can now do, what was broken and is now fixed) — not internal implementation details.
 
