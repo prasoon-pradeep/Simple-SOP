@@ -11,6 +11,7 @@ import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { renderSimpleMarkdown } from './lib/markdown';
 
 const RELEASES_URL = 'https://github.com/prasoon-pradeep/Simple-SOP/releases/latest';
 
@@ -98,9 +99,9 @@ function UpdateDialog({ update, onDismiss }: { update: UpdateInfo; onDismiss: ()
           </DialogDescription>
         </DialogHeader>
         {update.body && (
-          <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">
-            {update.body}
-          </pre>
+          <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 max-h-40 overflow-y-auto">
+            {renderSimpleMarkdown(update.body)}
+          </div>
         )}
         {stage === 'downloading' && progress > 0 && (
           <div className="w-full h-1 bg-border-standard rounded-full overflow-hidden">
@@ -154,9 +155,9 @@ function WhatsNewDialog({ version, notes, onDismiss }: { version: string; notes:
             Here's what changed in this update.
           </DialogDescription>
         </DialogHeader>
-        <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 whitespace-pre-wrap font-mono max-h-52 overflow-y-auto">
-          {notes}
-        </pre>
+        <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 max-h-52 overflow-y-auto">
+          {renderSimpleMarkdown(notes)}
+        </div>
         <DialogFooter>
           <Button onClick={onDismiss} className="bg-brand hover:bg-brand-hover text-white font-semibold">
             Got it

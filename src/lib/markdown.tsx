@@ -10,7 +10,7 @@ function resolveHref(href: string): string {
 
 function renderInline(text: string, keyPrefix: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const re = /\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)]+)\)/g;
+  const re = /\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let i = 0;
@@ -19,6 +19,12 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
     if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
     if (match[1] !== undefined) {
       nodes.push(<strong key={`${keyPrefix}-b-${i}`}>{match[1]}</strong>);
+    } else if (match[4] !== undefined) {
+      nodes.push(
+        <code key={`${keyPrefix}-c-${i}`} className="font-mono bg-secondary px-1 py-0.5 rounded text-[10px]">
+          {match[4]}
+        </code>
+      );
     } else {
       nodes.push(
         <a
@@ -87,9 +93,18 @@ export function renderSimpleMarkdown(md: string): ReactNode {
 
     const h1 = line.match(/^#\s+(.*)/);
     const h2 = line.match(/^##\s+(.*)/);
-    const li = line.match(/^-\s+(.*)/);
+    const h3 = line.match(/^###\s+(.*)/);
+    const li = line.match(/^[-*]\s+(.*)/);
 
-    if (h2) {
+    if (h3) {
+      flushParagraph();
+      flushList();
+      blocks.push(
+        <h5 key={`h3-${key}`} className="text-xs font-semibold text-text-primary mt-3 mb-1 first:mt-0">
+          {renderInline(h3[1], `h3-${key++}`)}
+        </h5>
+      );
+    } else if (h2) {
       flushParagraph();
       flushList();
       blocks.push(

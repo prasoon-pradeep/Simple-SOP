@@ -512,9 +512,9 @@ export default function Settings() {
             {releaseNotes && (
               <div className="mb-4">
                 <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1.5">Release notes</p>
-                <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 whitespace-pre-wrap font-mono max-h-36 overflow-y-auto">
-                  {releaseNotes}
-                </pre>
+                <div className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-3 max-h-36 overflow-y-auto">
+                  {renderSimpleMarkdown(releaseNotes)}
+                </div>
               </div>
             )}
 
