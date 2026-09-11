@@ -32,7 +32,7 @@ SOP Builder bridges the gap between "paper and pencil" and complex enterprise Sa
 - **Visual first:** Integrated image crop and annotation tools designed for step-by-step mechanical and technical instructions.
 - **Portable:** Export individual SOPs to self-contained `.sop` bundles for offline sharing across high-security facilities.
 - **AI-assisted writing:** Optional AI text enhancement on every prose field using your own API key. Supports Anthropic, OpenAI, and Gemini.
-- **Multilingual translation:** Translate steps and header fields into Hindi, Tamil, Malayalam, Kannada, Telugu, or Marathi using your own AI provider. PDFs and the in-app viewer show translations alongside the original English, with an unreviewed-AI disclaimer.
+- **Multilingual translation:** Translate steps and header fields into Hindi, Tamil, Malayalam, Kannada, Telugu, or Marathi using your own AI provider. PDFs and the in-app viewer show translations alongside the original English, with an unreviewed-AI disclaimer. Translations can be disabled per SOP with a toggle.
 
 ---
 
@@ -185,7 +185,7 @@ See `docs/SOP_BUILDER_SPEC.md` for complete behavior rules and constraints.
 - Keep the Viewer and `public/pdf-template.html` aligned.
 - Use Tauri commands for all persistent writes.
 - Validate frontend (`npm run build`) and Rust (`cargo check` in `src-tauri/`) after meaningful changes.
-- For releases, run `npm run version <major.minor.patch>` to sync the version across `package.json` and `src-tauri/Cargo.toml`, push to `master`, then run `npm run release -- <tag> "<notes>"` (e.g. `npm run release -- v0.3.1 "Fix PDF export layout"`), which validates the release notes and workflow file before dispatching `.github/workflows/release.yml`.
+- For releases, run `npm run version <major.minor.patch>` to sync the version across `package.json` and `src-tauri/Cargo.toml`, push to `master`, then run `npm run release -- <tag> "<notes>"` (e.g. `npm run release -- v0.3.2 "Fix PDF export layout"`). This runs four pre-flight checks — release notes don't contain dangerous shell characters, the workflow file doesn't inline `${{ inputs.* }}` in a `run:` block, the tag isn't already a published release, and `THIRD-PARTY-NOTICES.txt` is up to date with the current dependency tree (regenerate manually with `npm run notices` if it fails) — before dispatching `.github/workflows/release.yml`.
 
 ---
 
