@@ -14,7 +14,7 @@ See [PRIVACY.md](PRIVACY.md) for the privacy policy and [TERMS.md](TERMS.md) for
 
 Third-party software notices: see [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
-Current app version: **0.3.1**
+Current app version: **0.3.2**
 
 SOP Builder is an offline-first desktop application for creating, editing, reviewing, and exporting Standard Operating Procedures (SOPs).
 
