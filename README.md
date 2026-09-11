@@ -10,7 +10,7 @@
 
 **Website & downloads:** https://prasoon-pradeep.github.io/Simple-SOP/
 
-See [PRIVACY.md](PRIVACY.md) for the privacy policy.
+See [PRIVACY.md](PRIVACY.md) for the privacy policy and [TERMS.md](TERMS.md) for the terms of use.
 
 Third-party software notices: see [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 

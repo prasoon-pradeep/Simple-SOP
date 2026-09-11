@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import licenseText from '../../LICENSE?raw';
+import termsText from '../../TERMS.md?raw';
 
 const AI_PROVIDERS = [
   { id: 'anthropic', label: 'Anthropic' },
@@ -582,6 +583,22 @@ export default function Settings() {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="border-t border-border-standard" />
+
+          {/* Terms of Use */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <ScrollText className="w-4 h-4 text-text-tertiary" />
+              <h2 className="text-base font-semibold text-text-primary">Terms of Use</h2>
+            </div>
+            <p className="text-xs text-text-tertiary mb-4">
+              By installing and using SOP Builder you agree to the terms below.
+            </p>
+            <pre className="text-[11px] leading-relaxed text-text-secondary bg-surface border border-border-standard rounded-md p-4 whitespace-pre-wrap font-mono overflow-y-auto max-h-72">
+              {termsText}
+            </pre>
           </div>
 
           <div className="border-t border-border-standard" />
