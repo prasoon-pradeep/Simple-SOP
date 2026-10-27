@@ -19,9 +19,9 @@ interface AIPreviewPanelProps {
 
 function modelForProvider(provider: string): string {
   switch (provider) {
-    case 'openai': return 'gpt-4o-mini';
-    case 'gemini': return 'gemini-1.5-flash';
-    default: return 'claude-haiku-4-5-20251001';
+    case 'openai': return 'gpt-6-luna';
+    case 'gemini': return 'gemini-3.5-flash-lite';
+    default: return 'claude-haiku-5-5';
   }
 }
 

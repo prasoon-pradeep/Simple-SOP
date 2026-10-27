@@ -2533,7 +2533,7 @@ pub async fn test_ai_connection(
     match provider.as_str() {
         "anthropic" => {
             let body = serde_json::json!({
-                "model": "claude-haiku-4-5-20251001",
+                "model": "claude-haiku-5-5",
                 "max_tokens": 32,
                 "system": AI_SYSTEM_PROMPT,
                 "messages": [{"role": "user", "content": test_text}]
@@ -2557,7 +2557,7 @@ pub async fn test_ai_connection(
         }
         "openai" => {
             let body = serde_json::json!({
-                "model": "gpt-5.4-mini",
+                "model": "gpt-6-luna",
                 "max_tokens": 32,
                 "messages": [
                     {"role": "system", "content": AI_SYSTEM_PROMPT},
@@ -2585,7 +2585,7 @@ pub async fn test_ai_connection(
                 .fetch_optional(state.inner())
                 .await
                 .map_err(|e| e.to_string())?
-                .unwrap_or_else(|| "gemini-2.5-flash".to_string());
+                .unwrap_or_else(|| "gemini-3.5-flash-lite".to_string());
             let url = format!(
                 "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
                 model, api_key
@@ -2726,9 +2726,9 @@ pub async fn list_ai_models(
 
 fn default_model(provider: &str) -> &'static str {
     match provider {
-        "anthropic" => "claude-haiku-4-5-20251001",
-        "openai" => "gpt-5.4-mini",
-        "gemini" => "gemini-2.5-flash",
+        "anthropic" => "claude-haiku-5-5",
+        "openai" => "gpt-6-luna",
+        "gemini" => "gemini-3.5-flash-lite",
         _ => "",
     }
 }
